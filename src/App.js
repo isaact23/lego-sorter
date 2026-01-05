@@ -1,25 +1,32 @@
-import logo from './logo.svg';
-import './App.css';
+import './App.css'
+import { layout } from './PieceLayout.js'
 
-function App() {
+function App () {
+  const makeTable = layout => {
+    return (
+      <div className='w3-table'>
+        <tr>
+          {layout.map(row => {
+            return (
+              <th>
+                {row.map(col => {
+                  if (typeof col == 'string') return <p>{col}</p>
+                  return makeTable(col)
+                })}
+              </th>
+            )
+          })}
+        </tr>
+      </div>
+    )
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className='App'>
+      <h1>Lego Sorter</h1>
+      {makeTable(layout)}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
