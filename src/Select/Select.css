@@ -1,0 +1,14 @@
+
+
+.ListItem {
+    border: solid black 2px;
+    font-size: 25px;
+    width: 20%;
+    margin-left: 40%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.ListItem:hover {
+    cursor: pointer;
+}

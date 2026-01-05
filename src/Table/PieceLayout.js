@@ -21,7 +21,7 @@ export const layout = [
         [
           // Col 0
           ['Arches', 'Misc Frames'],
-          ['Panel Stickers', 'Brick Stickers'],
+          ['Panel Stickers', 'Bricks Stickers'],
           ['2x4 Slopes', '2x2 Slopes']
         ]
       ],
@@ -29,9 +29,9 @@ export const layout = [
         // Row 1
         [
           // Col 0
-          ['2x4 Brick', '2x4 Brick?'],
-          ['1x6 Brick', '1x8 Brick'],
-          ['2x3 Brick', '2x6 Brick']
+          ['2x4 Bricks', '2x4 Bricks?'],
+          ['1x6 Bricks', '1x8 Bricks'],
+          ['2x3 Bricks', '2x6 Bricks']
         ]
       ]
     ],
@@ -41,7 +41,7 @@ export const layout = [
         // Row 0
         [
           // Col 0
-          ['Piece', 'Piece'],
+          ['Plants', '1x4 Bricks'],
           ['Piece', 'Piece'],
           ['Piece', 'Piece']
         ]
@@ -112,16 +112,16 @@ export const layout = [
         // Row 0
         [
           // Col 0
-          ['Arches', 'Misc Frames'],
-          ['Panel Stickers', 'Brick Stickers'],
-          ['2x4 Slopes', '2x2 Slopes']
+          ['Piece', 'Piece'],
+          ['Piece', 'Piece'],
+          ['Piece', 'Piece']
         ]
       ],
       [
         // Row 1
         [
           // Col 0
-          ['PieceB', 'Piece'],
+          ['Piece', 'Piece'],
           ['Piece', 'Piece'],
           ['Piece', 'Piece']
         ]
