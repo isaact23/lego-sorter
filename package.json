@@ -1,42 +1,16 @@
 {
-  "name": "lego-sorter",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@shivantra/react-web-camera": "^1.1.0",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.1",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.13.2",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "react-scripts": "5.0.1",
-    "react-webcam": "^7.2.0",
-    "web-vitals": "^2.1.4"
-  },
+  "name": "lego-sorter-backend",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
