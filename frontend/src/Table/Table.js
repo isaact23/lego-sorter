@@ -2,18 +2,21 @@ import './Table.css'
 import { layout } from './PieceLayout.js'
 import { binMappings } from './BinMappings.js'
 
-function Table ({ brick, returnHome }) {
+function Table ({ brick, returnHome, editBucket }) {
   // A recursive function that converts the bucket layout defined in PieceLayout.js
   // to a giant HTML table.
-  const makeTable = layout => {
+  const makeTable = (layout, bucketId) => {
     return (
       <table>
-        {layout.map(row => {
+        {layout.map((row, rowId) => {
           return (
             <tr>
-              {row.map(col => {
-                if (typeof col == 'string') return <th>{getBucket(col)}</th>
-                return <th>{makeTable(col)}</th>
+              {row.map((col, colId) => {
+                const newBucketId =
+                  bucketId + rowId.toString() + colId.toString()
+                if (typeof col == 'string')
+                  return <th>{getBucket(col, newBucketId)}</th>
+                return <th>{makeTable(col, newBucketId)}</th>
               })}
             </tr>
           )
@@ -38,15 +41,19 @@ function Table ({ brick, returnHome }) {
   }
 
   // Get a bucket for a specific type of part. Blink if it's the targeted part.
-  const getBucket = partName => {
+  const getBucket = (partName, bucketId) => {
     let className = 'Bucket'
     if (getTargetBucketName() === partName) {
       className = 'TargetBucket'
     }
 
     return (
-      <div className={className} id={partName}>
-        <p>{partName}</p>
+      <div
+        className={className}
+        id={partName}
+        onClick={() => editBucket(bucketId)}
+      >
+        <p>{bucketId}</p>
       </div>
     )
   }
@@ -56,7 +63,7 @@ function Table ({ brick, returnHome }) {
       <h1>Lego Sorter</h1>
       {describeBrick()}
       <button onClick={returnHome}>Return home</button>
-      <div className='BinTable'>{makeTable(layout)}</div>
+      <div className='BinTable'>{makeTable(layout, '')}</div>
     </div>
   )
 }

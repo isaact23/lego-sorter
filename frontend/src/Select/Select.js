@@ -6,7 +6,7 @@ const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 const CONFIDENCE_THRESHOLD = 0.75
 
 // Remove special, legacy, prototype variants
-function dedupeParts(bricks) {
+function dedupeParts (bricks) {
   const map = {}
 
   bricks.forEach(brick => {
@@ -62,13 +62,11 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   }, [cleanBricks, images])
 
   // Step 3: discard bricks without images
-  const bricksWithImages = cleanBricks.filter(
-    brick => images[brick.id]
-  )
+  const bricksWithImages = cleanBricks.filter(brick => images[brick.id])
 
   if (!bricksWithImages.length) return null
 
-  // Step 4: threshold logic 
+  // Step 4: threshold logic
   const aboveThreshold = bricksWithImages.filter(
     brick => brick.score >= CONFIDENCE_THRESHOLD
   )
@@ -80,11 +78,9 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   // Oly one above threshold, show it
   if (aboveThreshold.length === 1) {
     primaryBricks = [aboveThreshold[0]]
-    hiddenBricks = bricksWithImages.filter(
-      b => b.id !== aboveThreshold[0].id
-    )
+    hiddenBricks = bricksWithImages.filter(b => b.id !== aboveThreshold[0].id)
     buttonText = 'Not this one'
-  // Multiple bricks above threshold, show all above threshold
+    // Multiple bricks above threshold, show all above threshold
   } else if (aboveThreshold.length > 1) {
     primaryBricks = aboveThreshold
     hiddenBricks = bricksWithImages.filter(
@@ -104,12 +100,11 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
     : primaryBricks
 
   return (
-    <div className="Select">
-      
+    <div className='Select'>
       <h1>Lego Sorter</h1>
       <h2>Choose the matching piece</h2>
 
-      <div className="BrickList">
+      <div className='BrickList'>
         {bricksToDisplay.map((brick, index) => (
           <div
             key={brick.id}
@@ -125,14 +120,11 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
             <strong>{brick.name}</strong>
             <div>Part #{brick.id}</div>
 
-            <div className="ConfidenceBar">
-              <div
-                className="ConfidenceFill"
-                style={{ width: '93%' }}
-              />
+            <div className='ConfidenceBar'>
+              <div className='ConfidenceFill' style={{ width: '93%' }} />
             </div>
 
-            <div className="ConfidenceLabel">
+            <div className='ConfidenceLabel'>
               {(brick.score * 100).toFixed(0)}% sure
             </div>
           </div>
@@ -140,25 +132,17 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
       </div>
 
       {!showAll && hiddenBricks.length > 0 && (
-        <button
-          className="SecondaryButton"
-          onClick={() => setShowAll(true)}
-        >
+        <button className='SecondaryButton' onClick={() => setShowAll(true)}>
           {buttonText}
         </button>
       )}
 
-      <div className="BottomActions">
-        <button
-          className="SecondaryButton"
-          onClick={retryPhoto}
-        >
+      <div className='BottomActions'>
+        <button className='SecondaryButton' onClick={retryPhoto}>
           Try another photo
         </button>
 
-        <button onClick={returnHome}>
-          Return home
-        </button>
+        <button onClick={returnHome}>Return home</button>
       </div>
     </div>
   )

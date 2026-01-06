@@ -92,7 +92,7 @@ export const layout = [
     ]
   ],
   [
-    // Row 0
+    // Row 1
     [
       // Col 0
       ['First', 'Right', 'Right2', 'Piece', 'Piece', 'Piece???'],
@@ -112,18 +112,18 @@ export const layout = [
         // Row 0
         [
           // Col 0
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece']
+          ['PieceA'],
+          ['Piece'],
+          ['Piece']
         ]
       ],
       [
         // Row 1
         [
           // Col 0
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece']
+          ['PieceB'],
+          ['Piece'],
+          ['Piece']
         ]
       ]
     ],
@@ -133,18 +133,18 @@ export const layout = [
         // Row 0
         [
           // Col 0
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece']
+          ['PieceC'],
+          ['Piece'],
+          ['Piece']
         ]
       ],
       [
         // Row 1
         [
           // Col 0
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece'],
-          ['Piece', 'Piece']
+          ['PieceD'],
+          ['Piece'],
+          ['Piece']
         ]
       ]
     ],
