@@ -91,6 +91,21 @@ function App () {
       )
   }
 
-  return <div className='App'>{getPage()}</div>
+  return (
+    <div className='App w3-theme-light'>
+      <div className='w3-bar w3-theme-d1'>
+        <div className='w3-bar-item'>
+          <h2>Lego Sorter</h2>
+        </div>
+        <div className='w3-bar-item w3-button' onClick={returnToCamera}>
+          <h2>Camera</h2>
+        </div>
+        <div className='w3-bar-item w3-button' onClick={returnToGrid}>
+          <h2>Grid</h2>
+        </div>
+      </div>
+      {getPage()}
+    </div>
+  )
 }
 export default App
