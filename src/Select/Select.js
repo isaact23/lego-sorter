@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import './Select.css'
 
 const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 const CONFIDENCE_THRESHOLD = 0.75
@@ -67,7 +68,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
 
   if (!bricksWithImages.length) return null
 
-  // Step 4: threshold logic exactly as requested
+  // Step 4: threshold logic 
   const aboveThreshold = bricksWithImages.filter(
     brick => brick.score >= CONFIDENCE_THRESHOLD
   )
@@ -76,32 +77,37 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   let hiddenBricks = []
   let buttonText = ''
 
+  // Oly one above threshold, show it
   if (aboveThreshold.length === 1) {
     primaryBricks = [aboveThreshold[0]]
     hiddenBricks = bricksWithImages.filter(
       b => b.id !== aboveThreshold[0].id
     )
     buttonText = 'Not this one'
+  // Multiple bricks above threshold, show all above threshold
   } else if (aboveThreshold.length > 1) {
     primaryBricks = aboveThreshold
     hiddenBricks = bricksWithImages.filter(
       b => !aboveThreshold.some(a => a.id === b.id)
     )
     buttonText = 'None of these'
+    // No bricks above threshold, show top one
   } else {
     primaryBricks = [bricksWithImages[0]]
     hiddenBricks = bricksWithImages.slice(1)
     buttonText = 'Not this one'
   }
 
+  // Final bricks to display, depending on "show all" state
   const bricksToDisplay = showAll
     ? [...primaryBricks, ...hiddenBricks]
     : primaryBricks
 
   return (
     <div className="Select">
+      
       <h1>Lego Sorter</h1>
-      <h2>Choose the correct piece</h2>
+      <h2>Choose the matching piece</h2>
 
       <div className="BrickList">
         {bricksToDisplay.map((brick, index) => (
@@ -122,12 +128,12 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
             <div className="ConfidenceBar">
               <div
                 className="ConfidenceFill"
-                style={{ width: `${brick.score * 100}%` }}
+                style={{ width: '93%' }}
               />
             </div>
 
             <div className="ConfidenceLabel">
-              {(brick.score * 100).toFixed(1)}% sure
+              {(brick.score * 100).toFixed(0)}% sure
             </div>
           </div>
         ))}
