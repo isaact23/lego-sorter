@@ -66,8 +66,6 @@ function Camera({ brickCallback }) {
       >
       Find Brick
     </button>
-
-
       
     </div>
   )
