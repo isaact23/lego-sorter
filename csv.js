@@ -10,7 +10,6 @@ export function loadCsv (callback) {
 }
 
 export function writeCsv (data) {
-  console.log(data)
   const str = data.map(val => val.join()).join('\n')
   fs.writeFile(FILE_NAME, str, { flag: 'w+' }, err => {
     if (err) throw err

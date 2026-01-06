@@ -2,7 +2,7 @@ import './BucketEditor.css'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function BucketEditor ({ bucketId, returnToCamera, returnToGrid }) {
+function BucketEditor ({ bucketId }) {
   const [pieces, setPieces] = useState([])
 
   // Send request to backend to get bucket information when bucket ID changes
@@ -14,7 +14,7 @@ function BucketEditor ({ bucketId, returnToCamera, returnToGrid }) {
 
     axios
       .post(
-        'http://localhost:3000/bucket/get',
+        'http://localhost:3000/bucket/get-info',
         {
           bucketId: bucketId
         },
@@ -89,12 +89,14 @@ function BucketEditor ({ bucketId, returnToCamera, returnToGrid }) {
     <div className='BinEditor'>
       <h1>Lego Sorter</h1>
       <h2>Bin Number: {bucketId}</h2>
-      <button onClick={addPiece}>Add piece</button>
-      <button onClick={removePiece}>Remove piece</button>
+      <button className='w3-button w3-theme-d1' onClick={addPiece}>
+        Add piece
+      </button>
+      <button className='w3-button w3-theme-d1' onClick={removePiece}>
+        Remove piece
+      </button>
       <h2>Pieces:</h2>
       {getPieces()}
-      <button onClick={returnToCamera}>Return to camera</button>
-      <button onClick={returnToGrid}>Return to grid</button>
     </div>
   )
 }

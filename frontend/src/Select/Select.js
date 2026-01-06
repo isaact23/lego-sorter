@@ -101,7 +101,6 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
 
   return (
     <div className='Select'>
-      <h1>Lego Sorter</h1>
       <h2>Choose the matching piece</h2>
 
       <div className='BrickList'>
@@ -132,13 +131,16 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
       </div>
 
       {!showAll && hiddenBricks.length > 0 && (
-        <button className='SecondaryButton' onClick={() => setShowAll(true)}>
+        <button
+          className='w3-button w3-theme-l3'
+          onClick={() => setShowAll(true)}
+        >
           {buttonText}
         </button>
       )}
 
       <div className='BottomActions'>
-        <button className='SecondaryButton' onClick={retryPhoto}>
+        <button className='w3-button w3-theme-l3' onClick={retryPhoto}>
           Try another photo
         </button>
 

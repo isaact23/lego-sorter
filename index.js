@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 })
 
 // Given a bucket ID, get all pieces that go into that bucket.
-app.post('/bucket/get', (req, res) => {
+app.post('/bucket/get-info', (req, res) => {
   const bucketId = req.body.bucketId
 
   // Iterate through the rows of the CSV
@@ -33,6 +33,23 @@ app.post('/bucket/get', (req, res) => {
     }
   }
   res.send([])
+})
+
+// Given a piece ID, get the bucket ID that the piece goes into.
+app.post('/bucket/get-bucket', (req, res) => {
+  const pieceId = req.body.pieceId
+
+  // Iterate through the rows of the CSV
+  for (let rowId in binMappings) {
+    let pieces = binMappings[rowId].slice(1)
+
+    // If the row contains the given piece ID, send back the bucket number.
+    if (pieces.indexOf(pieceId) >= 0) {
+      res.send(binMappings[rowId][0])
+      return
+    }
+  }
+  res.send(null)
 })
 
 // Add a piece to a bucket.
@@ -50,12 +67,19 @@ app.post('/bucket/add', (req, res) => {
         res.send('Done')
         return
       }
+
+      // Add the piece to the current row
+      binMappings[rowId] = binMappings[rowId].concat(pieceId)
+      writeCsv(binMappings)
+      res.send('Done')
+      return
     }
   }
 
   // Add a new row and save to filesystem
   binMappings = binMappings.concat([[bucketId, pieceId]])
   writeCsv(binMappings)
+  res.send('Done')
 })
 
 // Remove a piece from the bucket.
@@ -67,8 +91,10 @@ app.post('/bucket/remove', (req, res) => {
   for (let rowId in binMappings) {
     // Look for a row with the bucket ID
     if (binMappings[rowId][0] == bucketId) {
-      // Check if the piece is in the bucket
+      // Get the pieces in this row
       let pieces = binMappings[rowId].slice(1)
+
+      // Exit if piece is not in the bucket
       const index = pieces.indexOf(pieceId)
       if (index == -1) {
         res.send('Done')

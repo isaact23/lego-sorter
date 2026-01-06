@@ -74,21 +74,8 @@ function App () {
         />
       )
     if (page === TABLE_PAGE)
-      return (
-        <Table
-          brick={brick}
-          returnToCamera={returnToCamera}
-          editBucket={editBucket}
-        />
-      )
-    if (page === EDIT_BUCKET_PAGE)
-      return (
-        <BucketEditor
-          bucketId={bucketId}
-          returnToCamera={returnToCamera}
-          returnToGrid={returnToGrid}
-        />
-      )
+      return <Table brick={brick} editBucket={editBucket} />
+    if (page === EDIT_BUCKET_PAGE) return <BucketEditor bucketId={bucketId} />
   }
 
   return (

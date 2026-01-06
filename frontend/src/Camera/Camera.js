@@ -4,10 +4,10 @@ import { useState } from 'react'
 
 const API_ENDPOINT = 'https://api.brickognize.com/predict/'
 
-function Camera({ brickCallback }) {
+function Camera ({ brickCallback }) {
   const [waiting, setWaiting] = useState(false)
 
-  async function identify(base64Data) {
+  async function identify (base64Data) {
     setWaiting(true)
 
     const base64 = await fetch(base64Data)
@@ -36,7 +36,7 @@ function Camera({ brickCallback }) {
       })
   }
 
-  function handleFileChange(event) {
+  function handleFileChange (event) {
     const file = event.target.files[0]
     if (!file) return
 
@@ -48,25 +48,23 @@ function Camera({ brickCallback }) {
   }
 
   return (
-    <div className="Camera">
-      <h1>Lego Sorter</h1>
-
+    <div className='Camera'>
       <input
-        id="cameraInput"
-        type="file"
-        accept="image/*"
-        capture="environment"
+        id='cameraInput'
+        type='file'
+        accept='image/*'
+        capture='environment'
         hidden
         onChange={handleFileChange}
       />
 
       <button
+        className='w3-button w3-theme-d1'
         disabled={waiting}
         onClick={() => document.getElementById('cameraInput').click()}
       >
-      Find Brick
-    </button>
-      
+        Find Brick
+      </button>
     </div>
   )
 }

@@ -98,10 +98,6 @@ button {
   cursor: pointer;
 }
 
-.SecondaryButton {
-  background: #444;
-}
-
 .auto-highlight {
   border: 3px solid #4caf50;
   transform: scale(1.05);

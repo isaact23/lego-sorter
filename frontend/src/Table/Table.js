@@ -1,8 +1,39 @@
 import './Table.css'
 import { layout } from './PieceLayout.js'
-import { binMappings } from './BinMappings.js'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
-function Table ({ brick, returnHome, editBucket }) {
+function Table ({ brick, editBucket }) {
+  const [targetBucketId, setTargetBucketId] = useState(null)
+
+  // Get the bucket ID based on the brick.
+  useEffect(() => {
+    // If no brick is selected, no bucket should be selected.
+    if (brick === null) {
+      setTargetBucketId(null)
+      return
+    }
+
+    console.log('Fetching bucket ID for piece ' + brick['id'])
+
+    axios
+      .post(
+        'http://localhost:3000/bucket/get-bucket',
+        {
+          pieceId: brick['id']
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      .then(res => {
+        console.log('Got bucket ID ' + res.data)
+        setTargetBucketId(res.data)
+      })
+  }, [brick])
+
   // A recursive function that converts the bucket layout defined in PieceLayout.js
   // to a giant HTML table.
   const makeTable = (layout, bucketId) => {
@@ -15,7 +46,7 @@ function Table ({ brick, returnHome, editBucket }) {
                 const newBucketId =
                   bucketId + rowId.toString() + colId.toString()
                 if (typeof col == 'string')
-                  return <th>{getBucket(col, newBucketId)}</th>
+                  return <th>{getBucket(newBucketId)}</th>
                 return <th>{makeTable(col, newBucketId)}</th>
               })}
             </tr>
@@ -32,25 +63,17 @@ function Table ({ brick, returnHome, editBucket }) {
     }
   }
 
-  // Get the name of the targeted bucket.
-  const getTargetBucketName = () => {
-    if (brick == null) return ''
-    const bucketName = binMappings[brick['id']]
-    if (bucketName === undefined) return ''
-    return bucketName
-  }
-
   // Get a bucket for a specific type of part. Blink if it's the targeted part.
-  const getBucket = (partName, bucketId) => {
+  const getBucket = bucketId => {
     let className = 'Bucket'
-    if (getTargetBucketName() === partName) {
+    if (brick !== null && targetBucketId === brick['id']) {
       className = 'TargetBucket'
     }
 
     return (
       <div
         className={className}
-        id={partName}
+        id={bucketId}
         onClick={() => editBucket(bucketId)}
       >
         <p>{bucketId}</p>
@@ -62,7 +85,6 @@ function Table ({ brick, returnHome, editBucket }) {
     <div className='App'>
       <h1>Lego Sorter</h1>
       {describeBrick()}
-      <button onClick={returnHome}>Return home</button>
       <div className='BinTable'>{makeTable(layout, '')}</div>
     </div>
   )
