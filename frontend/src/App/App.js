@@ -38,11 +38,22 @@ function App () {
     setPage(TABLE_PAGE)
   }
 
-  // Function to return home and reset.
-  function returnHome () {
-    setPage(CAMERA_PAGE)
+  // Reset page to default state.
+  function resetPage () {
     setBrickList([])
     setBrick(null)
+  }
+
+  // Function to camera page and reset.
+  function returnToCamera () {
+    setPage(CAMERA_PAGE)
+    resetPage()
+  }
+
+  // Function to grid page and reset.
+  function returnToGrid () {
+    setPage(GRID_PAGE)
+    resetPage()
   }
 
   // Function to edit a bucket.
@@ -64,9 +75,20 @@ function App () {
       )
     if (page === TABLE_PAGE)
       return (
-        <Table brick={brick} returnHome={returnHome} editBucket={editBucket} />
+        <Table
+          brick={brick}
+          returnToCamera={returnToCamera}
+          editBucket={editBucket}
+        />
       )
-    if (page === EDIT_BUCKET_PAGE) return <BucketEditor bucketId={bucketId} />
+    if (page === EDIT_BUCKET_PAGE)
+      return (
+        <BucketEditor
+          bucketId={bucketId}
+          returnToCamera={returnToCamera}
+          returnToGrid={returnToGrid}
+        />
+      )
   }
 
   return <div className='App'>{getPage()}</div>
