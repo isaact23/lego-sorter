@@ -1,6 +1,6 @@
 import './Select.css'
 
-function Select ({ brickList, selectCallback, returnHome }) {
+function Select ({ brickList, selectCallback, returnToCamera }) {
   return (
     <div className='Select'>
       <h1>Lego Sorter</h1>
@@ -12,7 +12,7 @@ function Select ({ brickList, selectCallback, returnHome }) {
           </div>
         )
       })}
-      <button onClick={returnHome}>Return home</button>
+      <button onClick={returnToCamera}>Return to camera</button>
     </div>
   )
 }

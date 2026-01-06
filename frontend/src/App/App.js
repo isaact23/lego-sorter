@@ -52,7 +52,7 @@ function App () {
 
   // Function to grid page and reset.
   function returnToGrid () {
-    setPage(GRID_PAGE)
+    setPage(TABLE_PAGE)
     resetPage()
   }
 
@@ -70,7 +70,7 @@ function App () {
         <Select
           brickList={brickList}
           selectCallback={selectCallback}
-          returnHome={returnHome}
+          returnToCamera={returnToCamera}
         />
       )
     if (page === TABLE_PAGE)
