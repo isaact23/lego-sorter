@@ -67,78 +67,56 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
 
   if (!bricksWithImages.length) return null
 
-  // Step 4: threshold logic
-  const aboveThreshold = bricksWithImages.filter(
-    brick => brick.score >= CONFIDENCE_THRESHOLD
-  )
-
-  let primaryBricks = []
-  let hiddenBricks = []
-  let buttonText = ''
-
-  // Only one above threshold, show it
-  if (aboveThreshold.length === 1) {
-    primaryBricks = [aboveThreshold[0]]
-    hiddenBricks = bricksWithImages.filter(b => b.id !== aboveThreshold[0].id)
-    buttonText = 'Not this one'
-    // Multiple bricks above threshold, show all above threshold
-  } else if (aboveThreshold.length > 1) {
-    primaryBricks = aboveThreshold
-    hiddenBricks = bricksWithImages.filter(
-      b => !aboveThreshold.some(a => a.id === b.id)
-    )
-    buttonText = 'None of these'
-    // No bricks above threshold, show top one
-  } else {
-    primaryBricks = [bricksWithImages[0]]
-    hiddenBricks = bricksWithImages.slice(1)
-    buttonText = 'Not this one'
-  }
-
-  // Final bricks to display, depending on "show all" state
-  const bricksToDisplay = showAll
-    ? [...primaryBricks, ...hiddenBricks]
-    : primaryBricks
+  // Simple logic: show all bricks with images sorted by confidence (highest to lowest)
+  const bricksToDisplay = bricksWithImages.sort((a, b) => b.score - a.score)
 
   return (
     <div className='Select'>
       <h2>Choose the matching piece</h2>
       <div className='BrickList'>
-        {bricksToDisplay.map((brick, index) => (
-          <div
-            key={brick.id}
-            className={`ListItem ${index > 0 ? 'secondary' : ''}`}
-            onClick={() => selectCallback(brick)}
-          >
-            <img
-              src={images[brick.id]}
-              alt={brick.name}
-              width={index === 0 ? 150 : 100}
-            />
+        {bricksToDisplay.map((brick, index) => {
+          const fillWidth = `${Math.round(brick.score * 100)}%`
 
-            <strong>{brick.name}</strong>
-            <div>Part #{brick.id}</div>
+          let confidence_color
 
-            <div className='ConfidenceBar'>
-              <div className='ConfidenceFill' style={{ width: '93%' }} />
+          if (brick.score <= 0.5) {
+            // Red
+            confidence_color = 'hsl(0, 100%, 50%)'
+          } else if (brick.score >= 0.9) {
+            // Green
+            confidence_color = 'hsl(120, 100%, 40%)'
+          } else {
+            // Gradient from yellow to green between 0.5 and 0.9
+            const normalized = (brick.score - 0.5) / (0.9 - 0.5) // 0 to 1
+            const hue = Math.round(60 + normalized * 60) // 60 = yellow, 120 = green
+            confidence_color = `hsl(${hue}, 100%, 45%)`
+          }
+
+          return (
+            <div
+              key={brick.id}
+              className={`ListItem ${index > 0 ? 'secondary' : ''}`}
+              onClick={() => selectCallback(brick)}
+            >
+              <img
+                src={images[brick.id]}
+                alt={brick.name}
+                width={150}
+              />
+
+              <strong>{brick.name}</strong>
+              <div>Part #{brick.id}</div>
+
+              <div className='ConfidenceBar'>
+                <div
+                  className='ConfidenceFill'
+                  style={{ width: fillWidth, background: confidence_color }}
+                />
+              </div>
             </div>
-
-            <div className='ConfidenceLabel'>
-              {(brick.score * 100).toFixed(0)}% sure
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
-
-      {!showAll && hiddenBricks.length > 0 && (
-        <button
-          className='w3-button w3-theme-l3'
-          onClick={() => setShowAll(true)}
-        >
-          {buttonText}
-        </button>
-      )}
-
       <div className='BottomActions'>
         <button className='w3-button w3-theme-l3' onClick={retryPhoto}>
           Try another photo
