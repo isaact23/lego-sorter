@@ -83,7 +83,6 @@ function Table ({ brick, editBucket }) {
 
   return (
     <div className='App'>
-      <h1>Lego Sorter</h1>
       {describeBrick()}
       <div className='BinTable'>{makeTable(layout, '')}</div>
     </div>
