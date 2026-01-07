@@ -14,7 +14,7 @@ function BucketEditor ({ bucketId }) {
 
     axios
       .post(
-        'http://localhost:3000/bucket/get-info',
+        '/bucket/get-info',
         {
           bucketId: bucketId
         },
@@ -27,6 +27,10 @@ function BucketEditor ({ bucketId }) {
       .then(res => {
         console.log('Got pieces ' + res.data)
         setPieces(res.data)
+      })
+      .catch(err => {
+        console.error('Error fetching bucket info', err?.response || err.message)
+        setPieces([])
       })
   }
 
@@ -46,7 +50,7 @@ function BucketEditor ({ bucketId }) {
 
     axios
       .post(
-        'http://localhost:3000/bucket/add',
+        '/bucket/add',
         {
           bucketId: bucketId,
           pieceId: pieceId
@@ -60,6 +64,9 @@ function BucketEditor ({ bucketId }) {
       .then(res => {
         fetchPieces()
       })
+      .catch(err => {
+        console.error('Error adding piece', err?.response || err.message)
+      })
   }
 
   // Remove a piece from the bucket mapping
@@ -69,7 +76,7 @@ function BucketEditor ({ bucketId }) {
 
     axios
       .post(
-        'http://localhost:3000/bucket/remove',
+        '/bucket/remove',
         {
           bucketId: bucketId,
           pieceId: pieceId
@@ -82,6 +89,9 @@ function BucketEditor ({ bucketId }) {
       )
       .then(res => {
         fetchPieces()
+      })
+      .catch(err => {
+        console.error('Error removing piece', err?.response || err.message)
       })
   }
 

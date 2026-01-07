@@ -41,7 +41,8 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
           `https://rebrickable.com/api/v3/lego/parts/?part_num=${brick.id}`,
           {
             headers: {
-              Authorization: `key ${REBRICKABLE_API_KEY}`
+              Authorization: `key ${REBRICKABLE_API_KEY}`,
+              Accept: 'application/json'
             }
           }
         )
@@ -75,7 +76,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   let hiddenBricks = []
   let buttonText = ''
 
-  // Oly one above threshold, show it
+  // Only one above threshold, show it
   if (aboveThreshold.length === 1) {
     primaryBricks = [aboveThreshold[0]]
     hiddenBricks = bricksWithImages.filter(b => b.id !== aboveThreshold[0].id)
@@ -102,7 +103,6 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   return (
     <div className='Select'>
       <h2>Choose the matching piece</h2>
-
       <div className='BrickList'>
         {bricksToDisplay.map((brick, index) => (
           <div
