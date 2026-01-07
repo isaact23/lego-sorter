@@ -38,22 +38,14 @@ function App () {
     setPage(TABLE_PAGE)
   }
 
-  // Reset page to default state.
-  function resetPage () {
-    setBrickList([])
-    setBrick(null)
-  }
-
   // Function to camera page and reset.
   function returnToCamera () {
     setPage(CAMERA_PAGE)
-    resetPage()
   }
 
   // Function to grid page and reset.
   function returnToGrid () {
     setPage(TABLE_PAGE)
-    resetPage()
   }
 
   // Function to edit a bucket.
