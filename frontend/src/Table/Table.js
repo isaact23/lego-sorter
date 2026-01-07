@@ -66,7 +66,7 @@ function Table ({ brick, editBucket }) {
   // Get a bucket for a specific type of part. Blink if it's the targeted part.
   const getBucket = bucketId => {
     let className = 'Bucket'
-    if (brick !== null && targetBucketId === brick['id']) {
+    if (targetBucketId === bucketId) {
       className = 'TargetBucket'
     }
 
