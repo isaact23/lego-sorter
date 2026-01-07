@@ -32,6 +32,10 @@ function Table ({ brick, editBucket }) {
         console.log('Got bucket ID ' + res.data)
         setTargetBucketId(res.data)
       })
+      .catch(err => {
+        console.error('Error fetching bucket for piece ' + brick['id'] + ':', err.message)
+        setTargetBucketId(null)
+      })
   }, [brick])
 
   // A recursive function that converts the bucket layout defined in PieceLayout.js
@@ -66,7 +70,7 @@ function Table ({ brick, editBucket }) {
   // Get a bucket for a specific type of part. Blink if it's the targeted part.
   const getBucket = bucketId => {
     let className = 'Bucket'
-    if (brick !== null && targetBucketId === brick['id']) {
+    if (brick !== null && targetBucketId === bucketId) {
       className = 'TargetBucket'
     }
 

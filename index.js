@@ -49,7 +49,7 @@ app.post('/bucket/get-bucket', (req, res) => {
       return
     }
   }
-  res.send(null)
+  res.status(404).json({ error: 'Piece not found in any bucket' })
 })
 
 // Add a piece to a bucket.
