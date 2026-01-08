@@ -4,12 +4,18 @@
   height: 100%;
   font-size: 9px;
 }
+.Bucket:hover {
+  cursor: pointer;
+}
 
 .TargetBucket {
   border: solid 2px;
   height: 100%;
   font-size: 9px;
   animation: blink 1s step-start infinite;
+}
+.TargetBucket:hover {
+  cursor: pointer;
 }
 
 @keyframes blink {
