@@ -33,7 +33,10 @@ function Table ({ brick, editBucket }) {
         setTargetBucketId(res.data)
       })
       .catch(err => {
-        console.error('Error fetching bucket for piece ' + brick['id'] + ':', err.message)
+        console.error(
+          'Error fetching bucket for piece ' + brick['id'] + ':',
+          err.message
+        )
         setTargetBucketId(null)
       })
   }, [brick])
@@ -63,7 +66,17 @@ function Table ({ brick, editBucket }) {
   // Get a string combining the name of a brick with its part number.
   const describeBrick = () => {
     if (brick != null) {
-      return <h2>{brick['category'] + ' (' + brick['id'] + ')'}</h2>
+      return (
+        <div className='BrickDescription'>
+          <h2>{brick['name']}</h2>
+          <h2>Category: {brick['category']}</h2>
+          <h2>ID: {brick['id']}</h2>
+          <a href={brick['external_sites'][0]['url']} target='_blank'>
+            <h3>Bricklink</h3>
+          </a>
+          <img src={brick['img_url']} alt={'Picture of ' + brick['name']} />
+        </div>
+      )
     }
   }
 
