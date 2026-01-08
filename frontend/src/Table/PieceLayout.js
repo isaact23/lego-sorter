@@ -133,18 +133,18 @@ export const layout = [
         // Row 0
         [
           // Col 0
-          ['PieceC'],
-          ['Piece'],
-          ['Piece']
+          ['Piece', 'Piece'],
+          ['Piece', 'Piece'],
+          ['Piece', 'Piece']
         ]
       ],
       [
         // Row 1
         [
           // Col 0
-          ['PieceD'],
-          ['Piece'],
-          ['Piece']
+          ['Piece', 'Piece'],
+          ['Piece', 'Piece'],
+          ['Piece', 'Piece']
         ]
       ]
     ],

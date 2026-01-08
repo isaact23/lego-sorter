@@ -72,7 +72,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
 
   return (
     <div className='Select'>
-      <h2>Choose the matching piece</h2>
+      <h2>Does this look right?</h2>
       <div className='BrickList'>
         {bricksToDisplay.map((brick, index) => {
           const fillWidth = `${Math.round(brick.score * 100)}%`
@@ -116,13 +116,6 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
             </div>
           )
         })}
-      </div>
-      <div className='BottomActions'>
-        <button className='w3-button w3-theme-l3' onClick={retryPhoto}>
-          Try another photo
-        </button>
-
-        <button onClick={returnHome}>Return home</button>
       </div>
     </div>
   )
