@@ -3,20 +3,25 @@ import axios from 'axios'
 import './Select.css'
 
 const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
-const CONFIDENCE_THRESHOLD = 0.75
 
-// Remove special, legacy, prototype variants
-function dedupeParts (bricks) {
+// Remove special, legacy, prototype variants (keep A versions)
+function dedupeParts(bricks) {
   const map = {}
 
   bricks.forEach(brick => {
-    const numeric = brick.id.match(/^\d+/)?.[0]
-    if (!numeric) return
+    const match = brick.id.match(/^(\d+)([A-Za-z]?)$/)
+    if (!match) return
+
+    const numeric = match[1]
+    const suffix = match[2]
+
+    // allow only numeric or numeric + A
+    if (suffix && suffix.toUpperCase() !== 'A') return
 
     if (!map[numeric] || brick.score > map[numeric].score) {
       map[numeric] = {
         ...brick,
-        id: numeric
+        id: brick.id
       }
     }
   })
