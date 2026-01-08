@@ -116,10 +116,3 @@ app.post('/bucket/remove', (req, res) => {
 app.listen(PORT, () => {
   console.log('Listening on ' + PORT.toString())
 })
-
-// Handle shutdown
-function cleanup () {
-  process.exit()
-}
-process.on('SIGINT', cleanup)
-process.on('SIGTERM', cleanup)
