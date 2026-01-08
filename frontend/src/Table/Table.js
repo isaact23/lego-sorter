@@ -70,7 +70,7 @@ function Table ({ brick, editBucket }) {
   // Get a bucket for a specific type of part. Blink if it's the targeted part.
   const getBucket = bucketId => {
     let className = 'Bucket'
-    if (brick !== null && targetBucketId === bucketId) {
+    if (targetBucketId === bucketId) {
       className = 'TargetBucket'
     }
 
@@ -87,7 +87,6 @@ function Table ({ brick, editBucket }) {
 
   return (
     <div className='App'>
-      <h1>Lego Sorter</h1>
       {describeBrick()}
       <div className='BinTable'>{makeTable(layout, '')}</div>
     </div>
