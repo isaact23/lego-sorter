@@ -13,11 +13,8 @@ function dedupeParts(bricks) {
     if (!match) return
 
     const numeric = match[1]
-    const suffix = match[2]
 
-    // allow only numeric or numeric + A
-    if (suffix && suffix.toUpperCase() !== 'A') return
-
+    // Keep the highest-score variant for each base part number
     if (!map[numeric] || brick.score > map[numeric].score) {
       map[numeric] = {
         ...brick,
