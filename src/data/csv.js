@@ -1,9 +1,7 @@
 import fs from 'fs'
 
-const FILE_NAME = 'data.csv'
-
-export function loadCsv (callback) {
-  fs.readFile(FILE_NAME, 'utf8', (err, data) => {
+export function loadCsv (filename, callback) {
+  fs.readFile(filename, 'utf8', (err, data) => {
     if (err) {
       callback([])
       return
@@ -12,9 +10,9 @@ export function loadCsv (callback) {
   })
 }
 
-export function writeCsv (data) {
+export function writeCsv (filename, data) {
   const str = data.map(val => val.join()).join('\n')
-  fs.writeFile(FILE_NAME, str, { flag: 'w+' }, err => {
+  fs.writeFile(filename, str, { flag: 'w+' }, err => {
     if (err) throw err
   })
 }
