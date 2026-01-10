@@ -12,22 +12,10 @@
   border: solid 2px;
   height: 100%;
   font-size: 9px;
-  animation: blink 1s step-start infinite;
+  background-color: green;
 }
 .TargetBucket:hover {
   cursor: pointer;
-}
-
-@keyframes blink {
-  0% {
-    background-color: red;
-  }
-  50% {
-    background-color: yellow;
-  }
-  100% {
-    background-color: red;
-  }
 }
 
 .BinTable {
