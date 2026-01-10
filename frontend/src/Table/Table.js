@@ -52,9 +52,18 @@ function Table ({ brick, editBucket }) {
               {row.map((col, colId) => {
                 const newBucketId =
                   bucketId + rowId.toString() + colId.toString()
-                if (typeof col == 'string')
-                  return <th>{getBucket(newBucketId)}</th>
-                return <th>{makeTable(col, newBucketId)}</th>
+                if (typeof col[0] == 'number') {
+                  let colElems = []
+                  for (let j = 0; j < col[0]; j++) {
+                    let rowElems = []
+                    for (let i = 0; i < col[1]; i++) {
+                      rowElems.push(<td>A</td>)
+                    }
+                    colElems.push(<tr>{rowElems}</tr>)
+                  }
+                  return <td>{colElems}</td>
+                }
+                return <td>{makeTable(col, newBucketId)}</td>
               })}
             </tr>
           )
