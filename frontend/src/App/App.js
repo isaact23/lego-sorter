@@ -71,47 +71,28 @@ function App () {
   }
 
   return (
-    /*
     <div className='App w3-theme-light'>
-      <div className='w3-bar w3-theme-d1'>
-        <div className='w3-bar-item'>
-          <h2>Lego Sorter</h2>
-        </div>
-        <div className='w3-bar-item w3-button' onClick={returnToCamera}>
-          <h2>Camera</h2>
-        </div>
-        <div className='w3-bar-item w3-button' onClick={returnToGrid}>
-          <h2>Grid</h2>
-        </div>
-      </div>
-      {getPage()}
-    </div>
-    */ 
-    <div className='App w3-theme-light'>
-      <div className="option-card-row">
+      <div className='option-card-row w3-container w3-padding'>
         {/* Card 1: two dropdowns */}
-        <OptionCard iconSrc="/icons/mag_glass.png">
-          <select className="w3-select w3-border option-select">
+        <OptionCard iconSrc='/icons/mag_glass.png'>
+          <select className='w3-select w3-border option-select'>
             <option>First dropdown option</option>
           </select>
 
-          <select className="w3-select w3-border option-select">
+          <select className='w3-select w3-border option-select'>
             <option>Second dropdown option</option>
           </select>
         </OptionCard>
 
         {/* Card 2: text input */}
-        <OptionCard iconSrc="/icons/typewriter.png">
-          <input
-            className="w3-input w3-border"
-            placeholder="Enter text"
-          />
+        <OptionCard iconSrc='/icons/typewriter.png'>
+          <input className='w3-input w3-border' placeholder='Enter text' />
         </OptionCard>
 
         {/* Card 3: action button */}
         <OptionCard
-          iconSrc="/icons/cam.png"
-          onClick={() => console.log("Find Brick")}
+          iconSrc='/icons/cam.png'
+          onClick={() => console.log('Find Brick')}
         >
           <strong>Find Brick</strong>
         </OptionCard>
@@ -120,26 +101,20 @@ function App () {
     </div>
   )
 }
-function OptionCard({ iconSrc, iconAlt = "", children, onClick }) {
+function OptionCard ({ iconSrc, iconAlt = '', children, onClick }) {
   return (
     <div
-      className={`option-card ${onClick ? "option-card-clickable" : ""}`}
+      className={`option-card ${onClick ? 'option-card-clickable' : ''}`}
       onClick={onClick}
-      role={onClick ? "button" : undefined}
+      role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? e => e.key === "Enter" && onClick() : undefined}
+      onKeyDown={onClick ? e => e.key === 'Enter' && onClick() : undefined}
     >
-      <div className="option-card-icon">
-        <img
-          src={iconSrc}
-          alt={iconAlt}
-          className="option-card-icon-img"
-        />
+      <div className='option-card-icon'>
+        <img src={iconSrc} alt={iconAlt} className='option-card-icon-img' />
       </div>
 
-      <div className="option-card-content">
-        {children}
-      </div>
+      <div className='option-card-content'>{children}</div>
     </div>
   )
 }
