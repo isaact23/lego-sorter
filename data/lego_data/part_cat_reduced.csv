@@ -1,0 +1,60 @@
+id,cat1,cat2
+28,Animals,_Animals
+74,Animals,Accessories
+75,Animals,Body Parts
+32,"Bars, Ladders, Fences",n/a
+1,Baseplates,n/a
+11,Brick,_Bricks
+37,Brick,Curved
+20,Brick,Round and Cones
+3,Brick,Sloped
+5,Brick,Special
+6,Brick,Wedged
+7,Containers,n/a
+69,Energy Effects,n/a
+38,Flags,Banners and Signs
+18,"Hinges, Arms, Turntables",n/a
+44,Mechanical,n/a
+62,Minidolls,Heads
+64,Minidolls,Lower Body
+63,Minidolls,Upper Body
+13,Minifigs,_Minifigs
+27,Minifigs,Accessories
+59,Minifigs,Heads
+65,Minifigs,Headwear
+72,Minifigs,Headwear Accessories
+70,Minifigs,Hipwear
+61,Minifigs,Lower Body
+71,Minifigs,Neckwear
+73,Minifigs,"Shields, Weapons, Tools"
+60,Minifigs,Upper Body
+23,Panels,n/a
+76,Plants & Trees,n/a
+14,Plates,_Plates
+49,Plates,Angled
+21,Plates,Round Curved & Dishes
+9,Plates,Special
+68,Projectiles / Launchers,n/a
+33,Rock,n/a
+31,"String, Bands, Reels",n/a
+34,"Supports, Girders, Cranes",n/a
+46,Technic,Axles
+51,Technic,Beams
+55,Technic,Beams Special
+8,Technic,Bricks
+54,Technic,Bushes
+12,Technic,Connectors
+52,Technic,Gears
+40,Technic,Panels
+53,Technic,Pins
+26,Technic,Special
+25,Technic,"Steering, Suspension, Engine"
+19,Tiles,_Tiles
+67,Tiles,Round and Curved
+15,Tiles,Special
+36,Transportation,Land
+35,Transportation,Sea and Air
+30,Tubes and Hoses,n/a
+29,Wheels and Tires,n/a
+16,Windows and Doors,n/a
+47,Windscreens and Fuselage,n/a
