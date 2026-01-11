@@ -57,7 +57,9 @@ function Table ({ brick, editBucket }) {
                   for (let j = 0; j < col[0]; j++) {
                     let rowElems = []
                     for (let i = 0; i < col[1]; i++) {
-                      rowElems.push(<td>A</td>)
+                      const subBucketId =
+                        newBucketId + j.toString() + i.toString()
+                      rowElems.push(<td>{getBucket(subBucketId)}</td>)
                     }
                     colElems.push(<tr>{rowElems}</tr>)
                   }
