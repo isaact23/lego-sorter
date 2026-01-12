@@ -109,67 +109,77 @@ function Table ({ brick, editBucket }) {
     )
   }
 
-  const systemSize = [24, 20]
-  const containers = [
-    {
-      pos: [0, 0],
-      size: [6, 20],
-      bins: [6, 20]
-    },
-    {
-      pos: [6, 0],
-      size: [6, 10],
-      bins: [4, 6]
-    },
-    {
-      pos: [6, 10],
-      size: [3, 10],
-      bins: [1, 6]
-    },
-    {
-      pos: [9, 10],
-      size: [3, 10],
-      bins: [2, 6]
-    },
-    {
-      pos: [12, 0],
-      size: [6, 20],
-      bins: [6, 20]
-    },
-    {
-      pos: [18, 0],
-      size: [6, 10],
-      bins: [4, 6]
-    },
-    {
-      pos: [18, 10],
-      size: [6, 10],
-      bins: [1, 6]
-    }
-  ]
+  const mySystem = {
+    id: 'A',
+    size: [24, 20],
+    containers: [
+      {
+        id: 'A',
+        pos: [0, 0],
+        size: [6, 20],
+        bins: [6, 20]
+      },
+      {
+        id: 'B',
+        pos: [6, 0],
+        size: [6, 10],
+        bins: [4, 6]
+      },
+      {
+        id: 'C',
+        pos: [6, 10],
+        size: [3, 10],
+        bins: [1, 6]
+      },
+      {
+        id: 'D',
+        pos: [9, 10],
+        size: [3, 10],
+        bins: [2, 6]
+      },
+      {
+        id: 'E',
+        pos: [12, 0],
+        size: [6, 20],
+        bins: [6, 20]
+      },
+      {
+        id: 'F',
+        pos: [18, 0],
+        size: [6, 10],
+        bins: [4, 6]
+      },
+      {
+        id: 'G',
+        pos: [18, 10],
+        size: [6, 10],
+        bins: [1, 6]
+      }
+    ]
+  }
 
-  const getSystem = size => {
+  const getSystem = system => {
     return (
       <div
         className='System'
         style={{
-          gridTemplateColumns: `repeat(${size[0]}, 1fr)`,
-          gridTemplateRows: `repeat(${size[1]}, 1fr)`
+          gridTemplateColumns: `repeat(${system.size[0]}, 1fr)`,
+          gridTemplateRows: `repeat(${system.size[1]}, 1fr)`
         }}
       >
-        {containers.map(container => {
-          return getContainer(container.pos, container.size, container.bins)
+        {system.containers.map(container => {
+          return getContainer(container, system.id)
         })}
       </div>
     )
   }
 
-  const getContainer = (pos, size, bins) => {
+  const getContainer = (container, systemId) => {
     let binArray = []
-    for (let i = 0; i < bins[0] * bins[1]; i++) {
+    for (let i = 0; i < container.bins[0] * container.bins[1]; i++) {
       binArray.push(
         <div className='Bin'>
-          <p>A</p>
+          <p>{`${systemId}-${container.id}-${i}`}</p>
         </div>
       )
     }
@@ -177,12 +187,12 @@ function Table ({ brick, editBucket }) {
       <div
         className='Container'
         style={{
-          gridTemplateRows: `repeat(${bins[1]}, 1fr)`,
-          gridTemplateColumns: `repeat(${bins[0]}, 1fr)`,
-          gridRowStart: pos[1] + 1,
-          gridRowEnd: pos[1] + size[1] + 1,
-          gridColumnStart: pos[0] + 1,
-          gridColumnEnd: pos[0] + size[0] + 1
+          gridTemplateRows: `repeat(${container.bins[1]}, 1fr)`,
+          gridTemplateColumns: `repeat(${container.bins[0]}, 1fr)`,
+          gridRowStart: container.pos[1] + 1,
+          gridRowEnd: container.pos[1] + container.size[1] + 1,
+          gridColumnStart: container.pos[0] + 1,
+          gridColumnEnd: container.pos[0] + container.size[0] + 1
         }}
       >
         {binArray}
@@ -193,7 +203,7 @@ function Table ({ brick, editBucket }) {
   return (
     <div className='App'>
       {describeBrick()}
-      {getSystem(systemSize)}
+      {getSystem(mySystem)}
     </div>
   )
 }
