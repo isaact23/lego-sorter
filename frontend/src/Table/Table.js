@@ -177,9 +177,10 @@ function Table ({ brick, editBucket }) {
   const getContainer = (container, systemId) => {
     let binArray = []
     for (let i = 0; i < container.bins[0] * container.bins[1]; i++) {
+      let id = `${systemId}-${container.id}-${i}`
       binArray.push(
-        <div className='Bin'>
-          <p>{`${systemId}-${container.id}-${i}`}</p>
+        <div className='Bin' id={id}>
+          <p>{id}</p>
         </div>
       )
     }
