@@ -109,10 +109,91 @@ function Table ({ brick, editBucket }) {
     )
   }
 
+  const systemSize = [24, 20]
+  const containers = [
+    {
+      pos: [0, 0],
+      size: [6, 20],
+      bins: [6, 20]
+    },
+    {
+      pos: [6, 0],
+      size: [6, 10],
+      bins: [4, 6]
+    },
+    {
+      pos: [6, 10],
+      size: [3, 10],
+      bins: [1, 6]
+    },
+    {
+      pos: [9, 10],
+      size: [3, 10],
+      bins: [2, 6]
+    },
+    {
+      pos: [12, 0],
+      size: [6, 20],
+      bins: [6, 20]
+    },
+    {
+      pos: [18, 0],
+      size: [6, 10],
+      bins: [4, 6]
+    },
+    {
+      pos: [18, 10],
+      size: [6, 10],
+      bins: [1, 6]
+    }
+  ]
+
+  const getSystem = size => {
+    return (
+      <div
+        className='System'
+        style={{
+          gridTemplateColumns: `repeat(${size[0]}, 1fr)`,
+          gridTemplateRows: `repeat(${size[1]}, 1fr)`
+        }}
+      >
+        {containers.map(container => {
+          return getContainer(container.pos, container.size, container.bins)
+        })}
+      </div>
+    )
+  }
+
+  const getContainer = (pos, size, bins) => {
+    let binArray = []
+    for (let i = 0; i < bins[0] * bins[1]; i++) {
+      binArray.push(
+        <div className='Bin'>
+          <p>A</p>
+        </div>
+      )
+    }
+    return (
+      <div
+        className='Container'
+        style={{
+          gridTemplateRows: `repeat(${bins[1]}, 1fr)`,
+          gridTemplateColumns: `repeat(${bins[0]}, 1fr)`,
+          gridRowStart: pos[1] + 1,
+          gridRowEnd: pos[1] + size[1] + 1,
+          gridColumnStart: pos[0] + 1,
+          gridColumnEnd: pos[0] + size[0] + 1
+        }}
+      >
+        {binArray}
+      </div>
+    )
+  }
+
   return (
     <div className='App'>
       {describeBrick()}
-      <div className='BinTable'>{makeTable(layout, '')}</div>
+      {getSystem(systemSize)}
     </div>
   )
 }
