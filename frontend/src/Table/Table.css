@@ -1,20 +1,16 @@
 
-.Bucket {
-  border: solid 0px;
+.Bin {
   height: 100%;
-  font-size: 9px;
 }
-.Bucket:hover {
+.Bin:hover {
   cursor: pointer;
 }
 
-.TargetBucket {
-  border: solid 2px;
+.TargetBin {
   height: 100%;
-  font-size: 9px;
   background-color: green;
 }
-.TargetBucket:hover {
+.TargetBin:hover {
   cursor: pointer;
 }
 

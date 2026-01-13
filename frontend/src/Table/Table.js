@@ -1,24 +1,23 @@
 import './Table.css'
-import { layout } from './PieceLayout.js'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function Table ({ brick, editBucket }) {
-  const [targetBucketId, setTargetBucketId] = useState(null)
+function Table ({ brick, editBin }) {
+  const [targetBinId, setTargetBinId] = useState(null)
 
-  // Get the bucket ID based on the brick.
+  // Get the bin ID based on the brick.
   useEffect(() => {
-    // If no brick is selected, no bucket should be selected.
+    // If no brick is selected, no bin should be selected.
     if (brick === null) {
-      setTargetBucketId(null)
+      setTargetBinId(null)
       return
     }
 
-    console.log('Fetching bucket ID for piece ' + brick['id'])
+    console.log('Fetching bin ID for piece ' + brick['id'])
 
     axios
       .post(
-        'http://localhost:3000/bucket/get-bucket',
+        'http://localhost:3000/bin/get-bin',
         {
           pieceId: brick['id']
         },
@@ -29,50 +28,17 @@ function Table ({ brick, editBucket }) {
         }
       )
       .then(res => {
-        console.log('Got bucket ID ' + res.data)
-        setTargetBucketId(res.data)
+        console.log('Got bin ID ' + res.data)
+        setTargetBinId(res.data)
       })
       .catch(err => {
         console.error(
-          'Error fetching bucket for piece ' + brick['id'] + ':',
+          'Error fetching bin for piece ' + brick['id'] + ':',
           err.message
         )
-        setTargetBucketId(null)
+        setTargetBinId(null)
       })
   }, [brick])
-
-  // A recursive function that converts the bucket layout defined in PieceLayout.js
-  // to a giant HTML table.
-  const makeTable = (layout, bucketId) => {
-    return (
-      <table>
-        {layout.map((row, rowId) => {
-          return (
-            <tr>
-              {row.map((col, colId) => {
-                const newBucketId =
-                  bucketId + rowId.toString() + colId.toString()
-                if (typeof col[0] == 'number') {
-                  let colElems = []
-                  for (let j = 0; j < col[0]; j++) {
-                    let rowElems = []
-                    for (let i = 0; i < col[1]; i++) {
-                      const subBucketId =
-                        newBucketId + j.toString() + i.toString()
-                      rowElems.push(<td>{getBucket(subBucketId)}</td>)
-                    }
-                    colElems.push(<tr>{rowElems}</tr>)
-                  }
-                  return <td>{colElems}</td>
-                }
-                return <td>{makeTable(col, newBucketId)}</td>
-              })}
-            </tr>
-          )
-        })}
-      </table>
-    )
-  }
 
   // Get a string combining the name of a brick with its part number.
   const describeBrick = () => {
@@ -82,7 +48,11 @@ function Table ({ brick, editBucket }) {
           <h2>{brick['name']}</h2>
           <h2>Category: {brick['category']}</h2>
           <h2>ID: {brick['id']}</h2>
-          <a href={brick['external_sites'][0]['url']} target='_blank'>
+          <a
+            href={brick['external_sites'][0]['url']}
+            target='_blank'
+            rel='noreferrer'
+          >
             <h3>Bricklink</h3>
           </a>
           <img src={brick['img_url']} alt={'Picture of ' + brick['name']} />
@@ -91,20 +61,16 @@ function Table ({ brick, editBucket }) {
     }
   }
 
-  // Get a bucket for a specific type of part. Blink if it's the targeted part.
-  const getBucket = bucketId => {
-    let className = 'Bucket'
-    if (targetBucketId === bucketId) {
-      className = 'TargetBucket'
+  // Get a bin for a specific type of part. Blink if it's the targeted part.
+  const getBin = binId => {
+    let className = 'Bin'
+    if (targetBinId === binId) {
+      className = 'TargetBin'
     }
 
     return (
-      <div
-        className={className}
-        id={bucketId}
-        onClick={() => editBucket(bucketId)}
-      >
-        <p>{bucketId}</p>
+      <div className={className} id={binId} onClick={() => editBin(binId)}>
+        <p>{binId}</p>
       </div>
     )
   }
@@ -178,11 +144,7 @@ function Table ({ brick, editBucket }) {
     let binArray = []
     for (let i = 0; i < container.bins[0] * container.bins[1]; i++) {
       let id = `${systemId}-${container.id}-${i}`
-      binArray.push(
-        <div className='Bin' id={id}>
-          <p>{id}</p>
-        </div>
-      )
+      binArray.push(getBin(id))
     }
     return (
       <div
