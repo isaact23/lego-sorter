@@ -82,45 +82,99 @@ function Table ({ brick, editBin }) {
       {
         id: 'A',
         pos: [0, 0],
-        size: [6, 20],
-        bins: [6, 20]
+        size: [6, 10],
+        bins: [6, 10]
       },
       {
         id: 'B',
-        pos: [6, 0],
+        pos: [0, 10],
         size: [6, 10],
-        bins: [4, 6]
+        bins: [6, 10]
       },
       {
         id: 'C',
-        pos: [6, 10],
-        size: [3, 10],
-        bins: [1, 6]
-      },
-      {
-        id: 'D',
-        pos: [9, 10],
-        size: [3, 10],
-        bins: [2, 6]
-      },
-      {
-        id: 'E',
-        pos: [12, 0],
-        size: [6, 20],
-        bins: [6, 20]
-      },
-      {
-        id: 'F',
-        pos: [18, 0],
-        size: [6, 10],
-        bins: [4, 6]
+        pos: [6, 0],
+        size: [4, 5],
+        bins: [2, 3]
       },
       {
         id: 'G',
-        pos: [18, 10],
+        pos: [10, 0],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+      {
+        id: 'D',
+        pos: [6, 5],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+      {
+        id: 'H',
+        pos: [10, 5],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+      {
+        id: 'E',
+        pos: [6, 10],
+        size: [4, 5],
+        bins: [1, 3]
+      },
+      {
+        id: 'I',
+        pos: [10, 10],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+      {
+        id: 'F',
+        pos: [6, 15],
+        size: [4, 5],
+        bins: [1, 3]
+      },
+      {
+        id: 'J',
+        pos: [10, 15],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+    {
+        id: 'K',
+        pos: [14, 0],
         size: [6, 10],
-        bins: [1, 6]
-      }
+        bins: [6, 10]
+      },
+      {
+        id: 'L',
+        pos: [14, 10],
+        size: [6, 10],
+        bins: [6, 10]
+      },
+      {
+        id: 'M',
+        pos: [20, 0],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+      {
+        id: 'N',
+        pos: [20, 5],
+        size: [4, 5],
+        bins: [2, 3]
+      },
+      {
+        id: 'O',
+        pos: [20, 10],
+        size: [4, 5],
+        bins: [1, 3]
+      },
+      {
+        id: 'P',
+        pos: [20, 15],
+        size: [4, 5],
+        bins: [1, 3]
+      },
     ]
   }
 
@@ -143,7 +197,7 @@ function Table ({ brick, editBin }) {
   const getContainer = (container, systemId) => {
     let binArray = []
     for (let i = 0; i < container.bins[0] * container.bins[1]; i++) {
-      let id = `${systemId}-${container.id}-${i}`
+      let id = `${systemId}-${container.id}-${i+1}`
       binArray.push(getBin(id))
     }
     return (
