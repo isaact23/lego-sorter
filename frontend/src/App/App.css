@@ -22,7 +22,7 @@ button {
   width: 260px;
   padding: 12px;
   background: white;
-  border: 1px solid #ccc;
+  border: 1px solid #000000;
   border-radius: 16px;
   box-sizing: border-box;
 }
@@ -60,4 +60,10 @@ button {
 
 .option-select {
   width: 100%;
+}
+
+.placeholder-text {
+  display: block;
+  min-height: 1.25rem;
+  margin-top: 0.5rem;
 }

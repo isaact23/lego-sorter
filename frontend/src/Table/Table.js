@@ -44,18 +44,28 @@ function Table ({ brick, editBin }) {
   const describeBrick = () => {
     if (brick != null) {
       return (
-        <div className='BrickDescription'>
-          <h2>{brick['name']}</h2>
-          <h2>Category: {brick['category']}</h2>
-          <h2>ID: {brick['id']}</h2>
-          <a
-            href={brick['external_sites'][0]['url']}
-            target='_blank'
-            rel='noreferrer'
-          >
-            <h3>Bricklink</h3>
-          </a>
-          <img src={brick['img_url']} alt={'Picture of ' + brick['name']} />
+        <div className="BrickDescription">
+          <div className="BrickText">
+            <h2>{brick.name}</h2>
+            <p><strong>Category:</strong> {brick.category}</p>
+            <p><strong>ID:</strong> {brick.id}</p>
+            {/* 
+            <a
+              href={brick.external_sites[0].url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Bricklink
+            </a>
+            */}
+          </div>
+
+          <div className="BrickImage">
+            <img
+              src={brick.img_url}
+              alt={`Picture of ${brick.name}`}
+            />
+          </div>
         </div>
       )
     }

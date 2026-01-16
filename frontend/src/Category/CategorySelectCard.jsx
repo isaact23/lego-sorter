@@ -1,0 +1,97 @@
+import { useMemo, useState, useEffect } from 'react'
+import OptionCard from '../App/OptionCard'
+import categoryData from './CategoryData'
+import '../App/App.css'
+
+export default function CategorySelectCard({ onChange }) {
+  const [cat1, setCat1] = useState('')
+  const [cat2, setCat2] = useState('')
+
+  const cat1Options = useMemo(
+    () => [...new Set(categoryData.map(row => row.cat1))],
+    []
+  )
+
+  const cat2Options = useMemo(() => {
+    if (!cat1) return []
+
+    return categoryData
+      .filter(row => row.cat1 === cat1 && row.cat2 !== 'n/a')
+      .map(row => row.cat2)
+  }, [cat1])
+
+  const matchingIds = useMemo(() => {
+    if (!cat1) return []
+
+    return categoryData
+      .filter(row => row.cat1 === cat1)
+      .map(row => row.id)
+  }, [cat1])
+
+  const selectedCategoryId = useMemo(() => {
+    if (!cat1 || !cat2) return null
+
+    const match = categoryData.find(
+      row => row.cat1 === cat1 && row.cat2 === cat2
+    )
+
+    return match?.id ?? null
+  }, [cat1, cat2])
+
+  useEffect(() => {
+    if (!onChange) return
+
+    if (cat2 && selectedCategoryId) {
+      onChange([selectedCategoryId])
+    } else {
+      onChange(matchingIds)
+    }
+  }, [cat1, cat2, matchingIds, selectedCategoryId, onChange])
+
+  return (
+    <OptionCard iconSrc="/icons/mag_glass.png">
+      <select
+        className="w3-select w3-border option-select"
+        value={cat1}
+        onChange={e => {
+          setCat1(e.target.value)
+          setCat2('')
+        }}
+      >
+        <option value="">Select category</option>
+        {cat1Options.map(option => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className="w3-select w3-border option-select"
+        value={cat2}
+        disabled={!cat1}
+        onChange={e => setCat2(e.target.value)}
+      >
+        <option value="">Select subcategory</option>
+        {cat2Options.map(option => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+
+      <small className="placeholder-text">
+        {!cat1 && 'Select a category to highlight bins'}
+
+        {cat1 && !cat2 && (
+          <>Matching IDs: {matchingIds.join(', ')}</>
+        )}
+
+        {cat2 && selectedCategoryId && (
+          <>Selected Category ID: {selectedCategoryId}</>
+        )}
+      </small>
+
+    </OptionCard>
+  )
+}

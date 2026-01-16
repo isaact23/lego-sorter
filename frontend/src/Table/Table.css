@@ -22,6 +22,8 @@
   row-gap: 20px;
   column-gap: 20px;
   border: solid 2px;
+  border-radius: 16px;
+  background: #ffffff;
 }
 
 .Container {
@@ -34,4 +36,42 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.BrickDescription {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+
+  max-width: 700px;
+  margin: 1.5rem auto;
+
+  background: #ffffff;
+  border: 2px solid #333333;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.BrickText {
+  flex: 1;
+}
+
+.BrickText h2 {
+  margin-top: 0;
+}
+
+.BrickText p {
+  margin: 0.25rem 0;
+}
+
+.BrickImage {
+  flex-shrink: 0;
+}
+
+.BrickImage img {
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #ddd;
 }
