@@ -2,7 +2,7 @@ import './App.css'
 import Camera from '../Camera/Camera'
 import Select from '../Select/Select'
 import Table from '../Table/Table'
-import BucketEditor from '../BucketEditor/BucketEditor'
+import BinEditor from '../BinEditor/BinEditor'
 import { useState, useRef } from 'react'
 import axios from 'axios'
 import OptionCard from './OptionCard'
@@ -11,14 +11,14 @@ import CategorySelectCard from '../Category/CategorySelectCard'
 const CAMERA_PAGE = 0
 const SELECT_PAGE = 1
 const TABLE_PAGE = 2
-const EDIT_BUCKET_PAGE = 3
+const EDIT_BIN_PAGE = 3
 const BIN_OPERATION_PAGE = 4
 const API_ENDPOINT = 'https://api.brickognize.com/predict/'
 function App () {
   const [page, setPage] = useState(2)
   const [brickList, setBrickList] = useState([])
   const [brick, setBrick] = useState(null)
-  const [bucketId, setBucketId] = useState(0)
+  const [binId, setBinId] = useState(0)
   const [waiting, setWaiting] = useState(false)
   const [binOperation, setBinOperation] = useState(null)
   const [operationStatus, setOperationStatus] = useState(null) // Add this
@@ -56,27 +56,27 @@ function App () {
     setPage(TABLE_PAGE)
   }
 
-  // Function to add/remove part from a bucket.
-  function editBin (newBucketId) {
-    console.log('editBin called with:', newBucketId, 'binOperation:', binOperation, 'brick:', brick)
+  // Function to add/remove part from a bin.
+  function editBin (newBinId) {
+    console.log('editBin called with:', newBinId, 'binOperation:', binOperation, 'brick:', brick)
     if (binOperation === 'add') {
-      addPartToBin(brick.id, newBucketId)
+      addPartToBin(brick.id, newBinId)
     } else if (binOperation === 'remove') {
-      removePartFromBin(brick.id, newBucketId)
+      removePartFromBin(brick.id, newBinId)
     } else {
       console.warn('No operation selected')
     }
   }
 
-  async function addPartToBin (pieceId, bucketId) {
-    console.log('addPartToBin called:', pieceId, bucketId)
+  async function addPartToBin (pieceId, binId) {
+    console.log('addPartToBin called:', pieceId, binId)
     try {
-      const response = await axios.post('http://10.10.10.121:3000/bucket/add', {
+      const response = await axios.post('http://10.10.10.121:3000/bin/add', {
         pieceId,
-        bucketId
+        binId
       })
       console.log('Add response:', response)
-      setOperationStatus(`✓ Added piece ${pieceId} to bin ${bucketId}`)
+      setOperationStatus(`✓ Added piece ${pieceId} to bin ${binId}`)
       setTimeout(() => setOperationStatus(null), 3000) // Clear after 3 seconds
       setBrick({...brick})
       setBinOperation(null)
@@ -87,15 +87,15 @@ function App () {
     }
   }
 
-  async function removePartFromBin (pieceId, bucketId) {
-    console.log('removePartFromBin called:', pieceId, bucketId)
+  async function removePartFromBin (pieceId, binId) {
+    console.log('removePartFromBin called:', pieceId, binId)
     try {
-      const response = await axios.post('http://10.10.10.121:3000/bucket/remove', {
+      const response = await axios.post('http://10.10.10.121:3000/bin/remove', {
         pieceId,
-        bucketId
+        binId
       })
       console.log('Remove response:', response)
-      setOperationStatus(`✓ Removed piece ${pieceId} from bin ${bucketId}`)
+      setOperationStatus(`✓ Removed piece ${pieceId} from bin ${binId}`)
       setTimeout(() => setOperationStatus(null), 3000) // Clear after 3 seconds
       setBrick({...brick})
       setBinOperation(null)
@@ -119,7 +119,7 @@ function App () {
       )
     if (page === BIN_OPERATION_PAGE || page === TABLE_PAGE)
       return <Table brick={brick} editBin={editBin} binOperation={binOperation} setBinOperation={setBinOperation} operationStatus={operationStatus} />
-    if (page === EDIT_BUCKET_PAGE) return <BucketEditor bucketId={bucketId} />
+    if (page === EDIT_BIN_PAGE) return <BinEditor binId={binId} />
   }
 
   //

@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'path'
-import './data/bucketData.js'
-import bucketRouter from './routes/bucket.js'
+import './data/binData.js'
+import binRouter from './routes/bin.js'
 
 const app = express()
 const PORT = 3000
@@ -15,8 +15,8 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(import.meta.dirname, '../frontend/build/index.html'))
 })
 
-// All requests to the /bucket route are sent to bucketRouter
-app.use('/bucket', bucketRouter)
+// All requests to the /bin route are sent to binRouter
+app.use('/bin', binRouter)
 
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`)

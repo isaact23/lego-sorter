@@ -17,7 +17,7 @@ function Table ({ brick, editBin, binOperation, setBinOperation, operationStatus
 
     axios
       .post(
-        'http://10.10.10.121:3000/bucket/get-all-bins',
+        'http://10.10.10.121:3000/bin/get-all-bins',
         {
           pieceId: brick['id']
         },

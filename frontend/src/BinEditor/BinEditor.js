@@ -1,22 +1,22 @@
-import './BucketEditor.css'
+import './BinEditor.css'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function BucketEditor ({ bucketId }) {
+function BinEditor ({ binId }) {
   const [pieces, setPieces] = useState([])
 
-  // Send request to backend to get bucket information when bucket ID changes
-  useEffect(fetchPieces, [bucketId])
+  // Send request to backend to get bin information when bin ID changes
+  useEffect(fetchPieces, [binId])
 
   // Fetch piece listing from backend
   function fetchPieces () {
-    console.log('Fetching bucket info for ' + bucketId)
+    console.log('Fetching bin info for ' + binId)
 
     axios
       .post(
-        '/bucket/get-info',
+        '/bin/get-info',
         {
-          bucketId: bucketId
+          binId: binId
         },
         {
           headers: {
@@ -29,7 +29,7 @@ function BucketEditor ({ bucketId }) {
         setPieces(res.data)
       })
       .catch(err => {
-        console.error('Error fetching bucket info', err?.response || err.message)
+        console.error('Error fetching bin info', err?.response || err.message)
         setPieces([])
       })
   }
@@ -43,16 +43,16 @@ function BucketEditor ({ bucketId }) {
     ))
   }
 
-  // Add a piece to the bucket mapping
+  // Add a piece to the bin mapping
   function addPiece () {
     const pieceId = prompt('Enter piece # to add')
     if (pieceId == null) return
 
     axios
       .post(
-        '/bucket/add',
+        '/bin/add',
         {
-          bucketId: bucketId,
+          binId: binId,
           pieceId: pieceId
         },
         {
@@ -69,16 +69,16 @@ function BucketEditor ({ bucketId }) {
       })
   }
 
-  // Remove a piece from the bucket mapping
+  // Remove a piece from the bin mapping
   function removePiece () {
     const pieceId = prompt('Enter piece # to remove')
     if (pieceId == null) return
 
     axios
       .post(
-        '/bucket/remove',
+        '/bin/remove',
         {
-          bucketId: bucketId,
+          binId: binId,
           pieceId: pieceId
         },
         {
@@ -98,7 +98,7 @@ function BucketEditor ({ bucketId }) {
   return (
     <div className='BinEditor'>
       <h1>Lego Sorter</h1>
-      <h2>Bin Number: {bucketId}</h2>
+      <h2>Bin Number: {binId}</h2>
       <button className='w3-button w3-theme-d1' onClick={addPiece}>
         Add piece
       </button>
@@ -111,4 +111,4 @@ function BucketEditor ({ bucketId }) {
   )
 }
 
-export default BucketEditor
+export default BinEditor

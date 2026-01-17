@@ -1,12 +1,12 @@
-import { readBucketData } from '../../data/bucketData.js'
+import { readBinData } from '../../data/binData.js'
 
-// Given a piece ID, get all bucket IDs that contain the piece.
+// Given a piece ID, get all bin IDs that contain the piece.
 const getAllBins = (req, res) => {
   const pieceId = req.body.pieceId
 
   console.log('getAllBins called with pieceId:', pieceId)
 
-  let binMappings = readBucketData()
+  let binMappings = readBinData()
   let foundBins = []
 
   // Iterate through all rows and collect bins containing this piece
