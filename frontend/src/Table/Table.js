@@ -2,22 +2,22 @@ import './Table.css'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function Table ({ brick, editBin }) {
-  const [targetBinId, setTargetBinId] = useState(null)
+function Table ({ brick, editBin, binOperation, setBinOperation, operationStatus }) {
+  const [targetBinIds, setTargetBinIds] = useState([])
 
-  // Get the bin ID based on the brick.
+  // Get all bin IDs that contain the brick.
   useEffect(() => {
-    // If no brick is selected, no bin should be selected.
+    // If no brick is selected, no bins should be selected.
     if (brick === null) {
-      setTargetBinId(null)
+      setTargetBinIds([])
       return
     }
 
-    console.log('Fetching bin ID for piece ' + brick['id'])
+    console.log('Fetching bin IDs for piece ' + brick['id'])
 
     axios
       .post(
-        'http://localhost:3000/bin/get-bin',
+        'http://10.10.10.121:3000/bucket/get-all-bins',
         {
           pieceId: brick['id']
         },
@@ -28,15 +28,12 @@ function Table ({ brick, editBin }) {
         }
       )
       .then(res => {
-        console.log('Got bin ID ' + res.data)
-        setTargetBinId(res.data)
+        console.log('Got bin IDs:', res.data)
+        setTargetBinIds(Array.isArray(res.data) ? res.data : [res.data])
       })
       .catch(err => {
-        console.error(
-          'Error fetching bin for piece ' + brick['id'] + ':',
-          err.message
-        )
-        setTargetBinId(null)
+        console.error('Error fetching bins for piece ' + brick['id'] + ':', err.message)
+        setTargetBinIds([])
       })
   }, [brick])
 
@@ -49,15 +46,6 @@ function Table ({ brick, editBin }) {
             <h2>{brick.name}</h2>
             <p><strong>Category:</strong> {brick.category}</p>
             <p><strong>ID:</strong> {brick.id}</p>
-            {/* 
-            <a
-              href={brick.external_sites[0].url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Bricklink
-            </a>
-            */}
           </div>
 
           <div className="BrickImage">
@@ -66,21 +54,47 @@ function Table ({ brick, editBin }) {
               alt={`Picture of ${brick.name}`}
             />
           </div>
+
+          <div className="BrickActions">
+            <button 
+              className={`w3-button ${binOperation === 'add' ? 'w3-green' : 'w3-light-green'}`}
+              onClick={() => setBinOperation('add')}
+              style={{ opacity: binOperation === 'add' ? 1 : 0.6 }}
+            >
+              Add to Bin
+            </button>
+            <button 
+              className={`w3-button ${binOperation === 'remove' ? 'w3-red' : 'w3-light-red'}`}
+              onClick={() => setBinOperation('remove')}
+              style={{ opacity: binOperation === 'remove' ? 1 : 0.6 }}
+            >
+              Remove from Bin
+            </button>
+          </div>
+
+          {operationStatus && (
+            <div className="OperationStatus">
+              <p>{operationStatus}</p>
+            </div>
+          )}
         </div>
       )
     }
   }
 
-  // Get a bin for a specific type of part. Blink if it's the targeted part.
+  // Get a bin for a specific type of part. Highlight if it contains the targeted part.
   const getBin = binId => {
     let className = 'Bin'
-    if (targetBinId === binId) {
+    if (targetBinIds.includes(binId)) {
       className = 'TargetBin'
     }
 
+    // Remove system ID and first dash (e.g., "A-C-1" becomes "C-1")
+    const displayId = binId.split('-').slice(1).join('-')
+
     return (
       <div className={className} id={binId} onClick={() => editBin(binId)}>
-        <p>{binId}</p>
+        <p>{displayId}</p>
       </div>
     )
   }

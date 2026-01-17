@@ -12,16 +12,16 @@ const CAMERA_PAGE = 0
 const SELECT_PAGE = 1
 const TABLE_PAGE = 2
 const EDIT_BUCKET_PAGE = 3
-
+const BIN_OPERATION_PAGE = 4
 const API_ENDPOINT = 'https://api.brickognize.com/predict/'
-
 function App () {
-  // App state variables (React hooks)
   const [page, setPage] = useState(2)
   const [brickList, setBrickList] = useState([])
   const [brick, setBrick] = useState(null)
   const [bucketId, setBucketId] = useState(0)
   const [waiting, setWaiting] = useState(false)
+  const [binOperation, setBinOperation] = useState(null)
+  const [operationStatus, setOperationStatus] = useState(null) // Add this
   const pictureInputRef = useRef(null)
 
   // Callback for the Camera component once Lego bricks are identified
@@ -42,6 +42,7 @@ function App () {
   function selectCallback (selectedBrick) {
     console.log('Selected brick ' + selectedBrick['category'])
     setBrick(selectedBrick)
+    setBinOperation(null) // Don't auto-select any operation
     setPage(TABLE_PAGE)
   }
 
@@ -55,13 +56,57 @@ function App () {
     setPage(TABLE_PAGE)
   }
 
-  // Function to edit a bucket.
-  function editBucket (newBucketId) {
-    setBucketId(newBucketId)
-    setPage(EDIT_BUCKET_PAGE)
+  // Function to add/remove part from a bucket.
+  function editBin (newBucketId) {
+    console.log('editBin called with:', newBucketId, 'binOperation:', binOperation, 'brick:', brick)
+    if (binOperation === 'add') {
+      addPartToBin(brick.id, newBucketId)
+    } else if (binOperation === 'remove') {
+      removePartFromBin(brick.id, newBucketId)
+    } else {
+      console.warn('No operation selected')
+    }
   }
 
-  // Depending on the page variable, return the correct component
+  async function addPartToBin (pieceId, bucketId) {
+    console.log('addPartToBin called:', pieceId, bucketId)
+    try {
+      const response = await axios.post('http://10.10.10.121:3000/bucket/add', {
+        pieceId,
+        bucketId
+      })
+      console.log('Add response:', response)
+      setOperationStatus(`✓ Added piece ${pieceId} to bin ${bucketId}`)
+      setTimeout(() => setOperationStatus(null), 3000) // Clear after 3 seconds
+      setBrick({...brick})
+      setBinOperation(null)
+    } catch (err) {
+      console.error('Error adding part to bin:', err)
+      setOperationStatus(`✗ Error adding piece: ${err.message}`)
+      setTimeout(() => setOperationStatus(null), 3000)
+    }
+  }
+
+  async function removePartFromBin (pieceId, bucketId) {
+    console.log('removePartFromBin called:', pieceId, bucketId)
+    try {
+      const response = await axios.post('http://10.10.10.121:3000/bucket/remove', {
+        pieceId,
+        bucketId
+      })
+      console.log('Remove response:', response)
+      setOperationStatus(`✓ Removed piece ${pieceId} from bin ${bucketId}`)
+      setTimeout(() => setOperationStatus(null), 3000) // Clear after 3 seconds
+      setBrick({...brick})
+      setBinOperation(null)
+    } catch (err) {
+      console.error('Error removing part from bin:', err)
+      setOperationStatus(`✗ Error removing piece: ${err.message}`)
+      setTimeout(() => setOperationStatus(null), 3000)
+    }
+  }
+
+  // Pass operationStatus to Table
   const getPage = () => {
     if (page === CAMERA_PAGE) return <Camera brickCallback={brickCallback} />
     if (page === SELECT_PAGE)
@@ -72,8 +117,8 @@ function App () {
           returnToCamera={returnToCamera}
         />
       )
-    if (page === TABLE_PAGE)
-      return <Table brick={brick} editBucket={editBucket} />
+    if (page === BIN_OPERATION_PAGE || page === TABLE_PAGE)
+      return <Table brick={brick} editBin={editBin} binOperation={binOperation} setBinOperation={setBinOperation} operationStatus={operationStatus} />
     if (page === EDIT_BUCKET_PAGE) return <BucketEditor bucketId={bucketId} />
   }
 
@@ -142,18 +187,6 @@ function App () {
           onChange={handleFileChange}
           ref={pictureInputRef}
         />
-
-        {/* Card 1: two dropdowns 
-        <OptionCard iconSrc='/icons/mag_glass.png'>
-          <select className='w3-select w3-border option-select'>
-            <option>First dropdown option</option>
-          </select>
-
-          <select className='w3-select w3-border option-select'>
-            <option>Second dropdown option</option>
-          </select>
-        </OptionCard>
-        */}
 
         {/* Card 1: two dropdowns */}
         <CategorySelectCard />
