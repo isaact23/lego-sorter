@@ -89,7 +89,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
     : bricksWithImages.sort((a, b) => b.score - a.score)
 
   return (
-    <div className='Select'>
+    <div className='Select TopModule'>
       <h2>Does this look right?</h2>
       <div className='BrickList'>
         {bricksToDisplay.map((brick, index) => {

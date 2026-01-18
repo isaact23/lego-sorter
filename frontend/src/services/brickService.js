@@ -1,13 +1,9 @@
-const SELECT_PAGE = 1
-const TABLE_PAGE = 2
-
-export function createBrickCallbacks (setState) {
-  const { setBrickList, setPage, setBrick, setBinOperation } = setState
-
+export function createBrickCallbacks (
+  { setBrickList, setPage, setBrick, setBinOperation },
+  { SELECT_PAGE, BRICK_INFO }
+) {
   const brickCallback = (bricks) => {
-    console.log(bricks)
     if (bricks.length > 1) {
-      console.log('Multiple bricks detected')
       setBrickList(bricks)
       setPage(SELECT_PAGE)
     } else {
@@ -16,10 +12,9 @@ export function createBrickCallbacks (setState) {
   }
 
   const selectCallback = (selectedBrick) => {
-    console.log('Selected brick ' + selectedBrick['category'])
     setBrick(selectedBrick)
     setBinOperation(null)
-    setPage(TABLE_PAGE)
+    setPage(BRICK_INFO)
   }
 
   return { brickCallback, selectCallback }

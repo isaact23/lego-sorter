@@ -2,6 +2,7 @@ import './App.css'
 import Camera from '../Modules/Camera'
 import Select from '../Modules/Select'
 import Table from '../Table/Table'
+import BrickInfo from '../Modules/BrickInfo'
 import { useState, useRef } from 'react'
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
@@ -15,6 +16,7 @@ import { fetchBrickData } from '../services/brickDataService'
 const CAMERA_PAGE = 0
 const SELECT_PAGE = 1
 const OPTION_CARDS = 2
+const BRICK_INFO = 3
 
 function App () {
   const [page, setPage] = useState(2)
@@ -29,13 +31,19 @@ function App () {
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
 
-  // Create service callbacks with state setter
-  const { brickCallback, selectCallback } = createBrickCallbacks({
-    setBrickList,
-    setPage,
-    setBrick,
-    setBinOperation
-  })
+  const { brickCallback, selectCallback } = createBrickCallbacks(
+    {
+      setBrickList,
+      setPage,
+      setBrick,
+      setBinOperation
+    },
+    {
+      SELECT_PAGE,
+      BRICK_INFO
+    }
+  )
+
   const editBin = createEditBinHandler({ brick, binOperation }, {
     setBinOperation,
     setOperationStatus
@@ -48,7 +56,11 @@ function App () {
 
   // Pass operationStatus to Table
   const getPage = () => {
-    if (page === CAMERA_PAGE) return <Camera brickCallback={brickCallback} />
+    if (page === CAMERA_PAGE) 
+      return 
+        <Camera 
+          brickCallback={brickCallback} 
+        />
     if (page === SELECT_PAGE)
       return (
         <Select
@@ -57,6 +69,16 @@ function App () {
           returnToCamera={returnToCamera}
         />
       )
+    if (page === BRICK_INFO)
+      return (
+        <BrickInfo
+          brick={brick}
+          binOperation={binOperation}
+          setBinOperation={setBinOperation}
+          onClose={handleCloseBrickInfo}
+        />
+      )
+
     if (page === OPTION_CARDS)
       return (
         <div className='option-card-row w3-container w3-padding'>
@@ -69,6 +91,7 @@ function App () {
             onChange={handleImageChange}
             ref={pictureInputRef}
           />
+    
 
           {/* Card 1: two dropdowns */}
           <CategorySelectCard 
@@ -170,6 +193,7 @@ function App () {
       if (part) {
         // Use brick callback to navigate like camera detection
         selectCallback(part)
+        setPage(BRICK_INFO)
       } else {
         alert(`Part #${searchQuery} not found in Rebrickable`)
       }
@@ -181,13 +205,29 @@ function App () {
     }
   }
 
-
+  function handleCloseBrickInfo () {
+    setBrick(null)
+    setBinOperation(null)
+    setSearchQuery('')
+    setSearchResults([])
+    setPage(OPTION_CARDS)
+  }
 
   return (
     <div className='App w3-theme-light'>
-      {getPage()}
-      <Table brick={brick} editBin={editBin} binOperation={binOperation} setBinOperation={setBinOperation} operationStatus={operationStatus} searchQuery={searchQuery} searchResults={searchResults} setSearchResults={setSearchResults} />
-      
+      <div className='TopPanel'>
+        {getPage()}
+      </div>
+      <Table 
+        brick={brick} 
+        editBin={editBin} 
+        binOperation={binOperation} 
+        setBinOperation={setBinOperation} 
+        operationStatus={operationStatus} 
+        searchQuery={searchQuery} 
+        searchResults={searchResults} 
+        setSearchResults={setSearchResults} 
+      />   
     </div>
   )
 }
