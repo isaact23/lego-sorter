@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { BACKEND_URL } from '../config'
 import { searchPartsByPrefix } from '../services/searchService'
-import {describeBrick} from "../Modules/BrickInfo";
+
 
 function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation, operationStatus, searchQuery, searchResults, setSearchResults }) {
   const [targetBinIds, setTargetBinIds] = useState([])
@@ -71,7 +71,7 @@ function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation
     fetchTargetBins(brick['id'])
   }, [brick])
 
-  /*
+  
   // Get a string combining the name of a brick with its part number.
   const describeBrick = () => {
     if (brick != null) {
@@ -109,7 +109,7 @@ function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation
         </div>
       )
     }
-  }*/
+  }
 
   // Get a bin for a specific type of part. Highlight if it contains the targeted part.
   const getBin = binId => {
@@ -275,7 +275,7 @@ function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation
 
   return (
     <div className='App'>
-      {/*{describeBrick()}*/}
+      {describeBrick()}
       {getSystem(mySystem)}
     </div>
   )
