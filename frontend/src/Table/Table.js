@@ -1,25 +1,27 @@
 import './Table.css'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { BACKEND_URL } from '../config'
+import { searchPartsByPrefix } from '../services/searchService'
+import {describeBrick} from "../Modules/BrickInfo";
 
-function Table ({ brick, editBin, binOperation, setBinOperation, operationStatus }) {
+function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation, operationStatus, searchQuery, searchResults, setSearchResults }) {
   const [targetBinIds, setTargetBinIds] = useState([])
 
-  // Get all bin IDs that contain the brick.
-  useEffect(() => {
-    // If no brick is selected, no bins should be selected.
-    if (brick === null) {
-      setTargetBinIds([])
-      return
-    }
+  // Determine which bins to highlight - either from brick or from search
+  const highlightedBinIds = searchQuery && searchResults.length > 0 ? searchResults : targetBinIds
 
-    console.log('Fetching bin IDs for piece ' + brick['id'])
+  console.log('Table render - searchQuery:', searchQuery, 'searchResults:', searchResults, 'highlightedBinIds:', highlightedBinIds)
+
+  // Fetch bins that contain this brick
+  const fetchTargetBins = (brickId) => {
+    console.log('Fetching bin IDs for piece ' + brickId)
 
     axios
       .post(
-        'http://10.10.10.121:3000/bin/get-all-bins',
+        `${BACKEND_URL}/bin/get-all-bins`,
         {
-          pieceId: brick['id']
+          pieceId: brickId
         },
         {
           headers: {
@@ -32,11 +34,44 @@ function Table ({ brick, editBin, binOperation, setBinOperation, operationStatus
         setTargetBinIds(Array.isArray(res.data) ? res.data : [res.data])
       })
       .catch(err => {
-        console.error('Error fetching bins for piece ' + brick['id'] + ':', err.message)
+        console.error('Error fetching bins for piece ' + brickId + ':', err.message)
         setTargetBinIds([])
       })
+  }
+
+  // Refresh search results if a search is active
+  const refreshSearch = async (brickId) => {
+    if (searchQuery) {
+      console.log('Refreshing search for:', searchQuery)
+      try {
+        const results = await searchPartsByPrefix(searchQuery)
+        setSearchResults(results)
+      } catch (err) {
+        console.error('Error refreshing search:', err)
+      }
+    } else {
+      // If no search is active, refresh the target bins
+      fetchTargetBins(brickId)
+    }
+  }
+
+  // Wrapper around editBin that refreshes after operation
+  const editBin = (binId) => {
+    originalEditBin(binId, (brickId) => refreshSearch(brickId))
+  }
+
+  // Get all bin IDs that contain the brick.
+  useEffect(() => {
+    // If no brick is selected, no bins should be selected.
+    if (brick === null) {
+      setTargetBinIds([])
+      return
+    }
+
+    fetchTargetBins(brick['id'])
   }, [brick])
 
+  /*
   // Get a string combining the name of a brick with its part number.
   const describeBrick = () => {
     if (brick != null) {
@@ -71,22 +106,19 @@ function Table ({ brick, editBin, binOperation, setBinOperation, operationStatus
               Remove from Bin
             </button>
           </div>
-
-          {operationStatus && (
-            <div className="OperationStatus">
-              <p>{operationStatus}</p>
-            </div>
-          )}
         </div>
       )
     }
-  }
+  }*/
 
   // Get a bin for a specific type of part. Highlight if it contains the targeted part.
   const getBin = binId => {
     let className = 'Bin'
-    if (targetBinIds.includes(binId)) {
+    const isHighlighted = highlightedBinIds.includes(binId)
+    
+    if (isHighlighted) {
       className = 'TargetBin'
+      console.log('Highlighting bin:', binId)
     }
 
     // Remove system ID and first dash (e.g., "A-C-1" becomes "C-1")
@@ -243,7 +275,7 @@ function Table ({ brick, editBin, binOperation, setBinOperation, operationStatus
 
   return (
     <div className='App'>
-      {describeBrick()}
+      {/*{describeBrick()}*/}
       {getSystem(mySystem)}
     </div>
   )

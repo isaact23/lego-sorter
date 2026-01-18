@@ -6,6 +6,7 @@ import getBin from './bin/getBin.js'
 import addBin from './bin/addBin.js'
 import removeBin from './bin/removeBin.js'
 import getAllBins from './bin/getAllBins.js'
+import searchParts from './bin/searchParts.js'
 
 // Routes under the /bin route
 router.post('/get-info', getBinInfo)
@@ -13,5 +14,6 @@ router.post('/get-bin', getBin)
 router.post('/add', addBin)
 router.post('/remove', removeBin)
 router.post('/get-all-bins', getAllBins)
+router.post('/search-parts', searchParts)
 
 export default router

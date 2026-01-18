@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import './Select.css'
+import './Modules.css'
 
 const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 
 // Remove special, legacy, prototype variants (keep A versions)
+// Returns { kept: best bricks, removed: duplicate variants }
 function dedupeParts(bricks) {
   const map = {}
+  const removed = []
 
   bricks.forEach(brick => {
     const match = brick.id.match(/^(\d+)([A-Za-z]?)$/)
@@ -15,15 +17,26 @@ function dedupeParts(bricks) {
     const numeric = match[1]
 
     // Keep the highest-score variant for each base part number
-    if (!map[numeric] || brick.score > map[numeric].score) {
+    if (!map[numeric]) {
       map[numeric] = {
         ...brick,
         id: brick.id
       }
+    } else if (brick.score > map[numeric].score) {
+      removed.push(map[numeric])
+      map[numeric] = {
+        ...brick,
+        id: brick.id
+      }
+    } else {
+      removed.push(brick)
     }
   })
 
-  return Object.values(map)
+  return {
+    kept: Object.values(map),
+    removed
+  }
 }
 
 function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
@@ -31,7 +44,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   const [showAll, setShowAll] = useState(false)
 
   // Step 1: dedupe special bricks
-  const cleanBricks = dedupeParts(brickList)
+  const { kept: cleanBricks, removed: removedBricks } = dedupeParts(brickList)
 
   // Step 2: fetch images from Rebrickable
   useEffect(() => {
@@ -66,11 +79,14 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
 
   // Step 3: discard bricks without images
   const bricksWithImages = cleanBricks.filter(brick => images[brick.id])
+  const removedWithImages = removedBricks.filter(brick => images[brick.id])
 
   if (!bricksWithImages.length) return null
 
-  // Simple logic: show all bricks with images sorted by confidence (highest to lowest)
-  const bricksToDisplay = bricksWithImages.sort((a, b) => b.score - a.score)
+  // Simple logic: show best bricks, optionally show removed variants
+  const bricksToDisplay = showAll
+    ? [...bricksWithImages, ...removedWithImages].sort((a, b) => b.score - a.score)
+    : bricksWithImages.sort((a, b) => b.score - a.score)
 
   return (
     <div className='Select'>
@@ -119,6 +135,23 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
           )
         })}
       </div>
+
+      <button
+        className='w3-button w3-theme-d1'
+        onClick={() => setShowAll(!showAll)}
+        disabled={removedWithImages.length === 0}
+        style={{
+          width: '100%',
+          marginTop: '16px',
+          opacity: removedWithImages.length === 0 ? 0.5 : 1,
+          cursor: removedWithImages.length === 0 ? 'not-allowed' : 'pointer'
+        }}
+      >
+        {showAll 
+          ? `Hide ${removedWithImages.length} more options`
+          : `Show ${removedWithImages.length} more options`
+        }
+      </button>
     </div>
   )
 }

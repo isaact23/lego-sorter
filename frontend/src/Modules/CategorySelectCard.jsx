@@ -1,11 +1,17 @@
 import { useMemo, useState, useEffect } from 'react'
-import OptionCard from '../App/OptionCard'
+import OptionCard from './OptionCard'
 import categoryData from './CategoryData'
 import '../App/App.css'
 
-export default function CategorySelectCard({ onChange }) {
+export default function CategorySelectCard({ onChange, onCategorySelect, resetTrigger }) {
   const [cat1, setCat1] = useState('')
   const [cat2, setCat2] = useState('')
+
+  // Reset when search input is used
+  useEffect(() => {
+    setCat1('')
+    setCat2('')
+  }, [resetTrigger])
 
   const cat1Options = useMemo(
     () => [...new Set(categoryData.map(row => row.cat1))],
@@ -39,14 +45,16 @@ export default function CategorySelectCard({ onChange }) {
   }, [cat1, cat2])
 
   useEffect(() => {
-    if (!onChange) return
-
     if (cat2 && selectedCategoryId) {
-      onChange([selectedCategoryId])
+      if (onCategorySelect) onCategorySelect()
+      if (onChange) onChange([selectedCategoryId])
+    } else if (cat1) {
+      if (onCategorySelect) onCategorySelect()
+      if (onChange) onChange(matchingIds)
     } else {
-      onChange(matchingIds)
+      if (onChange) onChange([])
     }
-  }, [cat1, cat2, matchingIds, selectedCategoryId, onChange])
+  }, [cat1, cat2, matchingIds, selectedCategoryId, onChange, onCategorySelect])
 
   return (
     <OptionCard iconSrc="/icons/mag_glass.png">

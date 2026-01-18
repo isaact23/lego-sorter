@@ -1,4 +1,4 @@
-import './Camera.css'
+import './Modules.css'
 import axios from 'axios'
 import { useState } from 'react'
 

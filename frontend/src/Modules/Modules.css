@@ -1,5 +1,8 @@
 
 
+.Camera {
+    padding: 100px;
+}
 
 .lowConfidence {
   opacity: 0.6;
