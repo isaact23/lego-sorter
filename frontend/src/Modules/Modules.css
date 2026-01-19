@@ -1,4 +1,6 @@
-
+:root {
+  --brick-image-size: 150px;
+}
 
 .Camera {
     padding: 100px;
@@ -14,20 +16,25 @@
 }
 
 .BrickList {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
   margin: 1.5rem 0;
   justify-content: center;
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
+  align-items: center;
+  gap: 24px;
+  flex: 1;          /* critical */
+  overflow: hidden;
 }
 
 .ListItem {
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: 220px;
+  text-align: center;
   background: #ffffff;
   border: #333333 2px solid;
   border-radius: 16px;
@@ -47,16 +54,14 @@
   margin: 0 auto 0.5rem;
 }
 
-
-
 .dimmed {
   opacity: 0.35;
   filter: grayscale(70%);
 }
 
 .ImagePlaceholder {
-  width: 120px;
-  height: 120px;
+  width: var(--brick-image-size);
+  height: var(--brick-image-size);
   background: #333;
   border-radius: 8px;
   margin: 0 auto 0.5rem;
@@ -110,4 +115,96 @@ button {
 .auto-highlight {
   border: 3px solid #4caf50;
   transform: scale(1.05);
+}
+
+.BrickText {
+  flex: 1;
+}
+
+.BrickText h2 {
+  margin-top: 0;
+}
+
+.BrickText p {
+  margin: 0.25rem 0;
+}
+
+.BrickImage {
+  flex-shrink: 0;
+}
+
+.BrickImage img {
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.BrickActions {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.BrickActions button {
+  width: 150px;
+  transition: all 0.2s ease;
+}
+
+.BrickActions button:hover {
+  transform: scale(1.05);
+}
+
+.BrickDescription {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+
+.BrickImageFrame {
+  width: var(--brick-image-size);
+  height: var(--brick-image-size);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.BrickImageFrame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.SelectImageFrame {
+  width: var(--brick-image-size);
+  height: var(--brick-image-size);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f7f7f7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.SelectImageFrame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.Select.TopModule {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }

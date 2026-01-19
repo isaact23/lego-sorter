@@ -81,7 +81,7 @@ function App () {
 
     if (page === OPTION_CARDS)
       return (
-        <div className='option-card-row w3-container w3-padding'>
+        <div className='top-panel-row'>
           <input
             id='cameraInput'
             type='file'
@@ -215,7 +215,7 @@ function App () {
 
   return (
     <div className='App w3-theme-light'>
-      <div className='TopPanel'>
+      <div className='top-panel'>
         {getPage()}
       </div>
       <Table 

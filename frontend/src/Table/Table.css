@@ -37,62 +37,7 @@
   align-items: center;
 }
 
-.BrickDescription {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-
-  max-width: 700px;
-  margin: 1.5rem auto;
-
-  background: #ffffff;
-  border: 2px solid #333333;
-  border-radius: 16px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.BrickText {
-  flex: 1;
-}
-
-.BrickText h2 {
-  margin-top: 0;
-}
-
-.BrickText p {
-  margin: 0.25rem 0;
-}
-
-.BrickImage {
-  flex-shrink: 0;
-}
-
-.BrickImage img {
-  max-width: 200px;
-  height: auto;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-.BrickActions {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.BrickActions button {
-  width: 150px;
-  transition: all 0.2s ease;
-}
-
-.BrickActions button:hover {
-  transform: scale(1.05);
-}
-
+/*
 .OperationStatus {
   margin-top: 15px;
   padding: 10px 15px;
@@ -106,3 +51,4 @@
 .OperationStatus p {
   margin: 0;
 }
+  */
