@@ -12,6 +12,7 @@ app.use(cors())
 app.use(express.static(path.join(import.meta.dirname, '../frontend/build')))
 app.use(express.json())
 
+
 // Send the frontend when loading the webpage
 app.get('/', (req, res) => {
   res.sendFile(path.join(import.meta.dirname, '../frontend/build/index.html'))

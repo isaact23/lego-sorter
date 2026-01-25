@@ -1,3 +1,7 @@
+// frontend/src/services/binService.js
+// Service functions for managing bin operations
+// such as adding/removing parts and retrieving bin info.
+
 import axios from 'axios'
 import { BACKEND_URL } from '../config'
 

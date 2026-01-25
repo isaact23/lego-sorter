@@ -1,56 +1,56 @@
 import axios from 'axios'
-import { API_ENDPOINT } from '../config'
-import { fetchBrickData } from './brickDataService'
 
-export async function identify (base64Data, onSuccess, onError) {
+
+const IMAGE_CACHE_KEY = 'brickImageCache'
+const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
+
+function loadCache () {
   try {
-    const base64 = await fetch(base64Data)
-    const blob = await base64.blob()
+    return JSON.parse(localStorage.getItem(IMAGE_CACHE_KEY)) || {}
+  } catch {
+    return {}
+  }
+}
 
-    const formData = new FormData()
-    formData.append('query_image', blob, 'image.jpg')
+function saveCache (cache) {
+  localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(cache))
+}
 
-    const res = await axios.post(API_ENDPOINT, formData, {
-      headers: { Accept: 'application/json' }
-    })
+/**
+ * Get an image URL for a brick part number.
+ * - Returns cached image if available
+ * - Fetches from Rebrickable only if missing
+ */
+export async function getBrickImage (partId) {
+  const cache = loadCache()
 
-    const detectedParts = res.data.items
-    if (detectedParts.length === 0) {
-      onError('No pieces identified, try again?')
-      return
-    }
+  // Cache hit (including cached nulls)
+  if (cache.hasOwnProperty(partId)) {
+    return cache[partId]
+  }
 
-    // Fetch full brick data from Rebrickable for each detected part
-    const bricksWithData = await Promise.all(
-      detectedParts.map(part => fetchBrickData(part.id, part.score))
+  // Cache miss → fetch image only
+  try {
+    const res = await axios.get(
+      `https://rebrickable.com/api/v3/lego/parts/${partId}/`,
+      {
+        headers: {
+          Authorization: `key ${REBRICKABLE_API_KEY}`,
+          Accept: 'application/json'
+        }
+      }
     )
 
-    // Filter out any null results (parts not found in Rebrickable)
-    const validBricks = bricksWithData.filter(brick => brick !== null)
-    
-    if (validBricks.length === 0) {
-      onError('No matching parts found in Rebrickable database')
-      return
-    }
+    const imageUrl = res.data?.part_img_url || null
 
-    onSuccess(validBricks)
+    cache[partId] = imageUrl
+    saveCache(cache)
+
+    return imageUrl
   } catch (err) {
-    console.error(err)
-    onError('Something went wrong.')
+    console.warn(`Image fetch failed for ${partId}`)
+    cache[partId] = null
+    saveCache(cache)
+    return null
   }
-}
-
-export function takePicture (pictureInputRef) {
-  pictureInputRef.current?.click()
-}
-
-export function handleFileChange (event, onFileRead) {
-  const file = event.target.files[0]
-  if (!file) return
-
-  const reader = new FileReader()
-  reader.onloadend = () => {
-    onFileRead(reader.result)
-  }
-  reader.readAsDataURL(file)
 }

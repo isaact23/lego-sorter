@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import './Modules.css'
 import '../App/App.css'
+import { getBrickImage } from '../services/imageService'
 
-const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
-
+//const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 
 function hasScores(bricks) {
   return bricks.length > 0 && bricks[0].score !== undefined
@@ -56,36 +56,21 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
     [brickList, useScores]
   )
 
-  // Step 2: fetch images from rebrickable API
+  // Step 2: fetch images via imageService (cached + rate-limit safe)
   useEffect(() => {
     cleanBricks.forEach(brick => {
-      if (images[brick.id] !== undefined) return
+      // Skip if we already resolved this brick (including null)
+      if (images.hasOwnProperty(brick.id)) return
 
-      axios
-        .get(
-          `https://rebrickable.com/api/v3/lego/parts/?part_num=${brick.id}`,
-          {
-            headers: {
-              Authorization: `key ${REBRICKABLE_API_KEY}`,
-              Accept: 'application/json'
-            }
-          }
-        )
-        .then(res => {
-          const part = res.data.results?.[0]
-          setImages(prev => ({
-            ...prev,
-            [brick.id]: part?.part_img_url || null
-          }))
-        })
-        .catch(() => {
-          setImages(prev => ({
-            ...prev,
-            [brick.id]: null
-          }))
-        })
+      getBrickImage(brick.id).then(imageUrl => {
+        setImages(prev => ({
+          ...prev,
+          [brick.id]: imageUrl
+        }))
+      })
     })
-  }, [cleanBricks, images])
+  }, [cleanBricks])
+
 
   // Step 3: discard bricks without images
   const bricksWithImages = useMemo(
