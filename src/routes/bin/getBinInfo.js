@@ -5,7 +5,7 @@ const getBinInfo = (req, res) => {
   const binId = req.body.binId
 
   let binMappings = readBinData()
-
+  console.log(`Looking for pieces in bin ID: ${binId}`)
   // Iterate through the rows of the CSV
   for (let row of binMappings) {
     // Look for the row with the bin ID

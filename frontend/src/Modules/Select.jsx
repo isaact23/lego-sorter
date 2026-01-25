@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import './Modules.css'
 import '../App/App.css'
 
 const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 
+
+function hasScores(bricks) {
+  return bricks.length > 0 && bricks[0].score !== undefined
+}
+
 // Remove special, legacy, prototype variants (keep A versions)
-// Returns { kept: best bricks, removed: duplicate variants }
-function dedupeParts(bricks) {
+// If scores exist, keep highest score per base number
+// If not, keep first encountered
+function dedupeParts(bricks, useScores) {
   const map = {}
   const removed = []
 
@@ -17,18 +23,14 @@ function dedupeParts(bricks) {
 
     const numeric = match[1]
 
-    // Keep the highest-score variant for each base part number
     if (!map[numeric]) {
-      map[numeric] = {
-        ...brick,
-        id: brick.id
-      }
-    } else if (brick.score > map[numeric].score) {
+      map[numeric] = brick
+      return
+    }
+
+    if (useScores && brick.score > map[numeric].score) {
       removed.push(map[numeric])
-      map[numeric] = {
-        ...brick,
-        id: brick.id
-      }
+      map[numeric] = brick
     } else {
       removed.push(brick)
     }
@@ -40,14 +42,21 @@ function dedupeParts(bricks) {
   }
 }
 
+
+// Display a scrollable row of identified parts for user selection
 function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
+  // State to hold fetched images
   const [images, setImages] = useState({})
-  const [showAll, setShowAll] = useState(false)
+  // Determine if we have scores (if not, was called by bin selection)
+  const useScores = useMemo(() => hasScores(brickList), [brickList])
 
-  // Step 1: dedupe special bricks
-  const { kept: cleanBricks, removed: removedBricks } = dedupeParts(brickList)
+  // Step 1: dedupe (remove duplicates, special variants)
+  const { kept: cleanBricks } = useMemo(
+    () => dedupeParts(brickList, useScores),
+    [brickList, useScores]
+  )
 
-  // Step 2: fetch images from Rebrickable
+  // Step 2: fetch images from rebrickable API
   useEffect(() => {
     cleanBricks.forEach(brick => {
       if (images[brick.id] !== undefined) return
@@ -79,80 +88,88 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   }, [cleanBricks, images])
 
   // Step 3: discard bricks without images
-  const bricksWithImages = cleanBricks.filter(brick => images[brick.id])
-  const removedWithImages = removedBricks.filter(brick => images[brick.id])
+  const bricksWithImages = useMemo(
+    () => cleanBricks.filter(brick => images[brick.id]),
+    [cleanBricks, images]
+  )
 
-  if (!bricksWithImages.length) return null
+  // Step 4: sort (must be before any return)
+  const bricksToDisplay = useMemo(() => {
+    const sorted = [...bricksWithImages]
 
-  // Simple logic: show best bricks, optionally show removed variants
-  const bricksToDisplay = showAll
-    ? [...bricksWithImages, ...removedWithImages].sort((a, b) => b.score - a.score)
-    : bricksWithImages.sort((a, b) => b.score - a.score)
+    if (useScores) {
+      sorted.sort((a, b) => b.score - a.score)
+    } else {
+      sorted.sort((a, b) =>
+        a.id.localeCompare(b.id, undefined, { numeric: true })
+      )
+    }
+
+    return sorted
+  }, [bricksWithImages, useScores])
+
+
+  if (!bricksToDisplay.length) return null
 
   return (
-    <div className='top-panel-row'>
-      {bricksToDisplay.map((brick, index) => {
-        const fillWidth = `${Math.round(brick.score * 100)}%`
+    <div className='top-panel-wrapper top-panel-row scroll-row'>
+      <div>
+        {
+          bricksToDisplay.map(brick => {
+            let fillWidth
+            let confidence_color
 
-        let confidence_color
+            if (useScores) {
+              fillWidth = `${Math.round(brick.score * 100)}%`
 
-        if (brick.score <= 0.5) {
-          // Red
-          confidence_color = 'hsl(0, 100%, 50%)'
-        } else if (brick.score >= 0.9) {
-          // Green
-          confidence_color = 'hsl(120, 100%, 40%)'
-        } else {
-          // Gradient from yellow to green between 0.5 and 0.9
-          const normalized = (brick.score - 0.5) / (0.9 - 0.5) // 0 to 1
-          const hue = Math.round(60 + normalized * 60) // 60 = yellow, 120 = green
-          confidence_color = `hsl(${hue}, 100%, 45%)`
-        }
+              if (brick.score <= 0.5) {
+                confidence_color = 'hsl(0, 100%, 50%)'
+              } else if (brick.score >= 0.9) {
+                confidence_color = 'hsl(120, 100%, 40%)'
+              } else {
+                const normalized = (brick.score - 0.5) / (0.9 - 0.5)
+                const hue = Math.round(60 + normalized * 60)
+                confidence_color = `hsl(${hue}, 100%, 45%)`
+              }
+            }
 
-        return (
-          <div
-            key={brick.id}
-            className='top-panel-card Select TopModule'
-            onClick={() => selectCallback(brick)}
-          >
-            <div className="SelectImageFrame">
-              <img
-                src={images[brick.id]}
-                alt={brick.name}
-              />
-            </div>
-
-
-            <strong>{brick.name}</strong>
-            <div>Part #{brick.id}</div>
-
-            <div className='ConfidenceBar'>
+            return (
               <div
-                className='ConfidenceFill'
-                style={{ width: fillWidth, background: confidence_color }}
-              />
-            </div>
-          </div>
-        )
-      })}
-      
+                key={brick.id}
+                className='top-panel-card Select TopModule'
+                onClick={() => selectCallback(brick)}
+              >
+                <div className='SelectImageFrame'>
+                  <img
+                    src={images[brick.id]}
+                    alt={brick.name}
+                  />
+                </div>
 
-      <button
-        className='w3-button w3-theme-d1'
-        onClick={() => setShowAll(!showAll)}
-        disabled={removedWithImages.length === 0}
-        style={{
-          width: '100%',
-          marginTop: '16px',
-          opacity: removedWithImages.length === 0 ? 0.5 : 1,
-          cursor: removedWithImages.length === 0 ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {showAll 
-          ? `Hide ${removedWithImages.length} more options`
-          : `Show ${removedWithImages.length} more options`
+                <strong>{brick.name}</strong>
+                <div>Part #{brick.id}</div>
+
+                {useScores && (
+                  <div className='ConfidenceBar'>
+                    <div
+                      className='ConfidenceFill'
+                      style={{ width: fillWidth, background: confidence_color }}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })
         }
-      </button>
+      </div>
+      <div className='top-panel-fixed'>
+        <button
+          className='w3-button w3-theme-d1'
+          onClick={returnHome}
+        >
+          Return Home
+        </button>
+      </div>
     </div>
   )
 }

@@ -31,6 +31,73 @@ export async function addPartToBin (pieceId, binId, setState, onSuccess) {
   }
 }
 
+export function createEditBinHandler (state, setState, pages) {
+  const { brick, binOperation } = state
+  const {
+    setBinOperation,
+    setOperationStatus,
+    setBrickList,
+    setPage
+  } = setState
+  const { SELECT_PAGE } = pages
+
+  return async (newBinId, onSuccess) => {
+    console.log(
+      'editBin called with:',
+      newBinId,
+      'binOperation:',
+      binOperation,
+      'brick:',
+      brick
+    )
+
+    // CASE 1: No brick selected, show bin contents
+    if (!brick) {
+      try {
+        const binParts = await GetBinInfo(newBinId)
+
+        const cleanedParts = binParts.map(p => p.trim())
+
+        setBrickList(
+          cleanedParts.map(id => ({
+            id,
+            name: `Part ${id}`
+          }))
+        )
+
+        setPage(SELECT_PAGE)
+      } catch (err) {
+        console.error('Failed to load bin contents:', err)
+        setOperationStatus('✗ Failed to load bin contents')
+        setTimeout(() => setOperationStatus(null), 3000)
+      }
+
+      return
+    }
+
+
+    // CASE 2: Normal add/remove behavior
+    if (binOperation === 'add') {
+      addPartToBin(
+        brick.id,
+        newBinId,
+        { setOperationStatus, setBinOperation },
+        onSuccess
+      )
+    } else if (binOperation === 'remove') {
+      removePartFromBin(
+        brick.id,
+        newBinId,
+        { setOperationStatus, setBinOperation },
+        onSuccess
+      )
+    } else {
+      console.warn('No operation selected, binOperation:', binOperation)
+    }
+  }
+}
+
+
 export async function removePartFromBin (pieceId, binId, setState, onSuccess) {
   const { setOperationStatus, setBinOperation } = setState
   console.log('removePartFromBin called:', pieceId, binId)
@@ -61,26 +128,15 @@ export async function removePartFromBin (pieceId, binId, setState, onSuccess) {
   }
 }
 
-export function createEditBinHandler (state, setState) {
-  const { brick, binOperation } = state
-  const { setBinOperation, setOperationStatus } = setState
-
-  return (newBinId, onSuccess) => {
-    console.log('editBin called with:', newBinId, 'binOperation:', binOperation, 'brick:', brick)
-    
-    if (!brick) {
-      console.error('No brick selected!')
-      return
-    }
-
-    if (binOperation === 'add') {
-      console.log('Adding part to bin:', brick.id, newBinId)
-      addPartToBin(brick.id, newBinId, { setOperationStatus, setBinOperation }, onSuccess)
-    } else if (binOperation === 'remove') {
-      console.log('Removing part from bin:', brick.id, newBinId)
-      removePartFromBin(brick.id, newBinId, { setOperationStatus, setBinOperation }, onSuccess)
-    } else {
-      console.warn('No operation selected, binOperation:', binOperation)
-    }
+export async function GetBinInfo (binId) {
+  console.log('GetBinInfo called for binId:', binId)
+  try {
+    const response = await axios.post(`${BACKEND_URL}/bin/Get-Info`, { binId })
+    console.log('GetBinInfo response:', response)
+    return response.data
+  } 
+  catch (err) {
+    console.error('Error getting bin info:', err)
+    throw err
   }
 }

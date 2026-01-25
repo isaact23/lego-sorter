@@ -4,12 +4,18 @@ import axios from 'axios'
 import { BACKEND_URL } from '../config'
 import { searchPartsByPrefix } from '../services/searchService'
 
-
-function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation, operationStatus, searchQuery, searchResults, setSearchResults }) {
+function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation, setBinOperation, operationStatus, searchQuery, searchResults, setSearchResults }) {
   const [targetBinIds, setTargetBinIds] = useState([])
 
-  // Determine which bins to highlight - either from brick or from search
-  const highlightedBinIds = searchQuery && searchResults.length > 0 ? searchResults : targetBinIds
+  let highlightedBinIds = []
+
+  if (searchQuery && searchResults.length > 0) {
+    highlightedBinIds = searchResults
+  } else if (brick) {
+    highlightedBinIds = targetBinIds
+  } else if (binId) {
+    highlightedBinIds = [binId]
+  }
 
   console.log('Table render - searchQuery:', searchQuery, 'searchResults:', searchResults, 'highlightedBinIds:', highlightedBinIds)
 
@@ -73,24 +79,30 @@ function Table ({ brick, editBin: originalEditBin, binOperation, setBinOperation
 
   
   // Get a bin for a specific type of part. Highlight if it contains the targeted part.
-  const getBin = binId => {
+  const getBin = binIdValue => {
     let className = 'Bin'
-    const isHighlighted = highlightedBinIds.includes(binId)
-    
+    const isHighlighted = highlightedBinIds.includes(binIdValue)
+
     if (isHighlighted) {
       className = 'TargetBin'
-      console.log('Highlighting bin:', binId)
     }
 
-    // Remove system ID and first dash (e.g., "A-C-1" becomes "C-1")
-    const displayId = binId.split('-').slice(1).join('-')
+    const displayId = binIdValue.split('-').slice(1).join('-')
 
     return (
-      <div className={className} id={binId} onClick={() => editBin(binId)}>
+      <div
+        className={className}
+        id={binIdValue}
+        onClick={() => {
+          setBinId(binIdValue)
+          editBin(binIdValue)
+        }}
+      >
         <p>{displayId}</p>
       </div>
     )
   }
+
 
   const mySystem = {
     id: 'A',

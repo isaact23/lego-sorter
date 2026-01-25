@@ -44,10 +44,20 @@ function App () {
     }
   )
 
-  const editBin = createEditBinHandler({ brick, binOperation }, {
-    setBinOperation,
-    setOperationStatus
-  })
+  const editBin = createEditBinHandler(
+    { brick, binOperation },
+    {
+      setBinOperation,
+      setOperationStatus,
+      setBrickList,
+      setPage,
+      setBinId
+    },
+    {
+      SELECT_PAGE
+    }
+  )
+
 
   // Function to camera page and reset.
   function returnToCamera () {
@@ -220,7 +230,9 @@ function App () {
       </div>
       <Table 
         brick={brick} 
-        editBin={editBin} 
+        editBin={editBin}
+        binId={binId}
+        setBinId={setBinId}
         binOperation={binOperation} 
         setBinOperation={setBinOperation} 
         operationStatus={operationStatus} 

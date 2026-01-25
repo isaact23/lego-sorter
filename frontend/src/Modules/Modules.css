@@ -208,3 +208,16 @@ button {
   flex-direction: column;
   height: 100%;
 }
+
+
+.top-panel-wrapper {
+  position: relative;
+}
+
+.top-panel-fixed {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 5;
+}
+
