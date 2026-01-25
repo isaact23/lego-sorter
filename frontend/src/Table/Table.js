@@ -84,7 +84,7 @@ function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation
     const isHighlighted = highlightedBinIds.includes(binIdValue)
 
     if (isHighlighted) {
-      className = 'TargetBin'
+      className = 'Bin TargetBin'
     }
 
     const displayId = binIdValue.split('-').slice(1).join('-')
@@ -247,9 +247,9 @@ function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation
   }
 
   return (
-    <div className='App'>
-      {getSystem(mySystem)}
-    </div>
+    //<div className='App'>
+      getSystem(mySystem)
+    //</div>
   )
 }
 

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
-import './Modules.css'
 import '../App/App.css'
 import { getBrickImage } from '../services/imageService'
 
@@ -97,65 +96,62 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   if (!bricksToDisplay.length) return null
 
   return (
-    <div className='top-panel-wrapper top-panel-row scroll-row'>
-      <div>
-        {
-          bricksToDisplay.map(brick => {
-            let fillWidth
-            let confidence_color
+  <div className="top-panel-wrapper">
+    <div className="scroll-fade-wrapper">
+      <div className="scroll-row">
+        {bricksToDisplay.map(brick => {
+          let fillWidth
+          let confidence_color
 
-            if (useScores) {
-              fillWidth = `${Math.round(brick.score * 100)}%`
+          if (useScores) {
+            fillWidth = `${Math.round(brick.score * 100)}%`
 
-              if (brick.score <= 0.5) {
-                confidence_color = 'hsl(0, 100%, 50%)'
-              } else if (brick.score >= 0.9) {
-                confidence_color = 'hsl(120, 100%, 40%)'
-              } else {
-                const normalized = (brick.score - 0.5) / (0.9 - 0.5)
-                const hue = Math.round(60 + normalized * 60)
-                confidence_color = `hsl(${hue}, 100%, 45%)`
-              }
+            if (brick.score <= 0.5) {
+              confidence_color = 'hsl(0, 100%, 50%)'
+            } else if (brick.score >= 0.9) {
+              confidence_color = 'hsl(120, 100%, 40%)'
+            } else {
+              const normalized = (brick.score - 0.5) / (0.9 - 0.5)
+              const hue = Math.round(60 + normalized * 60)
+              confidence_color = `hsl(${hue}, 100%, 45%)`
             }
+          }
 
-            return (
-              <div
-                key={brick.id}
-                className='top-panel-card Select TopModule'
-                onClick={() => selectCallback(brick)}
-              >
-                <div className='SelectImageFrame'>
-                  <img
-                    src={images[brick.id]}
-                    alt={brick.name}
+          return (
+            <div
+              key={brick.id}
+              className="top-panel-card Select TopModule"
+              onClick={() => selectCallback(brick)}
+            >
+              <div className="SelectImageFrame">
+                <img
+                  src={images[brick.id]}
+                  alt={brick.name}
+                />
+              </div>
+
+              <strong>{brick.name}</strong>
+              <div>Part #{brick.id}</div>
+
+              {useScores && (
+                <div className="ConfidenceBar">
+                  <div
+                    className="ConfidenceFill"
+                    style={{ width: fillWidth, background: confidence_color }}
                   />
                 </div>
-
-                <strong>{brick.name}</strong>
-                <div>Part #{brick.id}</div>
-
-                {useScores && (
-                  <div className='ConfidenceBar'>
-                    <div
-                      className='ConfidenceFill'
-                      style={{ width: fillWidth, background: confidence_color }}
-                    />
-                  </div>
-                )}
-              </div>
-            )
-          })
-        }
+              )}
+            </div>
+          )
+        })}
+        </div>
       </div>
-      <div className='top-panel-fixed'>
-        <button
-          className='w3-button w3-theme-d1'
-          onClick={returnHome}
-        >
-          Return Home
-        </button>
-      </div>
+
+    <div className="top-panel-card-static">
+      {/* static card content */}
     </div>
+    
+  </div>
   )
 }
 

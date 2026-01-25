@@ -88,18 +88,6 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
         ))}
       </select>
 
-      <small className="placeholder-text">
-        {!cat1 && 'Select a category to highlight bins'}
-
-        {cat1 && !cat2 && (
-          <>Matching IDs: {matchingIds.join(', ')}</>
-        )}
-
-        {cat2 && selectedCategoryId && (
-          <>Selected Category ID: {selectedCategoryId}</>
-        )}
-      </small>
-
     </OptionCard>
   )
 }

@@ -1,5 +1,10 @@
 .Bin {
   height: 100%;
+  border: solid 1px;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .Bin:hover {
   cursor: pointer;
@@ -9,9 +14,7 @@
   height: 100%;
   background-color: green;
 }
-.TargetBin:hover {
-  cursor: pointer;
-}
+
 
 .System {
   display: grid;
@@ -27,14 +30,6 @@
 
 .Container {
   display: grid;
-}
-
-.Bin {
-  border: solid 1px;
-  min-height: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 /*

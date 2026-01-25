@@ -118,6 +118,7 @@ function App () {
               className='w3-input w3-border' 
               placeholder='Enter part #' 
               value={searchQuery}
+              onClick={handleSearchChange}
               onChange={handleSearchChange}
             />
             <button 

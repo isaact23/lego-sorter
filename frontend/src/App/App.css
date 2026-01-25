@@ -1,6 +1,7 @@
 :root {
   --top-panel-height: 230px;
   --top-panel-max-width: 800px;
+  --brick-image-size: 150px;
 }
 
 .App {
@@ -9,45 +10,59 @@
 }
 
 button {
-    width: 300px;
-    height: 50px;
-    font-size: 30px;
+  width: 300px;
+  height: 50px;
+  font-size: 30px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
 }
 
+/* Bounding box for the top panel */
 .top-panel {
   max-width: var(--top-panel-max-width);
   height: var(--top-panel-height);
   margin: 16px auto;
-
-  display: flex;
-  align-items: stretch;
   box-sizing: border-box;
-
   overflow: hidden; 
 }
 
 .top-panel-row{
   display: flex;
-  justify-content: center;
   gap: 12px;
   width: 100%;
+  height: 100%;
 }
 
 .top-panel-card {
   display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
   align-items: center;
   gap: 12px;
   padding: 12px;
   background: white;
-  border: 1px solid #000000;
+  border: solid 2px;
   border-radius: 16px;
   box-sizing: border-box;
   flex: 1 1 auto;
-  min-width: 220px;
+  min-width: 180px;
 }
 
-.top-panel-card-option {
+.top-panel-card-static {
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: solid 2px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  flex: 0 0 150px;
+  width: 150px;
 }
 
 .top-panel-card-selected {
@@ -84,23 +99,76 @@ button {
   width: 100%;
 }
 
-.placeholder-text {
-  display: block;
-  min-height: 1.25rem;
-  margin-top: 0.5rem;
+.scroll-fade-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .scroll-row {
   display: flex;
-  flex-direction: row;
   gap: 12px;
+  width: 100%;
+  height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 8px;
+  min-width: 0;
+}
+
+.top-panel-card {
+  flex-shrink: 0;
+  min-width: 180px;
+}
+
+
+.scroll-fade-wrapper::before,
+.scroll-fade-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.scroll-fade-wrapper::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255,255,255,1),
+    rgba(255,255,255,0)
+  );
+}
+
+.scroll-fade-wrapper::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(255,255,255,1),
+    rgba(255,255,255,0)
+  );
+}
+
+.scroll-row:has(:only-child) {
+  overflow-x: hidden;
 }
 
 .scroll-row::-webkit-scrollbar {
-  height: 8px;
+  display: none;                /* Chrome, Safari */
+}
+
+/* Desktop only */
+@media (hover: hover) and (pointer: fine) {
+  .scroll-row {
+    scrollbar-width: thin;
+  }
+
+  .scroll-row::-webkit-scrollbar {
+    display: block;
+    height: 8px;
+  }
 }
 
 @keyframes fadeSlideIn {
@@ -112,4 +180,224 @@ button {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+
+
+.Camera {
+    padding: 100px;
+}
+
+.lowConfidence {
+  opacity: 0.6;
+}
+
+.Select {
+  text-align: center;
+  padding: 1rem;
+}
+
+.BrickList {
+  display: flex;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 1.5rem 0;
+  justify-content: center;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  gap: 24px;
+  flex: 1;          /* critical */
+  overflow: hidden;
+}
+
+.ListItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 220px;
+  text-align: center;
+  background: #ffffff;
+  border: #333333 2px solid;
+  border-radius: 16px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.ListItem:hover {
+  transform: scale(1.03);
+}
+
+.ListItem img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 0.5rem;
+}
+
+.dimmed {
+  opacity: 0.35;
+  filter: grayscale(70%);
+}
+
+.ImagePlaceholder {
+  width: var(--brick-image-size);
+  height: var(--brick-image-size);
+  background: #333;
+  border-radius: 8px;
+  margin: 0 auto 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.ConfidenceBar {
+  display: block;
+  width: 100%;
+  height: 20px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #6b7280;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.ConfidenceFill {
+  display: block;
+  min-width: 2px;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.ConfidenceLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.BottomActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+
+
+.auto-highlight {
+  border: 3px solid #4caf50;
+  transform: scale(1.05);
+}
+
+.BrickText {
+  flex: 1;
+}
+
+.BrickText h2 {
+  margin-top: 0;
+}
+
+.BrickText p {
+  margin: 0.25rem 0;
+}
+
+.BrickImage {
+  flex-shrink: 0;
+}
+
+.BrickImage img {
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.BrickImageFrame {
+  width: var(--brick-image-size);
+  height: var(--brick-image-size);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.BrickImageFrame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.BrickActions {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.BrickActions button {
+  width: 150px;
+  transition: all 0.2s ease;
+}
+
+.BrickActions button:hover {
+  transform: scale(1.05);
+}
+
+.BrickDescription {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+
+.SelectImageFrame {
+  width: var(--brick-image-size);
+  height: var(--brick-image-size);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.Top-Panel-BrickInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: solid 2px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+}
+
+.SelectImageFrame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.Select.TopModule {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.top-panel-wrapper {
+  display: flex;
+  gap: 12px;
+  height: 100%;
 }

@@ -5,7 +5,7 @@ function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
 
   return (
     <div className="top-panel-row">
-      <div className="top-panel-card top-panel-card-brick">
+      <div className="Top-Panel-BrickInfo">
         <div className="BrickText">
           <h2>{brick.name}</h2>
           <p><strong>Category:</strong> {brick.category}</p>

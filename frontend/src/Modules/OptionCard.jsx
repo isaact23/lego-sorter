@@ -1,7 +1,7 @@
 export default function OptionCard ({ iconSrc, iconAlt = '', children, onClick }) {
   return (
     <div
-      className={`top-panel-card top-panel-card-option ${onClick ? 'top-panel-card-clickable' : ''}`}
+      className={`top-panel-card ${onClick ? 'top-panel-card-clickable' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
