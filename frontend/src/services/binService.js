@@ -36,8 +36,9 @@ export async function addPartToBin (pieceId, binId, setState, onSuccess) {
 }
 
 export function createEditBinHandler (state, setState, pages) {
-  const { brick, binOperation } = state
+  const { brick, binOperation, binId } = state
   const {
+    setBinId,
     setBinOperation,
     setOperationStatus,
     setBrickList,
@@ -45,16 +46,27 @@ export function createEditBinHandler (state, setState, pages) {
   } = setState
   const { SELECT_PAGE } = pages
 
-  return async (newBinId, onSuccess) => {
+  return async (newBinId, currentBinId, onSuccess) => {
     console.log(
       'editBin called with:',
       newBinId,
+      'current binId:',
+      currentBinId,
       'binOperation:',
       binOperation,
       'brick:',
       brick
     )
+    if (newBinId === currentBinId) {
+      console.log('Unselecting bin:', newBinId)
 
+      setBinId(null)
+      setBinOperation(null)
+      setOperationStatus(null)
+      setBrickList([])
+      return
+    }
+    setBinId(newBinId)
     // CASE 1: No brick selected, show bin contents
     if (!brick) {
       try {

@@ -62,9 +62,18 @@ function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation
   }
 
   // Wrapper around editBin that refreshes after operation
+  /*
   const editBin = (binId) => {
     originalEditBin(binId, (brickId) => refreshSearch(brickId))
   }
+*/
+  const editBin = (clickedBinId) => {
+  originalEditBin(
+    clickedBinId,
+    binId,
+    (brickId) => refreshSearch(brickId)
+  )
+}
 
   // Get all bin IDs that contain the brick.
   useEffect(() => {
@@ -94,7 +103,7 @@ function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation
         className={className}
         id={binIdValue}
         onClick={() => {
-          setBinId(binIdValue)
+          //setBinId(binIdValue)
           editBin(binIdValue)
         }}
       >
