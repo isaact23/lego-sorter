@@ -61,8 +61,9 @@ button {
   border: solid 2px;
   border-radius: 16px;
   box-sizing: border-box;
-  flex: 0 0 150px;
   width: 150px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .top-panel-card-selected {
@@ -96,14 +97,9 @@ button {
 }
 
 .top-panel-select {
-  width: 100%;
-}
-
-.scroll-fade-wrapper {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
 }
 
 .scroll-row {
@@ -114,6 +110,8 @@ button {
   overflow-x: auto;
   overflow-y: hidden;
   min-width: 0;
+  padding: 5px;
+
 }
 
 .top-panel-card {
@@ -121,43 +119,6 @@ button {
   min-width: 180px;
 }
 
-
-.scroll-fade-wrapper::before,
-.scroll-fade-wrapper::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: 16px;
-  height: 100%;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.scroll-fade-wrapper::before {
-  left: 0;
-  background: linear-gradient(
-    to right,
-    rgba(255,255,255,1),
-    rgba(255,255,255,0)
-  );
-}
-
-.scroll-fade-wrapper::after {
-  right: 0;
-  background: linear-gradient(
-    to left,
-    rgba(255,255,255,1),
-    rgba(255,255,255,0)
-  );
-}
-
-.scroll-row:has(:only-child) {
-  overflow-x: hidden;
-}
-
-.scroll-row::-webkit-scrollbar {
-  display: none;                /* Chrome, Safari */
-}
 
 /* Desktop only */
 @media (hover: hover) and (pointer: fine) {
@@ -171,19 +132,6 @@ button {
   }
 }
 
-@keyframes fadeSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
-
 .Camera {
     padding: 100px;
 }
@@ -192,10 +140,7 @@ button {
   opacity: 0.6;
 }
 
-.Select {
-  text-align: center;
-  padding: 1rem;
-}
+
 
 .BrickList {
   display: flex;

@@ -96,8 +96,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   if (!bricksToDisplay.length) return null
 
   return (
-  <div className="top-panel-wrapper">
-    <div className="scroll-fade-wrapper">
+  <div className="top-panel-select">
       <div className="scroll-row">
         {bricksToDisplay.map(brick => {
           let fillWidth
@@ -144,7 +143,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
             </div>
           )
         })}
-        </div>
+        
       </div>
 
     <div className="top-panel-card-static">
