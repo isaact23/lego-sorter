@@ -54,10 +54,10 @@ function App () {
       setBinId
     },
     {
-      SELECT_PAGE
+      SELECT_PAGE,
+      OPTION_CARDS
     }
   )
-
 
   // Function to camera page and reset.
   function returnToCamera () {
@@ -107,6 +107,7 @@ function App () {
           <CategorySelectCard 
             resetTrigger={dropdownResetTrigger}
             onCategorySelect={() => {
+
               setSearchQuery('') // Clear search when category is selected
               setSearchResults([])
             }}
@@ -174,6 +175,8 @@ function App () {
   // Handle part number search
   async function handleSearchChange (event) {
     const query = event.target.value
+
+
     setSearchQuery(query)
     setDropdownResetTrigger(prev => prev + 1) // Trigger dropdown reset
 

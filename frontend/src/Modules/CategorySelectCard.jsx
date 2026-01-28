@@ -45,14 +45,13 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
   }, [cat1, cat2])
 
   useEffect(() => {
+
     if (cat2 && selectedCategoryId) {
-      if (onCategorySelect) onCategorySelect()
-      if (onChange) onChange([selectedCategoryId])
+      onChange?.([selectedCategoryId])
     } else if (cat1) {
-      if (onCategorySelect) onCategorySelect()
-      if (onChange) onChange(matchingIds)
+      onChange?.(matchingIds)
     } else {
-      if (onChange) onChange([])
+      onChange?.([])
     }
   }, [cat1, cat2, matchingIds, selectedCategoryId, onChange, onCategorySelect])
 
@@ -64,6 +63,7 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
         onChange={e => {
           setCat1(e.target.value)
           setCat2('')
+          onCategorySelect?.()
         }}
       >
         <option value="">Select category</option>
@@ -78,7 +78,10 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
         className="w3-select w3-border option-select"
         value={cat2}
         disabled={!cat1}
-        onChange={e => setCat2(e.target.value)}
+        onChange={e => {
+          setCat2(e.target.value)
+          onCategorySelect?.()
+        }}
       >
         <option value="">Select subcategory</option>
         {cat2Options.map(option => (

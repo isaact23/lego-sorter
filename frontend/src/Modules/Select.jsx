@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import axios from 'axios'
 import '../App/App.css'
 import { getBrickImage } from '../services/imageService'
 

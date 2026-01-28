@@ -4,7 +4,7 @@ import axios from 'axios'
 import { BACKEND_URL } from '../config'
 import { searchPartsByPrefix } from '../services/searchService'
 
-function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation, setBinOperation, operationStatus, searchQuery, searchResults, setSearchResults }) {
+function Table ({ brick, editBin: originalEditBin, binId, searchQuery, searchResults, setSearchResults }) {
   const [targetBinIds, setTargetBinIds] = useState([])
 
   let highlightedBinIds = []
@@ -62,11 +62,7 @@ function Table ({ brick, editBin: originalEditBin, binId, setBinId, binOperation
   }
 
   // Wrapper around editBin that refreshes after operation
-  /*
-  const editBin = (binId) => {
-    originalEditBin(binId, (brickId) => refreshSearch(brickId))
-  }
-*/
+
   const editBin = (clickedBinId) => {
   originalEditBin(
     clickedBinId,

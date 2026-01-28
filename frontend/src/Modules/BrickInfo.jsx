@@ -1,4 +1,4 @@
-import React from 'react'
+
 
 function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
   if (!brick) return null
@@ -15,7 +15,7 @@ function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
         <div className="BrickImageFrame">
           <img
             src={brick.img_url}
-            alt={`Picture of ${brick.name}`}
+            alt={'${brick.name}'}
           />
         </div>
 

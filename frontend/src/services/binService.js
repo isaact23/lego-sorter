@@ -36,7 +36,7 @@ export async function addPartToBin (pieceId, binId, setState, onSuccess) {
 }
 
 export function createEditBinHandler (state, setState, pages) {
-  const { brick, binOperation, binId } = state
+  const { brick, binOperation } = state
   const {
     setBinId,
     setBinOperation,
@@ -44,7 +44,7 @@ export function createEditBinHandler (state, setState, pages) {
     setBrickList,
     setPage
   } = setState
-  const { SELECT_PAGE } = pages
+  const { SELECT_PAGE, OPTION_CARDS } = pages
 
   return async (newBinId, currentBinId, onSuccess) => {
     console.log(
@@ -59,11 +59,12 @@ export function createEditBinHandler (state, setState, pages) {
     )
     if (newBinId === currentBinId) {
       console.log('Unselecting bin:', newBinId)
-
+      
       setBinId(null)
       setBinOperation(null)
       setOperationStatus(null)
       setBrickList([])
+      setPage(OPTION_CARDS)
       return
     }
     setBinId(newBinId)
@@ -71,6 +72,16 @@ export function createEditBinHandler (state, setState, pages) {
     if (!brick) {
       try {
         const binParts = await GetBinInfo(newBinId)
+
+        // Handle empty or null bin
+        if (!binParts || binParts.length === 0) {
+          console.log('Bin is empty:', newBinId)
+
+          setBrickList([])
+          setOperationStatus(null)
+          setPage(OPTION_CARDS)
+          return
+        }
 
         const cleanedParts = binParts.map(p => p.trim())
 
