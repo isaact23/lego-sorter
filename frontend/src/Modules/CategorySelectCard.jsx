@@ -58,7 +58,7 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
   return (
     <OptionCard iconSrc="/icons/mag_glass.png">
       <select
-        className="w3-select w3-border option-select"
+        className="w3-select w3-border w3-padding option-select"
         value={cat1}
         onChange={e => {
           setCat1(e.target.value)
@@ -75,7 +75,7 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
       </select>
 
       <select
-        className="w3-select w3-border option-select"
+        className="w3-select w3-border w3-padding option-select"
         value={cat2}
         disabled={!cat1}
         onChange={e => {
