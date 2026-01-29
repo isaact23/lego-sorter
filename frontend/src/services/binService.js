@@ -119,7 +119,12 @@ export function createEditBinHandler (state, setState, pages) {
         onSuccess
       )
     } else {
-      console.warn('No operation selected, binOperation:', binOperation)
+      console.log('No operation selected, binOperation:', binOperation)
+      setBrickList([])
+      setOperationStatus(null)
+      setPage(OPTION_CARDS)
+
+      return
     }
   }
 }
