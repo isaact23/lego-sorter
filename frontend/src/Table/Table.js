@@ -1,88 +1,19 @@
+// Generate and display the table layout with bins and containers
+// Return bin IDs on click
+
 import './Table.css'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { BACKEND_URL } from '../config'
-import { searchPartsByPrefix } from '../services/searchService'
 
-function Table ({ brick, editBin: originalEditBin, binId, searchQuery, searchResults, setSearchResults }) {
-  const [targetBinIds, setTargetBinIds] = useState([])
+function Table ({ binId, onBinClick, searchQuery, searchResults }) {
 
-  let highlightedBinIds = []
-
-  if (searchQuery && searchResults.length > 0) {
-    highlightedBinIds = searchResults
-  } else if (brick) {
-    highlightedBinIds = targetBinIds
-  } else if (binId) {
-    highlightedBinIds = [binId]
-  }
+  const highlightedBinIds =
+    searchQuery && searchResults.length > 0
+      ? searchResults
+      : binId
+        ? [binId]
+        : []
 
   console.log('Table render - searchQuery:', searchQuery, 'searchResults:', searchResults, 'highlightedBinIds:', highlightedBinIds)
 
-  // Fetch bins that contain this brick
-  const fetchTargetBins = (brickId) => {
-    console.log('Fetching bin IDs for piece ' + brickId)
-
-    axios
-      .post(
-        `${BACKEND_URL}/bin/get-all-bins`,
-        {
-          pieceId: brickId
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      .then(res => {
-        console.log('Got bin IDs:', res.data)
-        setTargetBinIds(Array.isArray(res.data) ? res.data : [res.data])
-      })
-      .catch(err => {
-        console.error('Error fetching bins for piece ' + brickId + ':', err.message)
-        setTargetBinIds([])
-      })
-  }
-
-  // Refresh search results if a search is active
-  const refreshSearch = async (brickId) => {
-    if (searchQuery) {
-      console.log('Refreshing search for:', searchQuery)
-      try {
-        const results = await searchPartsByPrefix(searchQuery)
-        setSearchResults(results)
-      } catch (err) {
-        console.error('Error refreshing search:', err)
-      }
-    } else {
-      // If no search is active, refresh the target bins
-      fetchTargetBins(brickId)
-    }
-  }
-
-  // Wrapper around editBin that refreshes after operation
-
-  const editBin = (clickedBinId) => {
-  originalEditBin(
-    clickedBinId,
-    binId,
-    (brickId) => refreshSearch(brickId)
-  )
-}
-
-  // Get all bin IDs that contain the brick.
-  useEffect(() => {
-    // If no brick is selected, no bins should be selected.
-    if (brick === null) {
-      setTargetBinIds([])
-      return
-    }
-
-    fetchTargetBins(brick['id'])
-  }, [brick])
-
-  
   // Get a bin for a specific type of part. Highlight if it contains the targeted part.
   const getBin = binIdValue => {
     let className = 'Bin'
@@ -99,8 +30,7 @@ function Table ({ brick, editBin: originalEditBin, binId, searchQuery, searchRes
         className={className}
         id={binIdValue}
         onClick={() => {
-          //setBinId(binIdValue)
-          editBin(binIdValue)
+          onBinClick(binIdValue)
         }}
       >
         <p>{displayId}</p>

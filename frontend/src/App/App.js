@@ -7,8 +7,7 @@ import { useState, useRef } from 'react'
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
 import { identify, takePicture, handleFileChange } from '../services/photoService'
-import { createBrickCallbacks } from '../services/brickService'
-import { createEditBinHandler } from '../services/binService'
+import { GetBinInfo } from '../services/binService'
 import { searchPartsByPrefix } from '../services/searchService'
 import { fetchBrickData } from '../services/brickDataService'
 
@@ -31,33 +30,74 @@ function App () {
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
 
-  const { brickCallback, selectCallback } = createBrickCallbacks(
-    {
-      setBrickList,
-      setPage,
-      setBrick,
-      setBinOperation
-    },
-    {
-      SELECT_PAGE,
-      BRICK_INFO
+  // Handle bin clicks from Table
+  async function onBinClicked (newBinId) {
+    // Clicking the same bin toggles it off
+    if (newBinId === binId) {
+      setBinId(null)
+      setPage(OPTION_CARDS)
+      setBrickList([])
+      return
     }
-  )
 
-  const editBin = createEditBinHandler(
-    { brick, binOperation },
-    {
-      setBinOperation,
-      setOperationStatus,
-      setBrickList,
-      setPage,
-      setBinId
-    },
-    {
-      SELECT_PAGE,
-      OPTION_CARDS
+    // If we are in BrickInfo, ignore bin clicks
+    if (page === BRICK_INFO) return
+
+    setBinId(newBinId)
+
+    try {
+      const binParts = await GetBinInfo(newBinId)
+
+      if (!binParts || binParts.length === 0) {
+        setBrickList([])
+        setPage(OPTION_CARDS)
+        return
+      }
+
+      setBrickList(
+        binParts.map(id => ({
+          id: id.trim(),
+          name: `Part ${id}`
+        }))
+      )
+
+      setPage(SELECT_PAGE)
+    } catch (err) {
+      console.error('Failed to load bin contents:', err)
     }
-  )
+  }
+
+
+
+  function brickCallback (bricks) {
+    if (!bricks || bricks.length === 0) return
+
+    if (bricks.length > 1) {
+      setBrickList(bricks)
+      setPage(SELECT_PAGE)
+    } else {
+      selectCallback(bricks[0])
+    }
+  }
+
+  function selectCallback (selectedBrick) {
+    setBrick(selectedBrick)
+    setBinOperation(null)
+    setPage(BRICK_INFO)
+  }
+
+  function onBricksIdentified (bricks) {
+    if (!bricks || bricks.length === 0) return
+
+    if (bricks.length > 1) {
+      setBrickList(bricks)
+      setPage(SELECT_PAGE)
+    } else {
+      setBrick(bricks[0])
+      setBinOperation(null)
+      setPage(BRICK_INFO)
+    }
+  }
 
   // Function to camera page and reset.
   function returnToCamera () {
@@ -68,9 +108,8 @@ function App () {
   const getPage = () => {
     if (page === CAMERA_PAGE) 
       return 
-        <Camera 
-          brickCallback={brickCallback} 
-        />
+        <Camera brickCallback={onBricksIdentified} />
+
     if (page === SELECT_PAGE)
       return (
         <Select
@@ -232,18 +271,12 @@ function App () {
       <div className='top-panel'>
         {getPage()}
       </div>
-      <Table 
-        brick={brick} 
-        editBin={editBin}
+      <Table
         binId={binId}
-        setBinId={setBinId}
-        binOperation={binOperation} 
-        setBinOperation={setBinOperation} 
-        operationStatus={operationStatus} 
-        searchQuery={searchQuery} 
-        searchResults={searchResults} 
-        setSearchResults={setSearchResults} 
-      />   
+        onBinClick={onBinClicked}
+        searchQuery={searchQuery}
+        searchResults={searchResults}
+      />
     </div>
   )
 }

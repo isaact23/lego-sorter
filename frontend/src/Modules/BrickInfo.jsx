@@ -21,17 +21,15 @@ function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
 
         <div className="BrickActions">
           <button
-            className={`w3-button ${binOperation === 'add' ? 'w3-green' : 'w3-light-green'}`}
+            className="w3-button w3-green"
             onClick={() => setBinOperation('add')}
-            style={{ opacity: binOperation === 'add' ? 1 : 0.6 }}
           >
             Add to Bin
           </button>
 
           <button
-            className={`w3-button ${binOperation === 'remove' ? 'w3-red' : 'w3-light-red'}`}
+            className="w3-button w3-red"
             onClick={() => setBinOperation('remove')}
-            style={{ opacity: binOperation === 'remove' ? 1 : 0.6 }}
           >
             Remove from Bin
           </button>
