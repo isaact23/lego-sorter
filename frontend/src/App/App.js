@@ -1,11 +1,11 @@
 import './App.css'
 import { useState, useRef } from 'react'
-import Camera from './Components/Camera'
-import Select from './Components/Select'
-import BrickInfo from './Components/BrickInfo'
-import OptionCard from './Components/OptionCard'
-import CategorySelectCard from './Components/CategorySelectCard'
-import Table from './Components/Table/Table'
+import CameraCard from './SearchBar/CameraCard'
+import Select from './ResultsBar/Select'
+import BrickInfo from './ResultsBar/BrickInfo'
+import PartNumberCard from './SearchBar/PartNumberCard'
+import CategorySelectCard from './SearchBar/CategorySelectCard'
+import Table from './Table/Table'
 import {
   identify,
   takePicture,
@@ -69,8 +69,8 @@ function App () {
 
   // Pass operationStatus to Table
   const getPage = () => {
-    if (page === CAMERA_PAGE) return
-    ;<Camera brickCallback={brickCallback} />
+    if (page === CAMERA_PAGE)
+      return <CameraCard brickCallback={brickCallback} />
     if (page === SELECT_PAGE)
       return (
         <Select
@@ -112,7 +112,7 @@ function App () {
           />
 
           {/* Card 2: part number search */}
-          <OptionCard iconSrc='/icons/typewriter.png'>
+          <PartNumberCard iconSrc='/icons/typewriter.png'>
             <input
               className='w3-input w3-border'
               placeholder='Enter part #'
@@ -128,15 +128,15 @@ function App () {
             >
               Search Part
             </button>
-          </OptionCard>
+          </PartNumberCard>
 
           {/* Card 3: action button */}
-          <OptionCard
+          <PartNumberCard
             iconSrc='/icons/cam.png'
             onClick={() => handleTakePicture()}
           >
             <strong>Find Brick</strong>
-          </OptionCard>
+          </PartNumberCard>
         </div>
       )
   }

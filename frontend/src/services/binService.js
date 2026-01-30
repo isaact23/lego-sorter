@@ -3,7 +3,7 @@
 // such as adding/removing parts and retrieving bin info.
 
 import axios from 'axios'
-import { BACKEND_URL } from '../config'
+import { BACKEND_URL } from '../data/config'
 
 export async function addPartToBin (pieceId, binId, setState, onSuccess) {
   const { setOperationStatus, setBinOperation } = setState
@@ -59,7 +59,7 @@ export function createEditBinHandler (state, setState, pages) {
     )
     if (newBinId === currentBinId) {
       console.log('Unselecting bin:', newBinId)
-      
+
       setBinId(null)
       setBinOperation(null)
       setOperationStatus(null)
@@ -102,7 +102,6 @@ export function createEditBinHandler (state, setState, pages) {
       return
     }
 
-
     // CASE 2: Normal add/remove behavior
     if (binOperation === 'add') {
       addPartToBin(
@@ -128,7 +127,6 @@ export function createEditBinHandler (state, setState, pages) {
     }
   }
 }
-
 
 export async function removePartFromBin (pieceId, binId, setState, onSuccess) {
   const { setOperationStatus, setBinOperation } = setState
@@ -166,8 +164,7 @@ export async function GetBinInfo (binId) {
     const response = await axios.post(`${BACKEND_URL}/bin/Get-Info`, { binId })
     console.log('GetBinInfo response:', response)
     return response.data
-  } 
-  catch (err) {
+  } catch (err) {
     console.error('Error getting bin info:', err)
     throw err
   }

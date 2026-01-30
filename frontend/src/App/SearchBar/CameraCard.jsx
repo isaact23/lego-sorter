@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 const API_ENDPOINT = 'https://api.brickognize.com/predict/'
 
-function Camera ({ brickCallback }) {
+function CameraCard ({ brickCallback }) {
   const [waiting, setWaiting] = useState(false)
 
   async function identify (base64Data) {
@@ -68,4 +68,4 @@ function Camera ({ brickCallback }) {
   )
 }
 
-export default Camera
+export default CameraCard

@@ -1,8 +1,8 @@
 import './Table.css'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { BACKEND_URL } from '../../../config'
-import { searchPartsByPrefix } from '../../../services/searchService'
+import { BACKEND_URL } from '../../data/config'
+import { searchPartsByPrefix } from '../../services/searchService'
 
 function Table ({ brick, editBin: originalEditBin, binId, searchQuery, searchResults, setSearchResults }) {
   const [targetBinIds, setTargetBinIds] = useState([])

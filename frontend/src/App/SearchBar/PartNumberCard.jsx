@@ -1,4 +1,4 @@
-export default function OptionCard ({ iconSrc, iconAlt = '', children, onClick }) {
+export default function PartNumberCard ({ iconSrc, iconAlt = '', children, onClick }) {
   return (
     <div
       className={`top-panel-card ${onClick ? 'top-panel-card-clickable' : ''}`}
