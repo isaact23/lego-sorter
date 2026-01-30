@@ -2,6 +2,10 @@
 // Return bin IDs on click
 
 import './Table.css'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import { BACKEND_URL } from '../../data/config'
+import { searchPartsByPrefix } from '../../services/searchService'
 
 function Table ({ binId, onBinClick, searchQuery, searchResults }) {
 

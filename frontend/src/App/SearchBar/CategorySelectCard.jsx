@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
-import OptionCard from './OptionCard'
-import categoryData from './CategoryData'
-import '../App/App.css'
+import PartNumberCard from './PartNumberCard'
+import categoryData from '../../data/categoryData'
 
 export default function CategorySelectCard({ onChange, onCategorySelect, resetTrigger }) {
   const [cat1, setCat1] = useState('')
@@ -56,7 +55,7 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
   }, [cat1, cat2, matchingIds, selectedCategoryId, onChange, onCategorySelect])
 
   return (
-    <OptionCard iconSrc="/icons/mag_glass.png">
+    <PartNumberCard iconSrc="/icons/mag_glass.png">
       <select
         className="w3-select w3-border w3-padding option-select"
         value={cat1}
@@ -91,6 +90,6 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
         ))}
       </select>
 
-    </OptionCard>
+    </PartNumberCard>
   )
 }

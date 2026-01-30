@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { API_ENDPOINT } from '../config'
+import { API_ENDPOINT } from '../data/config'
 import { fetchBrickData } from './brickDataService'
 
 export async function identify (base64Data, onSuccess, onError) {
@@ -27,7 +27,7 @@ export async function identify (base64Data, onSuccess, onError) {
 
     // Filter out any null results (parts not found in Rebrickable)
     const validBricks = bricksWithData.filter(brick => brick !== null)
-    
+
     if (validBricks.length === 0) {
       onError('No matching parts found in Rebrickable database')
       return

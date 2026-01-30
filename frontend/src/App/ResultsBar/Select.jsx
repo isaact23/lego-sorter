@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import '../App/App.css'
-import { getBrickImage } from '../services/imageService'
+import { getBrickImage } from '../../services/imageService'
 
 //const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 

@@ -1,16 +1,12 @@
 import './App.css'
-import Camera from '../Modules/Camera'
-import Select from '../Modules/Select'
-import Table from '../Table/Table'
-import BrickInfo from '../Modules/BrickInfo'
 import { useState, useRef } from 'react'
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
 import { identify, takePicture, handleFileChange } from '../services/photoService'
-import { GetBinInfo } from '../services/binService'
+import { createBrickCallbacks } from '../services/brickService'
+import { createEditBinHandler } from '../services/binService'
 import { searchPartsByPrefix } from '../services/searchService'
 import { fetchBrickData } from '../services/brickDataService'
-
 
 const CAMERA_PAGE = 0
 const SELECT_PAGE = 1
@@ -108,8 +104,9 @@ function App () {
   const getPage = () => {
     if (page === CAMERA_PAGE) 
       return 
-        <Camera brickCallback={onBricksIdentified} />
-
+        <Camera 
+          brickCallback={brickCallback} 
+        />
     if (page === SELECT_PAGE)
       return (
         <Select
@@ -140,28 +137,26 @@ function App () {
             onChange={handleImageChange}
             ref={pictureInputRef}
           />
-    
 
           {/* Card 1: two dropdowns */}
-          <CategorySelectCard 
+          <CategorySelectCard
             resetTrigger={dropdownResetTrigger}
             onCategorySelect={() => {
-
               setSearchQuery('') // Clear search when category is selected
               setSearchResults([])
             }}
           />
-          
+
           {/* Card 2: part number search */}
-          <OptionCard iconSrc='/icons/typewriter.png'>
-            <input 
-              className='w3-input w3-border' 
-              placeholder='Enter part #' 
+          <PartNumberCard iconSrc='/icons/typewriter.png'>
+            <input
+              className='w3-input w3-border'
+              placeholder='Enter part #'
               value={searchQuery}
               onClick={handleSearchChange}
               onChange={handleSearchChange}
             />
-            <button 
+            <button
               className='w3-button w3-theme-d1'
               onClick={handleExactPartSearch}
               disabled={waiting || !searchQuery.trim()}
@@ -169,12 +164,15 @@ function App () {
             >
               Search Part
             </button>
-          </OptionCard>
+          </PartNumberCard>
 
           {/* Card 3: action button */}
-          <OptionCard iconSrc='/icons/cam.png' onClick={() => handleTakePicture()}>
+          <PartNumberCard
+            iconSrc='/icons/cam.png'
+            onClick={() => handleTakePicture()}
+          >
             <strong>Find Brick</strong>
-          </OptionCard>
+          </PartNumberCard>
         </div>
       )
   }
@@ -206,7 +204,7 @@ function App () {
 
   // Handle when an image is taken.
   function handleImageChange (event) {
-    handleFileChange(event, (base64Data) => {
+    handleFileChange(event, base64Data => {
       identify(base64Data, handleIdentify, handleIdentifyError)
     })
   }
@@ -214,7 +212,6 @@ function App () {
   // Handle part number search
   async function handleSearchChange (event) {
     const query = event.target.value
-
 
     setSearchQuery(query)
     setDropdownResetTrigger(prev => prev + 1) // Trigger dropdown reset
@@ -271,12 +268,18 @@ function App () {
       <div className='top-panel'>
         {getPage()}
       </div>
-      <Table
+      <Table 
+        brick={brick} 
+        editBin={editBin}
         binId={binId}
-        onBinClick={onBinClicked}
-        searchQuery={searchQuery}
-        searchResults={searchResults}
-      />
+        setBinId={setBinId}
+        binOperation={binOperation} 
+        setBinOperation={setBinOperation} 
+        operationStatus={operationStatus} 
+        searchQuery={searchQuery} 
+        searchResults={searchResults} 
+        setSearchResults={setSearchResults} 
+      />   
     </div>
   )
 }
