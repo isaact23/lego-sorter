@@ -10,6 +10,7 @@ import { identify, takePicture, handleFileChange } from '../services/photoServic
 import { GetBinInfo } from '../services/binService'
 import { searchPartsByPrefix } from '../services/searchService'
 import { fetchBrickData } from '../services/brickDataService'
+import { createEditBinHandler } from '../services/binService'
 
 
 const CAMERA_PAGE = 0
@@ -29,6 +30,19 @@ function App () {
   const [searchResults, setSearchResults] = useState([])
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
+
+
+  const editBin = createEditBinHandler(
+    { brick, binOperation },
+    {
+      setBinId,
+      setBinOperation,
+      setOperationStatus,
+      setBrickList,
+      setPage
+    },
+    { SELECT_PAGE, OPTION_CARDS }
+  )
 
   // Handle bin clicks from Table
   async function onBinClicked (newBinId) {
@@ -272,6 +286,7 @@ function App () {
         {getPage()}
       </div>
       <Table
+        editBin={editBin}
         binId={binId}
         onBinClick={onBinClicked}
         searchQuery={searchQuery}

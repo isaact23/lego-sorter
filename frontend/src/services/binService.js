@@ -6,7 +6,7 @@ import axios from 'axios'
 import { BACKEND_URL } from '../config'
 
 export async function addPartToBin (pieceId, binId, setState, onSuccess) {
-  const { setOperationStatus, setBinOperation } = setState
+  const { setOperationStatus, setBinOperation, setBrickList } = setState
   console.log('addPartToBin called:', pieceId, binId)
   try {
     const response = await axios.post(`${BACKEND_URL}/bin/add`, {
@@ -16,6 +16,7 @@ export async function addPartToBin (pieceId, binId, setState, onSuccess) {
     console.log('Add response:', response)
     setOperationStatus(`✓ Added piece ${pieceId} to bin ${binId}`)
     setBinOperation(null)
+    setBrickList([])
     console.log('Calling onSuccess with:', pieceId, 'onSuccess:', onSuccess)
     if (onSuccess) {
       console.log('onSuccess is defined, calling it')
@@ -36,7 +37,7 @@ export async function addPartToBin (pieceId, binId, setState, onSuccess) {
 }
 
 export function createEditBinHandler (state, setState, pages) {
-  const { brick, binOperation } = state
+  
   const {
     setBinId,
     setBinOperation,
@@ -47,6 +48,7 @@ export function createEditBinHandler (state, setState, pages) {
   const { SELECT_PAGE, OPTION_CARDS } = pages
 
   return async (newBinId, currentBinId, onSuccess) => {
+    const { brick, binOperation } = state
     console.log(
       'editBin called with:',
       newBinId,
@@ -57,7 +59,8 @@ export function createEditBinHandler (state, setState, pages) {
       'brick:',
       brick
     )
-    if (newBinId === currentBinId) {
+    if (newBinId === currentBinId && !binOperation) {
+ 
       console.log('Unselecting bin:', newBinId)
       
       setBinId(null)
@@ -108,31 +111,31 @@ export function createEditBinHandler (state, setState, pages) {
       addPartToBin(
         brick.id,
         newBinId,
-        { setOperationStatus, setBinOperation },
+        { setOperationStatus, setBinOperation, setBrickList },
         onSuccess
       )
     } else if (binOperation === 'remove') {
       removePartFromBin(
         brick.id,
         newBinId,
-        { setOperationStatus, setBinOperation },
+        { setOperationStatus, setBinOperation, setBrickList },
         onSuccess
       )
     } else {
-      console.log('No operation selected, binOperation:', binOperation)
-      
-      setBrickList([])
-      setOperationStatus(null)
-      setPage(OPTION_CARDS)
+        console.log('No operation selected, clearing brick')
 
-      return
-    }
+        setBrickList([])
+        setOperationStatus(null)
+        setPage(OPTION_CARDS)
+        return
+      }
+
   }
 }
 
 
 export async function removePartFromBin (pieceId, binId, setState, onSuccess) {
-  const { setOperationStatus, setBinOperation } = setState
+  const { setOperationStatus, setBinOperation, setBrickList } = setState
   console.log('removePartFromBin called:', pieceId, binId)
   try {
     const response = await axios.post(`${BACKEND_URL}/bin/remove`, {
@@ -142,6 +145,7 @@ export async function removePartFromBin (pieceId, binId, setState, onSuccess) {
     console.log('Remove response:', response)
     setOperationStatus(`✓ Removed piece ${pieceId} from bin ${binId}`)
     setBinOperation(null)
+    setBrickList([])
     console.log('Calling onSuccess with:', pieceId, 'onSuccess:', onSuccess)
     if (onSuccess) {
       console.log('onSuccess is defined, calling it')

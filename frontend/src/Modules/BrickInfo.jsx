@@ -22,14 +22,20 @@ function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
         <div className="BrickActions">
           <button
             className="w3-button w3-green"
-            onClick={() => setBinOperation('add')}
+            onClick={() => {
+              console.log('ADD toggled on')
+              setBinOperation('add')
+            }}
           >
             Add to Bin
           </button>
 
           <button
             className="w3-button w3-red"
-            onClick={() => setBinOperation('remove')}
+            onClick={() => {
+              console.log('REMOVE toggled on')
+              setBinOperation('remove')
+            }}
           >
             Remove from Bin
           </button>

@@ -3,7 +3,7 @@
 
 import './Table.css'
 
-function Table ({ binId, onBinClick, searchQuery, searchResults }) {
+function Table ({ editBin, binId, onBinClick, searchQuery, searchResults }) {
 
   const highlightedBinIds =
     searchQuery && searchResults.length > 0
@@ -30,7 +30,8 @@ function Table ({ binId, onBinClick, searchQuery, searchResults }) {
         className={className}
         id={binIdValue}
         onClick={() => {
-          onBinClick(binIdValue)
+          console.log('BIN CLICK', binIdValue)
+          editBin(binIdValue, binId)
         }}
       >
         <p>{displayId}</p>
