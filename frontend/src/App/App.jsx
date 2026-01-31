@@ -18,6 +18,13 @@ const SELECT_PAGE = 1
 const OPTION_CARDS = 2
 const BRICK_INFO = 3
 
+// Navigation helpers
+const isHomePage = page => page === OPTION_CARDS || page === CAMERA_PAGE
+const isSelectPage = page => page === SELECT_PAGE
+const isBrickInfoPage = page => page === BRICK_INFO
+
+
+
 function App () {
   const [page, setPage] = useState(2)
   const [brickList, setBrickList] = useState([])
@@ -31,6 +38,7 @@ function App () {
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
 
+  const canSelectBin = !isBrickInfoPage(page)
 
   const editBin = createEditBinHandler(
     { brick, binOperation },
@@ -46,25 +54,28 @@ function App () {
 
   // Handle bin clicks from Table
   async function onBinClicked (newBinId) {
+    console.log('bin clicked', newBinId, 'page:', page)
+    // BrickInfo blocks bin selection entirely
+    if (!canSelectBin) return
+
     // Clicking the same bin toggles it off
     if (newBinId === binId) {
       setBinId(null)
-      setPage(OPTION_CARDS)
       setBrickList([])
+      setPage(OPTION_CARDS)
       return
     }
-
-    // If we are in BrickInfo, ignore bin clicks
-    if (page === BRICK_INFO) return
 
     setBinId(newBinId)
 
     try {
       const binParts = await GetBinInfo(newBinId)
 
+      // Always go to Select when a bin is clicked
+      // Even if empty
       if (!binParts || binParts.length === 0) {
         setBrickList([])
-        setPage(OPTION_CARDS)
+        setPage(SELECT_PAGE)
         return
       }
 
@@ -83,6 +94,7 @@ function App () {
 
 
 
+
   function brickCallback (bricks) {
     if (!bricks || bricks.length === 0) return
 
@@ -96,9 +108,12 @@ function App () {
 
   function selectCallback (selectedBrick) {
     setBrick(selectedBrick)
+    setBinId(null)          // clear bin selection
+    setBrickList([])        // clear Select memory
     setBinOperation(null)
     setPage(BRICK_INFO)
   }
+
 
   function onBricksIdentified (bricks) {
     if (!bricks || bricks.length === 0) return
@@ -272,13 +287,22 @@ function App () {
     }
   }
 
-  function handleCloseBrickInfo () {
+  // Clear everything and start over, equivalent to page refresh
+  function resetToHome () {
     setBrick(null)
+    setBrickList([])
+    setBinId(null)
     setBinOperation(null)
+    setOperationStatus(null)
     setSearchQuery('')
     setSearchResults([])
     setPage(OPTION_CARDS)
   }
+
+  function handleCloseBrickInfo () {
+    resetToHome()
+  }
+
 
   return (
     <div className='App w3-theme-light'>

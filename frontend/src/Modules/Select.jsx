@@ -92,7 +92,7 @@ function Select ({ brickList, selectCallback, returnHome, retryPhoto }) {
   }, [bricksWithImages, useScores])
 
 
-  if (!bricksToDisplay.length) return null
+  //if (!bricksToDisplay.length) return null
 
   return (
   <div className="top-panel-select">

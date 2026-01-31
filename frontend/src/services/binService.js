@@ -82,9 +82,10 @@ export function createEditBinHandler (state, setState, pages) {
 
           setBrickList([])
           setOperationStatus(null)
-          setPage(OPTION_CARDS)
+          setPage(SELECT_PAGE)
           return
         }
+
 
         const cleanedParts = binParts.map(p => p.trim())
 
