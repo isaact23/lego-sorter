@@ -51,6 +51,22 @@ button {
   min-width: 180px;
 }
 
+
+.bin-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.helper-text {
+  text-align: center;
+  min-height: 1.5em;
+  font-size: 1.5em;
+}
+
+.op-pending {
+  opacity: 0.5;
+}
+
 .top-panel-card-static {
   display: flex;
   flex-direction: column;

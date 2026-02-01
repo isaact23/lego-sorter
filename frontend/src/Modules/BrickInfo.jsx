@@ -27,7 +27,9 @@ function BrickInfo({
 
         <div className="BrickActions">
           <button
-            className={`w3-button ${isAddActive ? 'w3-green' : 'w3-border'}`}
+            className={`w3-button w3-green ${
+              isAddActive ? 'op-pending' : ''
+            }`}
             onClick={() =>
               onOperationSelect(isAddActive ? null : 'add')
             }
@@ -36,7 +38,9 @@ function BrickInfo({
           </button>
 
           <button
-            className={`w3-button ${isRemoveActive ? 'w3-red' : 'w3-border'}`}
+            className={`w3-button w3-red ${
+              isRemoveActive ? 'op-pending' : ''
+            }`}
             onClick={() =>
               onOperationSelect(isRemoveActive ? null : 'remove')
             }

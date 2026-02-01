@@ -53,13 +53,6 @@ function Select ({ partIds = [], selectCallback }) {
     })
   }, [bricks])
 
-  // Auto-select if only one brick
-  useEffect(() => {
-    if (bricks.length === 1) {
-      selectCallback(bricks[0])
-    }
-  }, [bricks])
-
   if (!bricks.length) return null
 
   return (
@@ -84,6 +77,11 @@ function Select ({ partIds = [], selectCallback }) {
             <div>Part #{brick.id}</div>
           </div>
         ))}
+      </div>
+
+      {/* Static placeholder card (close / spacer) */}
+      <div className="top-panel-card-static">
+        {/* intentionally empty for now */}
       </div>
     </div>
   )

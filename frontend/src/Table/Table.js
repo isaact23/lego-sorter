@@ -4,33 +4,47 @@ import './Table.css'
 function Table ({
   highlightedBinIds = [],
   selectedBinId = null,
-  onBinClick
+  onBinClick,
+  binsSelectable = true,
+  binOperation = null
 }) {
 
-  // Render a single bin
-  const renderBin = binId => {
-    let className = 'bin'
+const renderBin = binId => {
+  const isSelected = binId === selectedBinId
+  const isHighlighted = highlightedBinIds.includes(binId)
+  const isRemoveMode = binOperation === 'remove'
+  const canRemoveFromThisBin =
+    !isRemoveMode || highlightedBinIds.includes(binId)
+  const isClickable =
+    binsSelectable && canRemoveFromThisBin
 
-    if (highlightedBinIds.includes(binId)) {
-      className += ' bin-highlighted'
-    }
 
-    if (selectedBinId === binId) {
-      className += ' bin-selected'
-    }
+  const classNames = [
+    'bin',
+    isSelected && 'bin-selected',
+    isHighlighted && 'bin-highlighted',
+    !isClickable && !isHighlighted && 'bin-disabled'
+  ]
+    .filter(Boolean)
+    .join(' ')
 
-    const displayId = binId.split('-').slice(1).join('-')
 
-    return (
-      <div
-        key={binId}
-        className={className}
-        onClick={() => onBinClick(binId)}
-      >
-        <p>{displayId}</p>
-      </div>
-    )
-  }
+
+  const displayId = binId.split('-').slice(1).join('-')
+
+  return (
+    <div
+      className={classNames}
+      onClick={() => {
+        if (!isClickable) return
+        onBinClick(binId)
+      }}
+    >
+      <p>{displayId}</p>
+    </div>
+  )
+}
+
 
   // Static system layout
   const system = {

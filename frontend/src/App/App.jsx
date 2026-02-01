@@ -7,7 +7,6 @@ import { useState, useRef } from 'react'
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
 import { identify, takePicture, handleFileChange } from '../services/photoService'
-import { searchPartsByPrefix } from '../services/searchService'
 import { fetchBrickData } from '../services/brickDataService'
 import { getBinsForBrick } from '../services/binService'
 import { operateBin } from '../services/binService'
@@ -19,6 +18,8 @@ const SELECT_PAGE = 1
 const OPTION_CARDS = 2
 const BRICK_INFO = 3
 
+
+
 function App () {
   const [page, setPage] = useState(2)
   const [brickList, setBrickList] = useState([])
@@ -26,15 +27,15 @@ function App () {
   const [waiting, setWaiting] = useState(false)
   const [binOperation, setBinOperation] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState([])
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
   const [highlightedBinIds, setHighlightedBinIds] = useState([])
   const [selectedBinId, setSelectedBinId] = useState(null)
   const [currentBinContents, setCurrentBinContents] = useState([])
+  const [helperText, setHelperText] = useState('')
 
+  const binsSelectable = !brick || binOperation
 
-  
   async function onBinClicked (newBinId) {
     console.log('onBinClicked', {
       newBinId,
@@ -42,6 +43,10 @@ function App () {
       binOperation,
       brick
     })
+
+    if (page === BRICK_INFO && !binOperation) {
+      return
+    }
 
     const clickingSameBin = newBinId === selectedBinId
 
@@ -61,9 +66,17 @@ function App () {
         const contents = await getBinContents(newBinId)
         console.log('Bin contents:', contents)
         setCurrentBinContents(contents)
+        if (contents.length === 0) {
+          setHelperText(`Bin ${newBinId} is empty`)
+          setPage(OPTION_CARDS)
+          return
+        } else {
+          setHelperText('')
+        }
       } catch (err) {
         console.error('Failed to fetch bin contents', err)
         setCurrentBinContents([])
+        setHelperText('Unable to load bin contents')
       }
 
       setPage(SELECT_PAGE)
@@ -115,13 +128,8 @@ function App () {
 
   function brickCallback (bricks) {
     if (!bricks || bricks.length === 0) return
-
-    if (bricks.length > 1) {
       setBrickList(bricks)
       setPage(SELECT_PAGE)
-    } else {
-      selectCallback(bricks[0])
-    }
   }
 
   async function selectCallback (selectedBrick) {
@@ -129,6 +137,8 @@ function App () {
     setBrick(selectedBrick)
     setBinOperation(null)
     setBrickList([])
+    setHelperText('')
+
 
     try {
       console.log('Fetching bins for brick:', selectedBrick.id)
@@ -207,7 +217,7 @@ function App () {
             onCategorySelect={() => {
 
               setSearchQuery('') // Clear search when category is selected
-              setSearchResults([])
+
             }}
           />
           
@@ -259,7 +269,7 @@ function App () {
     if (waiting) return
     setWaiting(true)
     setSearchQuery('') // Clear search when taking picture
-    setSearchResults([])
+
     setDropdownResetTrigger(prev => prev + 1) // Reset dropdown when taking picture
     takePicture(pictureInputRef)
   }
@@ -305,7 +315,7 @@ function App () {
     setBrickList([])
     setBinOperation(null)
     setSearchQuery('')
-    setSearchResults([])
+    setHelperText('')
     setSelectedBinId(null)
     setPage(OPTION_CARDS)
     setCurrentBinContents([])
@@ -316,11 +326,17 @@ function App () {
       <div className='top-panel'>
         {getPage()}
       </div>
+      <div className="helper-text">
+        {helperText}
+      </div>
       <Table
         onBinClick={onBinClicked}
         highlightedBinIds={highlightedBinIds}
         selectedBinId={selectedBinId}
+        binsSelectable={binsSelectable}
+        binOperation={binOperation}
       />
+
     </div>
   )
 }
