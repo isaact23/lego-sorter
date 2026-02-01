@@ -59,7 +59,7 @@ function Camera ({ brickCallback }) {
       />
 
       <button
-        className='w3-button w3-theme-d1'
+        className='ui-button blue'
         disabled={waiting}
         onClick={() => document.getElementById('cameraInput').click()}
       >

@@ -1,0 +1,39 @@
+.ui-button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #000;
+    font-size: 16px;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    user-select: none;
+    touch-action: manipulation;
+    color: #fff;
+
+    transition: opacity 0.15s ease;
+}
+
+/* Color variants */
+.ui-button.green { background-color: #4CAF50; }
+.ui-button.red { background-color: #f44336; }
+.ui-button.blue { background-color: #2196F3; }
+.ui-button.neutral {
+  background-color: #f1f1f1;
+  color: #000;
+  border: #ccc;
+}
+
+/* Pending / half-tone */
+.ui-button.pending {
+  opacity: 0.5;
+}
+
+/* Disabled */
+.ui-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

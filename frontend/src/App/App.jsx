@@ -1,4 +1,5 @@
 import './App.css'
+import './Button.css'
 import Camera from '../Modules/Camera'
 import Select from '../Modules/Select'
 import Table from '../Table/Table'
@@ -231,7 +232,7 @@ function App () {
             />
 
             <button
-              className='w3-button w3-theme-d1'
+              className='ui-button blue'
               onClick={handleExactPartSearch}
               disabled={waiting || !searchQuery.trim()}
               style={{ width: '100%', marginTop: '-4px' }}
