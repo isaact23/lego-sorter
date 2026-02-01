@@ -1,4 +1,4 @@
-.Bin {
+.bin {
   height: 100%;
   border: solid 1px;
   min-height: 0;
@@ -10,11 +10,14 @@
   cursor: pointer;
 }
 
-.TargetBin {
-  height: 100%;
-  background-color: green;
+.bin-highlighted {
+  background: #2e7d32; /* green */
 }
 
+.bin-selected {
+  outline: 3px solid #ff9800; /* orange */
+  background: #ffb74d;
+}
 
 .System {
   display: grid;

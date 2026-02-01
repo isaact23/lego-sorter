@@ -1,7 +1,13 @@
-
-
-function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
+function BrickInfo({
+  brick,
+  selectedOperation,
+  onOperationSelect,
+  onClose
+}) {
   if (!brick) return null
+
+  const isAddActive = selectedOperation === 'add'
+  const isRemoveActive = selectedOperation === 'remove'
 
   return (
     <div className="top-panel-row">
@@ -15,27 +21,25 @@ function BrickInfo({ brick, binOperation, setBinOperation, onClose }) {
         <div className="BrickImageFrame">
           <img
             src={brick.img_url}
-            alt={'${brick.name}'}
+            alt={brick.name}
           />
         </div>
 
         <div className="BrickActions">
           <button
-            className="w3-button w3-green"
-            onClick={() => {
-              console.log('ADD toggled on')
-              setBinOperation('add')
-            }}
+            className={`w3-button ${isAddActive ? 'w3-green' : 'w3-border'}`}
+            onClick={() =>
+              onOperationSelect(isAddActive ? null : 'add')
+            }
           >
             Add to Bin
           </button>
 
           <button
-            className="w3-button w3-red"
-            onClick={() => {
-              console.log('REMOVE toggled on')
-              setBinOperation('remove')
-            }}
+            className={`w3-button ${isRemoveActive ? 'w3-red' : 'w3-border'}`}
+            onClick={() =>
+              onOperationSelect(isRemoveActive ? null : 'remove')
+            }
           >
             Remove from Bin
           </button>

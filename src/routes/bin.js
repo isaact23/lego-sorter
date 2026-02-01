@@ -1,19 +1,17 @@
 import express from 'express'
 const router = express.Router()
 
-import getBinInfo from './bin/getBinInfo.js'
-import getBin from './bin/getBin.js'
-import addBin from './bin/addBin.js'
-import removeBin from './bin/removeBin.js'
-import getAllBins from './bin/getAllBins.js'
+import getBinContents from './bin/getBinContents.js'
+import addBrick from './bin/addBrick.js'
+import removeBrick from './bin/removeBrick.js'
+import getBins_Brick from './bin/getBins_Brick.js'
 import searchParts from './bin/searchParts.js'
 
 // Routes under the /bin route
-router.post('/get-info', getBinInfo)
-router.post('/get-bin', getBin)
-router.post('/add', addBin)
-router.post('/remove', removeBin)
-router.post('/get-all-bins', getAllBins)
+router.post('/get-info', getBinContents)
+router.post('/add', addBrick)
+router.post('/remove', removeBrick)
+router.post('/getBins_Brick', getBins_Brick)
 router.post('/search-parts', searchParts)
 
 export default router

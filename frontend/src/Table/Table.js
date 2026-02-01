@@ -1,172 +1,67 @@
-// Generate and display the table layout with bins and containers
-// Return bin IDs on click
-
+// frontend/src/Table/Table.jsx
 import './Table.css'
 
-function Table ({ editBin, binId, onBinClick, searchQuery, searchResults }) {
+function Table ({
+  highlightedBinIds = [],
+  selectedBinId = null,
+  onBinClick
+}) {
 
-  const highlightedBinIds =
-    searchQuery && searchResults.length > 0
-      ? searchResults
-      : binId
-        ? [binId]
-        : []
+  // Render a single bin
+  const renderBin = binId => {
+    let className = 'bin'
 
-  console.log('Table render - searchQuery:', searchQuery, 'searchResults:', searchResults, 'highlightedBinIds:', highlightedBinIds)
-
-  // Get a bin for a specific type of part. Highlight if it contains the targeted part.
-  const getBin = binIdValue => {
-    let className = 'Bin'
-    const isHighlighted = highlightedBinIds.includes(binIdValue)
-
-    if (isHighlighted) {
-      className = 'Bin TargetBin'
+    if (highlightedBinIds.includes(binId)) {
+      className += ' bin-highlighted'
     }
 
-    const displayId = binIdValue.split('-').slice(1).join('-')
+    if (selectedBinId === binId) {
+      className += ' bin-selected'
+    }
+
+    const displayId = binId.split('-').slice(1).join('-')
 
     return (
       <div
+        key={binId}
         className={className}
-        id={binIdValue}
-        onClick={() => {
-          console.log('BIN CLICK', binIdValue)
-          editBin(binIdValue, binId)
-        }}
+        onClick={() => onBinClick(binId)}
       >
         <p>{displayId}</p>
       </div>
     )
   }
 
-
-  const mySystem = {
+  // Static system layout
+  const system = {
     id: 'A',
     size: [24, 20],
     containers: [
-      {
-        id: 'A',
-        pos: [0, 0],
-        size: [6, 10],
-        bins: [6, 10]
-      },
-      {
-        id: 'B',
-        pos: [0, 10],
-        size: [6, 10],
-        bins: [6, 10]
-      },
-      {
-        id: 'C',
-        pos: [6, 0],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'G',
-        pos: [10, 0],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'D',
-        pos: [6, 5],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'H',
-        pos: [10, 5],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'E',
-        pos: [6, 10],
-        size: [4, 5],
-        bins: [1, 3]
-      },
-      {
-        id: 'I',
-        pos: [10, 10],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'F',
-        pos: [6, 15],
-        size: [4, 5],
-        bins: [1, 3]
-      },
-      {
-        id: 'J',
-        pos: [10, 15],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-    {
-        id: 'K',
-        pos: [14, 0],
-        size: [6, 10],
-        bins: [6, 10]
-      },
-      {
-        id: 'L',
-        pos: [14, 10],
-        size: [6, 10],
-        bins: [6, 10]
-      },
-      {
-        id: 'M',
-        pos: [20, 0],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'N',
-        pos: [20, 5],
-        size: [4, 5],
-        bins: [2, 3]
-      },
-      {
-        id: 'O',
-        pos: [20, 10],
-        size: [4, 5],
-        bins: [1, 3]
-      },
-      {
-        id: 'P',
-        pos: [20, 15],
-        size: [4, 5],
-        bins: [1, 3]
-      },
+      { id: 'A', pos: [0, 0], size: [6, 10], bins: [6, 10] },
+      { id: 'B', pos: [0, 10], size: [6, 10], bins: [6, 10] },
+      { id: 'C', pos: [6, 0], size: [4, 5], bins: [2, 3] },
+      { id: 'G', pos: [10, 0], size: [4, 5], bins: [2, 3] },
+      { id: 'D', pos: [6, 5], size: [4, 5], bins: [2, 3] },
+      { id: 'H', pos: [10, 5], size: [4, 5], bins: [2, 3] },
+      { id: 'E', pos: [6, 10], size: [4, 5], bins: [1, 3] },
+      { id: 'I', pos: [10, 10], size: [4, 5], bins: [2, 3] },
+      { id: 'F', pos: [6, 15], size: [4, 5], bins: [1, 3] },
+      { id: 'J', pos: [10, 15], size: [4, 5], bins: [2, 3] },
+      { id: 'K', pos: [14, 0], size: [6, 10], bins: [6, 10] },
+      { id: 'L', pos: [14, 10], size: [6, 10], bins: [6, 10] },
+      { id: 'M', pos: [20, 0], size: [4, 5], bins: [2, 3] },
+      { id: 'N', pos: [20, 5], size: [4, 5], bins: [2, 3] },
+      { id: 'O', pos: [20, 10], size: [4, 5], bins: [1, 3] },
+      { id: 'P', pos: [20, 15], size: [4, 5], bins: [1, 3] }
     ]
   }
 
-  const getSystem = system => {
-    return (
-      <div
-        className='System'
-        style={{
-          gridTemplateColumns: `repeat(${system.size[0]}, 1fr)`,
-          gridTemplateRows: `repeat(${system.size[1]}, 1fr)`
-        }}
-      >
-        {system.containers.map(container => {
-          return getContainer(container, system.id)
-        })}
-      </div>
-    )
-  }
+  const renderContainer = container => {
+    const totalBins = container.bins[0] * container.bins[1]
 
-  const getContainer = (container, systemId) => {
-    let binArray = []
-    for (let i = 0; i < container.bins[0] * container.bins[1]; i++) {
-      let id = `${systemId}-${container.id}-${i+1}`
-      binArray.push(getBin(id))
-    }
     return (
       <div
+        key={container.id}
         className='Container'
         style={{
           gridTemplateRows: `repeat(${container.bins[1]}, 1fr)`,
@@ -177,15 +72,23 @@ function Table ({ editBin, binId, onBinClick, searchQuery, searchResults }) {
           gridColumnEnd: container.pos[0] + container.size[0] + 1
         }}
       >
-        {binArray}
+        {Array.from({ length: totalBins }, (_, i) =>
+          renderBin(`${system.id}-${container.id}-${i + 1}`)
+        )}
       </div>
     )
   }
 
   return (
-    //<div className='App'>
-      getSystem(mySystem)
-    //</div>
+    <div
+      className='System'
+      style={{
+        gridTemplateColumns: `repeat(${system.size[0]}, 1fr)`,
+        gridTemplateRows: `repeat(${system.size[1]}, 1fr)`
+      }}
+    >
+      {system.containers.map(renderContainer)}
+    </div>
   )
 }
 

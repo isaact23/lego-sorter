@@ -16,3 +16,12 @@ Run with `npm run start`
 - Use the same method when presenting a list in select whether it's from a photo search or bin click, photo from local DB or cache and description from local CSV.
 - Minimize API calls
 - Make category selection functional
+
+
+-Jed Notes
+
+anything that needs to call up bricks is going to build/pass array of only ids and scores if present. 
+BrickRef {
+  id: string
+  score?: number
+}

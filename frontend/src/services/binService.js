@@ -1,180 +1,55 @@
 // frontend/src/services/binService.js
-// Service functions for managing bin operations
-// such as adding/removing parts and retrieving bin info.
 
 import axios from 'axios'
 import { BACKEND_URL } from '../config'
 
-export async function addPartToBin (pieceId, binId, setState, onSuccess) {
-  const { setOperationStatus, setBinOperation, setBrickList } = setState
-  console.log('addPartToBin called:', pieceId, binId)
-  try {
-    const response = await axios.post(`${BACKEND_URL}/bin/add`, {
-      pieceId,
-      binId
-    })
-    console.log('Add response:', response)
-    setOperationStatus(`✓ Added piece ${pieceId} to bin ${binId}`)
-    setBinOperation(null)
-    setBrickList([])
-    console.log('Calling onSuccess with:', pieceId, 'onSuccess:', onSuccess)
-    if (onSuccess) {
-      console.log('onSuccess is defined, calling it')
-      onSuccess(pieceId)
-    } else {
-      console.warn('onSuccess is undefined!')
-    }
-    setTimeout(() => {
-      setOperationStatus(null)
-    }, 3000)
-  } catch (err) {
-    console.error('Error adding part to bin:', err)
-    setOperationStatus(`✗ Error adding piece: ${err.message}`)
-    setTimeout(() => {
-      setOperationStatus(null)
-    }, 3000)
-  }
+
+// Get all bins containing a specific brick
+export async function getBinsForBrick (pieceId) {
+  const res = await fetch('/bin/getBins_Brick', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pieceId })
+  })
+  return res.json()
 }
 
-export function createEditBinHandler (state, setState, pages) {
-  
-  const {
-    setBinId,
-    setBinOperation,
-    setOperationStatus,
-    setBrickList,
-    setPage
-  } = setState
-  const { SELECT_PAGE, OPTION_CARDS } = pages
-
-  return async (newBinId, currentBinId, onSuccess) => {
-    const { brick, binOperation } = state
-    console.log(
-      'editBin called with:',
-      newBinId,
-      'current binId:',
-      currentBinId,
-      'binOperation:',
-      binOperation,
-      'brick:',
-      brick
-    )
-    if (newBinId === currentBinId && !binOperation) {
- 
-      console.log('Unselecting bin:', newBinId)
-      
-      setBinId(null)
-      setBinOperation(null)
-      setOperationStatus(null)
-      setBrickList([])
-      setPage(OPTION_CARDS)
-      return
-    }
-    setBinId(newBinId)
-    // CASE 1: No brick selected, show bin contents
-    if (!brick) {
-      try {
-        const binParts = await GetBinInfo(newBinId)
-
-        // Handle empty or null bin
-        if (!binParts || binParts.length === 0) {
-          console.log('Bin is empty:', newBinId)
-
-          setBrickList([])
-          setOperationStatus(null)
-          setPage(SELECT_PAGE)
-          return
-        }
-
-
-        const cleanedParts = binParts.map(p => p.trim())
-
-        setBrickList(
-          cleanedParts.map(id => ({
-            id,
-            name: `Part ${id}`
-          }))
-        )
-
-        setPage(SELECT_PAGE)
-      } catch (err) {
-        console.error('Failed to load bin contents:', err)
-        setOperationStatus('✗ Failed to load bin contents')
-        setTimeout(() => setOperationStatus(null), 3000)
-      }
-
-      return
-    }
-
-
-    // CASE 2: Normal add/remove behavior
-    if (binOperation === 'add') {
-      addPartToBin(
-        brick.id,
-        newBinId,
-        { setOperationStatus, setBinOperation, setBrickList },
-        onSuccess
-      )
-    } else if (binOperation === 'remove') {
-      removePartFromBin(
-        brick.id,
-        newBinId,
-        { setOperationStatus, setBinOperation, setBrickList },
-        onSuccess
-      )
-    } else {
-        console.log('No operation selected, clearing brick')
-
-        setBrickList([])
-        setOperationStatus(null)
-        setPage(OPTION_CARDS)
-        return
-      }
-
+// Add or remove a part from a bin
+export async function operateBin ({ binId, partId, operation }) {
+  if (!binId || !partId || !operation) {
+    throw new Error('operateBin requires binId, partId, and operation')
   }
+
+  const endpoint =
+    operation === 'add'
+      ? '/bin/add'
+      : operation === 'remove'
+        ? '/bin/remove'
+        : null
+
+  if (!endpoint) {
+    throw new Error(`Invalid bin operation: ${operation}`)
+  }
+
+  const response = await axios.post(`${BACKEND_URL}${endpoint}`, {
+    binId,
+    pieceId: partId
+  })
+
+  return response.data
 }
 
-
-export async function removePartFromBin (pieceId, binId, setState, onSuccess) {
-  const { setOperationStatus, setBinOperation, setBrickList } = setState
-  console.log('removePartFromBin called:', pieceId, binId)
-  try {
-    const response = await axios.post(`${BACKEND_URL}/bin/remove`, {
-      pieceId,
-      binId
-    })
-    console.log('Remove response:', response)
-    setOperationStatus(`✓ Removed piece ${pieceId} from bin ${binId}`)
-    setBinOperation(null)
-    setBrickList([])
-    console.log('Calling onSuccess with:', pieceId, 'onSuccess:', onSuccess)
-    if (onSuccess) {
-      console.log('onSuccess is defined, calling it')
-      onSuccess(pieceId)
-    } else {
-      console.warn('onSuccess is undefined!')
-    }
-    setTimeout(() => {
-      setOperationStatus(null)
-    }, 3000)
-  } catch (err) {
-    console.error('Error removing part from bin:', err)
-    setOperationStatus(`✗ Error removing piece: ${err.message}`)
-    setTimeout(() => {
-      setOperationStatus(null)
-    }, 3000)
+// Return all parts in a given bin
+export async function getBinContents (binId) {
+  if (!binId) {
+    throw new Error('getBinContents requires binId')
   }
-}
 
-export async function GetBinInfo (binId) {
-  console.log('GetBinInfo called for binId:', binId)
-  try {
-    const response = await axios.post(`${BACKEND_URL}/bin/Get-Info`, { binId })
-    console.log('GetBinInfo response:', response)
-    return response.data
-  } 
-  catch (err) {
-    console.error('Error getting bin info:', err)
-    throw err
-  }
+  const response = await axios.post(
+    `${BACKEND_URL}/bin/Get-Info`,
+    { binId }
+  )
+
+  // Expecting an array of part IDs
+  return response.data ?? []
 }

@@ -7,10 +7,11 @@ import { useState, useRef } from 'react'
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
 import { identify, takePicture, handleFileChange } from '../services/photoService'
-import { GetBinInfo } from '../services/binService'
 import { searchPartsByPrefix } from '../services/searchService'
 import { fetchBrickData } from '../services/brickDataService'
-import { createEditBinHandler } from '../services/binService'
+import { getBinsForBrick } from '../services/binService'
+import { operateBin } from '../services/binService'
+import { getBinContents } from '../services/binService'
 
 
 const CAMERA_PAGE = 0
@@ -18,77 +19,94 @@ const SELECT_PAGE = 1
 const OPTION_CARDS = 2
 const BRICK_INFO = 3
 
-// Navigation helpers
-const isHomePage = page => page === OPTION_CARDS || page === CAMERA_PAGE
-const isSelectPage = page => page === SELECT_PAGE
-const isBrickInfoPage = page => page === BRICK_INFO
-
-
-
 function App () {
   const [page, setPage] = useState(2)
   const [brickList, setBrickList] = useState([])
   const [brick, setBrick] = useState(null)
-  const [binId, setBinId] = useState(0)
   const [waiting, setWaiting] = useState(false)
   const [binOperation, setBinOperation] = useState(null)
-  const [operationStatus, setOperationStatus] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
+  const [highlightedBinIds, setHighlightedBinIds] = useState([])
+  const [selectedBinId, setSelectedBinId] = useState(null)
+  const [currentBinContents, setCurrentBinContents] = useState([])
 
-  const canSelectBin = !isBrickInfoPage(page)
 
-  const editBin = createEditBinHandler(
-    { brick, binOperation },
-    {
-      setBinId,
-      setBinOperation,
-      setOperationStatus,
-      setBrickList,
-      setPage
-    },
-    { SELECT_PAGE, OPTION_CARDS }
-  )
-
-  // Handle bin clicks from Table
+  
   async function onBinClicked (newBinId) {
-    console.log('bin clicked', newBinId, 'page:', page)
-    // BrickInfo blocks bin selection entirely
-    if (!canSelectBin) return
+    console.log('onBinClicked', {
+      newBinId,
+      selectedBinId,
+      binOperation,
+      brick
+    })
 
-    // Clicking the same bin toggles it off
-    if (newBinId === binId) {
-      setBinId(null)
-      setBrickList([])
-      setPage(OPTION_CARDS)
-      return
-    }
+    const clickingSameBin = newBinId === selectedBinId
 
-    setBinId(newBinId)
-
-    try {
-      const binParts = await GetBinInfo(newBinId)
-
-      // Always go to Select when a bin is clicked
-      // Even if empty
-      if (!binParts || binParts.length === 0) {
-        setBrickList([])
-        setPage(SELECT_PAGE)
+    // 1️⃣ No brick, no operation → normal bin browsing
+    if (!brick && !binOperation) {
+      if (clickingSameBin) {
+        console.log('Deselecting bin, returning home')
+        resetToHome()
         return
       }
 
-      setBrickList(
-        binParts.map(id => ({
-          id: id.trim(),
-          name: `Part ${id}`
-        }))
-      )
+      console.log('Selecting bin for browsing')
+
+      setSelectedBinId(newBinId)
+
+      try {
+        const contents = await getBinContents(newBinId)
+        console.log('Bin contents:', contents)
+        setCurrentBinContents(contents)
+      } catch (err) {
+        console.error('Failed to fetch bin contents', err)
+        setCurrentBinContents([])
+      }
 
       setPage(SELECT_PAGE)
-    } catch (err) {
-      console.error('Failed to load bin contents:', err)
+      return
+    }
+
+
+    // 2️⃣ Brick selected, no operation → visual select only
+    if (brick && !binOperation) {
+      console.log('Brick selected, no operation yet – selecting bin visually')
+      setSelectedBinId(newBinId)
+      return
+    }
+
+    // 3️⃣ Brick + operation → perform add/remove
+    if (brick && binOperation) {
+      console.log(`Performing ${binOperation} on bin ${newBinId}`)
+
+      try {
+        await operateBin({
+          operation: binOperation,
+          binId: newBinId,
+          partId: brick.id
+        })
+
+        // Keep UI in sync
+        setHighlightedBinIds(prev => {
+          if (binOperation === 'add') {
+            return prev.includes(newBinId) ? prev : [...prev, newBinId]
+          }
+          if (binOperation === 'remove') {
+            return prev.filter(id => id !== newBinId)
+          }
+          return prev
+        })
+      } catch (err) {
+        console.error('Bin operation failed:', err)
+      }
+
+      // Clear operation state
+      setBinOperation(null)
+      setSelectedBinId(null)
+      return
     }
   }
 
@@ -106,11 +124,24 @@ function App () {
     }
   }
 
-  function selectCallback (selectedBrick) {
+  async function selectCallback (selectedBrick) {
+    setSelectedBinId(null)
     setBrick(selectedBrick)
-    setBinId(null)          // clear bin selection
-    setBrickList([])        // clear Select memory
     setBinOperation(null)
+    setBrickList([])
+
+    try {
+      console.log('Fetching bins for brick:', selectedBrick.id)
+
+      const bins = await getBinsForBrick(selectedBrick.id)
+
+      console.log('Brick found in bins:', bins)
+      setHighlightedBinIds(bins)
+    } catch (err) {
+      console.error('Failed to fetch bins for brick', err)
+      setHighlightedBinIds([])
+    }
+
     setPage(BRICK_INFO)
   }
 
@@ -121,10 +152,9 @@ function App () {
     if (bricks.length > 1) {
       setBrickList(bricks)
       setPage(SELECT_PAGE)
-    } else {
-      setBrick(bricks[0])
-      setBinOperation(null)
-      setPage(BRICK_INFO)
+    } 
+    else {
+      selectCallback(bricks[0])
     }
   }
 
@@ -142,18 +172,18 @@ function App () {
     if (page === SELECT_PAGE)
       return (
         <Select
-          brickList={brickList}
+          partIds={brickList.length ? brickList.map(b => b.id) : currentBinContents}
           selectCallback={selectCallback}
-          returnToCamera={returnToCamera}
         />
+
       )
     if (page === BRICK_INFO)
       return (
         <BrickInfo
           brick={brick}
-          binOperation={binOperation}
-          setBinOperation={setBinOperation}
-          onClose={handleCloseBrickInfo}
+          selectedOperation={binOperation}
+          onOperationSelect={setBinOperation}
+          onClose={resetToHome}
         />
       )
 
@@ -183,14 +213,14 @@ function App () {
           
           {/* Card 2: part number search */}
           <OptionCard iconSrc='/icons/typewriter.png'>
-            <input 
-              className='w3-input w3-border' 
-              placeholder='Enter part #' 
+            <input
+              className='w3-input w3-border'
+              placeholder='Enter part #'
               value={searchQuery}
-              onClick={handleSearchChange}
-              onChange={handleSearchChange}
+              onChange={e => setSearchQuery(e.target.value)}
             />
-            <button 
+
+            <button
               className='w3-button w3-theme-d1'
               onClick={handleExactPartSearch}
               disabled={waiting || !searchQuery.trim()}
@@ -199,6 +229,7 @@ function App () {
               Search Part
             </button>
           </OptionCard>
+
 
           {/* Card 3: action button */}
           <OptionCard iconSrc='/icons/cam.png' onClick={() => handleTakePicture()}>
@@ -240,28 +271,6 @@ function App () {
     })
   }
 
-  // Handle part number search
-  async function handleSearchChange (event) {
-    const query = event.target.value
-
-
-    setSearchQuery(query)
-    setDropdownResetTrigger(prev => prev + 1) // Trigger dropdown reset
-
-    if (!query.trim()) {
-      setSearchResults([])
-      return
-    }
-
-    try {
-      const results = await searchPartsByPrefix(query)
-      setSearchResults(results)
-    } catch (err) {
-      console.error('Error searching parts:', err)
-      setSearchResults([])
-    }
-  }
-
   // Search for exact part number and show like camera results
   async function handleExactPartSearch () {
     if (!searchQuery.trim()) {
@@ -270,14 +279,15 @@ function App () {
     }
 
     setWaiting(true)
+
     try {
       const part = await fetchBrickData(searchQuery, 1.0)
+
       if (part) {
-        // Use brick callback to navigate like camera detection
-        selectCallback(part)
-        setPage(BRICK_INFO)
+        // Funnel through Select logic like camera results
+        brickCallback([part])
       } else {
-        alert(`Part #${searchQuery} not found in Rebrickable`)
+        alert(`Part #${searchQuery} not found`)
       }
     } catch (err) {
       console.error('Error searching part:', err)
@@ -287,22 +297,19 @@ function App () {
     }
   }
 
+
   // Clear everything and start over, equivalent to page refresh
   function resetToHome () {
     setBrick(null)
+    setHighlightedBinIds([])
     setBrickList([])
-    setBinId(null)
     setBinOperation(null)
-    setOperationStatus(null)
     setSearchQuery('')
     setSearchResults([])
+    setSelectedBinId(null)
     setPage(OPTION_CARDS)
+    setCurrentBinContents([])
   }
-
-  function handleCloseBrickInfo () {
-    resetToHome()
-  }
-
 
   return (
     <div className='App w3-theme-light'>
@@ -310,11 +317,9 @@ function App () {
         {getPage()}
       </div>
       <Table
-        editBin={editBin}
-        binId={binId}
         onBinClick={onBinClicked}
-        searchQuery={searchQuery}
-        searchResults={searchResults}
+        highlightedBinIds={highlightedBinIds}
+        selectedBinId={selectedBinId}
       />
     </div>
   )

@@ -1,21 +1,32 @@
-import { loadCsv, writeCsv } from './csv.js'
+import fs from 'fs'
+import path from 'path'
 
-const BIN_DATA = 'data/bins.csv'
+const BIN_DATA = path.resolve('data/bins.json')
 
-// Load database
-let binMappings
-loadCsv(BIN_DATA, data => {
-  binMappings = data
-  console.log('Loaded bin mappings')
-})
+// In-memory cache
+let binMappings = {}
 
-// Get the most up-to-date bin data
+// Load database once at startup
+function loadBinData () {
+  try {
+    const raw = fs.readFileSync(BIN_DATA, 'utf8')
+    binMappings = JSON.parse(raw)
+    console.log('Loaded bin mappings (JSON)')
+  } catch (err) {
+    console.error('Failed to load bin mappings', err)
+    binMappings = {}
+  }
+}
+
+loadBinData()
+
+// Read-only access
 export function readBinData () {
   return binMappings
 }
 
-// Write to the bin data file
+// Persist updates
 export function writeBinData (data) {
-  writeCsv(BIN_DATA, data)
   binMappings = data
+  fs.writeFileSync(BIN_DATA, JSON.stringify(binMappings, null, 2))
 }
