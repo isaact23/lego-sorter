@@ -22,7 +22,7 @@ export async function identify (base64Data, onSuccess, onError) {
 
     // Fetch full brick data from Rebrickable for each detected part
     const bricksWithData = await Promise.all(
-      detectedParts.map(part => fetchBrickData(part.part_num, part.score))
+      detectedParts.map(part => fetchBrickData(part.id, part.score))
     )
 
     // Filter out any null results (parts not found in Rebrickable)

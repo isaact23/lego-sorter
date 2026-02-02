@@ -270,7 +270,6 @@ function App () {
     if (waiting) return
     setWaiting(true)
     setSearchQuery('') // Clear search when taking picture
-
     setDropdownResetTrigger(prev => prev + 1) // Reset dropdown when taking picture
     pictureInputRef.current?.click()
   }

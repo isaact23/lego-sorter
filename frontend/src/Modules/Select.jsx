@@ -1,11 +1,11 @@
 import '../App/App.css'
 import { useEffect, useState } from 'react'
 import { fetchBrickData } from '../services/brickDataService'
-import { getBrickImage } from '../services/imageService'
+//import { getBrickImage } from '../services/imageService'
 
 function Select ({ partIds = [], selectCallback }) {
   const [bricks, setBricks] = useState([])
-  const [images, setImages] = useState({})
+  //const [images, setImages] = useState({})
 
   // Load brick metadata from part IDs
   useEffect(() => {
@@ -40,6 +40,7 @@ function Select ({ partIds = [], selectCallback }) {
   }, [partIds])
 
   // Fetch images as bricks load
+  /*
   useEffect(() => {
     bricks.forEach(brick => {
       if (images[brick.part_num]) return
@@ -52,6 +53,7 @@ function Select ({ partIds = [], selectCallback }) {
       })
     })
   }, [bricks])
+  */
 
   if (!bricks.length) return null
 
@@ -65,14 +67,11 @@ function Select ({ partIds = [], selectCallback }) {
             onClick={() => selectCallback(brick)}
           >
             <div className="SelectImageFrame">
-              {images[brick.part_num] && (
-                <img
-                  src={images[brick.part_num]}
+              <img
+                  src={brick.part_img_url}
                   alt={brick.name}
                 />
-              )}
             </div>
-
             <strong>{brick.name}</strong>
             <div>Part #{brick.part_num}</div>
           </div>

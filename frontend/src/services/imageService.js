@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-
 const IMAGE_CACHE_KEY = 'brickImageCache'
 const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 
