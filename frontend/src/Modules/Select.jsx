@@ -80,9 +80,9 @@ function Select ({ partIds = [], selectCallback }) {
       </div>
 
       {/* Static placeholder card (close / spacer) */}
-      { /* <div className="top-panel-card-static"> */ }
-        {/* intentionally empty for now */}
-      { /* </div> */ }
+      <div className="top-panel-card-static">
+        <h1>Close</h1>
+      </div>
     </div>
   )
 }
