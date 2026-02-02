@@ -42,12 +42,12 @@ function Select ({ partIds = [], selectCallback }) {
   // Fetch images as bricks load
   useEffect(() => {
     bricks.forEach(brick => {
-      if (images[brick.id]) return
+      if (images[brick.part_num]) return
 
-      getBrickImage(brick.id).then(url => {
+      getBrickImage(brick.part_num).then(url => {
         setImages(prev => ({
           ...prev,
-          [brick.id]: url
+          [brick.part_num]: url
         }))
       })
     })
@@ -60,21 +60,21 @@ function Select ({ partIds = [], selectCallback }) {
       <div className="scroll-row">
         {bricks.map(brick => (
           <div
-            key={brick.id}
+            key={brick.part_num}
             className="top-panel-card Select TopModule"
             onClick={() => selectCallback(brick)}
           >
             <div className="SelectImageFrame">
-              {images[brick.id] && (
+              {images[brick.part_num] && (
                 <img
-                  src={images[brick.id]}
+                  src={images[brick.part_num]}
                   alt={brick.name}
                 />
               )}
             </div>
 
             <strong>{brick.name}</strong>
-            <div>Part #{brick.id}</div>
+            <div>Part #{brick.part_num}</div>
           </div>
         ))}
       </div>

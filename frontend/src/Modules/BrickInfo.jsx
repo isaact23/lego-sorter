@@ -14,13 +14,13 @@ function BrickInfo({
       <div className="Top-Panel-BrickInfo">
         <div className="BrickText">
           <h2>{brick.name}</h2>
-          <p><strong>Category:</strong> {brick.category}</p>
-          <p><strong>ID:</strong> {brick.id}</p>
+          <p><strong>Category:</strong> {brick.part_cat_id}</p>
+          <p><strong>ID:</strong> {brick.part_num}</p>
         </div>
 
         <div className="BrickImageFrame">
           <img
-            src={brick.img_url}
+            src={brick.part_img_url}
             alt={brick.name}
           />
         </div>

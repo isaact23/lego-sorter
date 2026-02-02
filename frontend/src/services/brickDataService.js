@@ -12,17 +12,12 @@ import axios from 'axios'
 const REBRICKABLE_API_KEY = process.env.REACT_APP_LS_API_KEY
 const brickCache = {}
 
-export async function fetchBrickData (partNumber, confidence = 1.0) {
+export async function fetchBrickData (partNumber) {
   try {
     if (brickCache[partNumber]) {
-      return {
-        id: brickCache[partNumber].part_num,
-        name: brickCache[partNumber].name,
-        category: brickCache[partNumber].part_cat_id || 'Unknown',
-        img_url: brickCache[partNumber].part_img_url,
-        score: confidence
-      }
+      return brickCache[partNumber]   
     }
+    
     const response = await axios.get(
       `https://rebrickable.com/api/v3/lego/parts/?part_num=${partNumber}`,
       {
@@ -41,14 +36,18 @@ export async function fetchBrickData (partNumber, confidence = 1.0) {
     // Standardized brick format
     const part = parts[0]
     brickCache[partNumber] = part
-  
+    
+    return part
+    
+    /*
     return {
       id: part.part_num,
       name: part.name,
       category: part.part_cat_id || 'Unknown',
       img_url: part.part_img_url,
-      score: confidence
     }
+    */
+
   } catch (err) {
     console.error(`Error fetching brick data for part ${partNumber}:`, err)
     return null

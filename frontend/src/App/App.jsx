@@ -100,7 +100,7 @@ function App () {
         await operateBin({
           operation: binOperation,
           binId: newBinId,
-          partId: brick.id
+          partId: brick.part_num
         })
 
         // Keep UI in sync
@@ -142,9 +142,9 @@ function App () {
 
 
     try {
-      console.log('Fetching bins for brick:', selectedBrick.id)
+      console.log('Fetching bins for brick:', selectedBrick.part_num)
 
-      const bins = await getBinsForBrick(selectedBrick.id)
+      const bins = await getBinsForBrick(selectedBrick.part_num)
 
       console.log('Brick found in bins:', bins)
       setHighlightedBinIds(bins)
@@ -183,7 +183,7 @@ function App () {
     if (page === SELECT_PAGE)
       return (
         <Select
-          partIds={brickList.length ? brickList.map(b => b.id) : currentBinContents}
+          partIds={brickList.length ? brickList.map(b => b.part_num) : currentBinContents}
           selectCallback={selectCallback}
         />
 
@@ -272,7 +272,7 @@ function App () {
     setSearchQuery('') // Clear search when taking picture
 
     setDropdownResetTrigger(prev => prev + 1) // Reset dropdown when taking picture
-    takePicture(pictureInputRef)
+    pictureInputRef.current?.click()
   }
 
   // Handle when an image is taken.
