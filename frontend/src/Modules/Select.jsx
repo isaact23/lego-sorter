@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { fetchBrickData } from '../services/brickDataService'
 //import { getBrickImage } from '../services/imageService'
 
-function Select ({ partIds = [], selectCallback }) {
+function Select ({ partIds = [], selectCallback, onClose }) {
   const [bricks, setBricks] = useState([])
   //const [images, setImages] = useState({})
 
@@ -39,22 +39,6 @@ function Select ({ partIds = [], selectCallback }) {
     }
   }, [partIds])
 
-  // Fetch images as bricks load
-  /*
-  useEffect(() => {
-    bricks.forEach(brick => {
-      if (images[brick.part_num]) return
-
-      getBrickImage(brick.part_num).then(url => {
-        setImages(prev => ({
-          ...prev,
-          [brick.part_num]: url
-        }))
-      })
-    })
-  }, [bricks])
-  */
-
   if (!bricks.length) return null
 
   return (
@@ -80,7 +64,12 @@ function Select ({ partIds = [], selectCallback }) {
 
       {/* Static placeholder card (close / spacer) */}
       <div className="top-panel-card-static">
-        <h1>Close</h1>
+        <button
+            className="ui-button blue"
+            onClick={onClose}
+          >
+            Close
+        </button>
       </div>
     </div>
   )

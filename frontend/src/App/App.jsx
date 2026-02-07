@@ -81,6 +81,7 @@ function App () {
       }
 
       setPage(SELECT_PAGE)
+      setHelperText(`Select a brick from bin ${newBinId} or click Close to return home.`)
       return
     }
 
@@ -124,14 +125,11 @@ function App () {
     }
   }
 
-
-
-
   function brickCallback (bricks) {
     if (!bricks || bricks.length === 0) return
       setBrickList(bricks)
       setPage(SELECT_PAGE)
-  }
+    }
 
   async function selectCallback (selectedBrick) {
     setSelectedBinId(null)
@@ -152,7 +150,7 @@ function App () {
       console.error('Failed to fetch bins for brick', err)
       setHighlightedBinIds([])
     }
-
+    setHelperText(`Choose an operation for brick ${selectedBrick.part_num} or click Close to return home.`)
     setPage(BRICK_INFO)
   }
 
@@ -169,11 +167,6 @@ function App () {
     }
   }
 
-  // Function to camera page and reset.
-  function returnToCamera () {
-    setPage(CAMERA_PAGE)
-  }
-
   // Pass operationStatus to Table
   const getPage = () => {
     if (page === CAMERA_PAGE) 
@@ -185,6 +178,7 @@ function App () {
         <Select
           partIds={brickList.length ? brickList.map(b => b.part_num) : currentBinContents}
           selectCallback={selectCallback}
+          onClose={resetToHome}
         />
 
       )
@@ -224,21 +218,28 @@ function App () {
           
           {/* Card 2: part number search */}
           <OptionCard iconSrc='/icons/typewriter.png'>
-            <input
-              className='w3-input w3-border'
-              placeholder='Enter part #'
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-
-            <button
-              className='ui-button blue'
-              onClick={handleExactPartSearch}
-              disabled={waiting || !searchQuery.trim()}
-              style={{ width: '100%', marginTop: '-4px' }}
+            <form
+              onSubmit={e => {
+                e.preventDefault()       // prevent page reload
+                handleExactPartSearch()  // trigger same logic as button
+              }}
             >
-              Search Part
-            </button>
+              <input
+                className='w3-input w3-border'
+                placeholder='Enter part #'
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+
+              <button
+                type='submit'
+                className='ui-button blue'
+                disabled={waiting || !searchQuery.trim()}
+                style={{ width: '100%', marginTop: '4px' }}
+              >
+                Search Part
+              </button>
+            </form>
           </OptionCard>
 
 
@@ -297,7 +298,7 @@ function App () {
         // Funnel through Select logic like camera results
         brickCallback([part])
       } else {
-        alert(`Part #${searchQuery} not found`)
+        setHelperText(`Part #${searchQuery} not found`)
       }
     } catch (err) {
       console.error('Error searching part:', err)
