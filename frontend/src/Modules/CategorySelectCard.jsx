@@ -3,11 +3,11 @@ import OptionCard from './OptionCard'
 import categoryData from './CategoryData'
 import '../App/App.css'
 
-export default function CategorySelectCard({ onChange, onCategorySelect, resetTrigger }) {
+export default function CategorySelectCard({ onChange, resetTrigger, onCategorySelect }) {
   const [cat1, setCat1] = useState('')
   const [cat2, setCat2] = useState('')
 
-  // Reset when search input is used
+  // Reset when search or camera is used
   useEffect(() => {
     setCat1('')
     setCat2('')
@@ -44,8 +44,8 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
     return match?.id ?? null
   }, [cat1, cat2])
 
+  // 🔑 Emit category IDs upward
   useEffect(() => {
-
     if (cat2 && selectedCategoryId) {
       onChange?.([selectedCategoryId])
     } else if (cat1) {
@@ -53,7 +53,7 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
     } else {
       onChange?.([])
     }
-  }, [cat1, cat2, matchingIds, selectedCategoryId, onChange, onCategorySelect])
+  }, [cat1, cat2, matchingIds, selectedCategoryId, onChange])
 
   return (
     <OptionCard iconSrc="/icons/mag_glass.png">
@@ -90,7 +90,6 @@ export default function CategorySelectCard({ onChange, onCategorySelect, resetTr
           </option>
         ))}
       </select>
-
     </OptionCard>
   )
 }

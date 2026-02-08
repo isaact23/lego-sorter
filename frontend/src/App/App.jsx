@@ -28,6 +28,7 @@ function App () {
   const [waiting, setWaiting] = useState(false)
   const [binOperation, setBinOperation] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([])
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
   const pictureInputRef = useRef(null)
   const [highlightedBinIds, setHighlightedBinIds] = useState([])
@@ -207,12 +208,18 @@ function App () {
     
 
           {/* Card 1: two dropdowns */}
-          <CategorySelectCard 
+          <CategorySelectCard
             resetTrigger={dropdownResetTrigger}
-            onCategorySelect={() => {
+            onChange={(catIdArray) => {
+              console.log('Category IDs from CategorySelectCard:', catIdArray)
 
+              setSelectedCategoryIds(catIdArray)
               setSearchQuery('') // Clear search when category is selected
-
+              setHelperText(
+                catIdArray.length
+                  ? `Selected category IDs: ${catIdArray.join(', ')}`
+                  : ''
+              )
             }}
           />
           
