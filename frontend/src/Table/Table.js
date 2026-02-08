@@ -10,6 +10,7 @@ function Table ({
 }) {
 
 const renderBin = binId => {
+  const hasHighlights = highlightedBinIds.length > 0
   const isSelected = binId === selectedBinId
   const isHighlighted = highlightedBinIds.includes(binId)
   const isRemoveMode = binOperation === 'remove'
@@ -18,12 +19,12 @@ const renderBin = binId => {
   const isClickable =
     binsSelectable && canRemoveFromThisBin
 
-
-  const classNames = [
+  
+ const classNames = [
     'bin',
     isSelected && 'bin-selected',
     isHighlighted && 'bin-highlighted',
-    !isClickable && !isHighlighted && 'bin-disabled'
+    hasHighlights && !isHighlighted && 'bin-disabled'
   ]
     .filter(Boolean)
     .join(' ')

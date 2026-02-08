@@ -5,11 +5,13 @@ import Select from '../Modules/Select'
 import Table from '../Table/Table'
 import BrickInfo from '../Modules/BrickInfo'
 import { useState, useRef } from 'react'
+import { useEffect } from 'react'
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
 import { identify, takePicture, handleFileChange } from '../services/photoService'
 import { fetchBrickData } from '../services/brickDataService'
-import { getBinsForBrick } from '../services/binService'
+import { getBinsbyBrick } from '../services/binService'
+import { getBinsbyCategory } from '../services/binService'
 import { operateBin } from '../services/binService'
 import { getBinContents } from '../services/binService'
 
@@ -38,6 +40,40 @@ function App () {
 
   const binsSelectable = !brick || binOperation
 
+  useEffect(() => {
+    // No categories selected → clear highlights
+    if (!selectedCategoryIds.length) {
+      setHighlightedBinIds([])
+      return
+    }
+
+    let cancelled = false
+
+    async function loadCategoryBins () {
+      try {
+        // If multiple categories, union the bins
+        const results = await Promise.all(
+          selectedCategoryIds.map(catId => getBinsbyCategory(catId))
+        )
+
+        const merged = [...new Set(results.flat())]
+
+        if (!cancelled) {
+          setHighlightedBinIds(merged)
+        }
+      } catch (err) {
+        console.error('Failed to fetch bins for category', err)
+        if (!cancelled) setHighlightedBinIds([])
+      }
+    }
+
+    loadCategoryBins()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedCategoryIds])
+
   async function onBinClicked (newBinId) {
     console.log('onBinClicked', {
       newBinId,
@@ -52,7 +88,7 @@ function App () {
 
     const clickingSameBin = newBinId === selectedBinId
 
-    // 1️⃣ No brick, no operation → normal bin browsing
+    // No brick, no operation → normal bin browsing
     if (!brick && !binOperation) {
       if (clickingSameBin) {
         console.log('Deselecting bin, returning home')
@@ -87,14 +123,14 @@ function App () {
     }
 
 
-    // 2️⃣ Brick selected, no operation → visual select only
+    // Brick selected, no operation → visual select only
     if (brick && !binOperation) {
       console.log('Brick selected, no operation yet – selecting bin visually')
       setSelectedBinId(newBinId)
       return
     }
 
-    // 3️⃣ Brick + operation → perform add/remove
+    // Brick + operation → perform add/remove
     if (brick && binOperation) {
       console.log(`Performing ${binOperation} on bin ${newBinId}`)
 
@@ -144,7 +180,7 @@ function App () {
     try {
       console.log('Fetching bins for brick:', selectedBrick.part_num)
 
-      const bins = await getBinsForBrick(selectedBrick.part_num)
+      const bins = await getBinsbyBrick(selectedBrick.part_num)
 
       console.log('Brick found in bins:', bins)
       setHighlightedBinIds(bins)
