@@ -3,14 +3,15 @@ import OptionCard from './OptionCard'
 import categoryData from './CategoryData'
 import '../App/App.css'
 
-export default function CategorySelectCard({ onChange, resetTrigger, onCategorySelect }) {
+export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) {
   const [cat1, setCat1] = useState('')
   const [cat2, setCat2] = useState('')
 
-  // Reset when search or camera is used
+  // Reset only when explicitly triggered
   useEffect(() => {
     setCat1('')
     setCat2('')
+    onCategorySelect?.([])
   }, [resetTrigger])
 
   const cat1Options = useMemo(
@@ -26,44 +27,27 @@ export default function CategorySelectCard({ onChange, resetTrigger, onCategoryS
       .map(row => row.cat2)
   }, [cat1])
 
-  const matchingIds = useMemo(() => {
-    if (!cat1) return []
-
-    return categoryData
-      .filter(row => row.cat1 === cat1)
-      .map(row => row.id)
-  }, [cat1])
-
-  const selectedCategoryId = useMemo(() => {
-    if (!cat1 || !cat2) return null
-
-    const match = categoryData.find(
-      row => row.cat1 === cat1 && row.cat2 === cat2
-    )
-
-    return match?.id ?? null
-  }, [cat1, cat2])
-
-  // 🔑 Emit category IDs upward
-  useEffect(() => {
-    if (cat2 && selectedCategoryId) {
-      onChange?.([selectedCategoryId])
-    } else if (cat1) {
-      onChange?.(matchingIds)
-    } else {
-      onChange?.([])
-    }
-  }, [cat1, cat2, matchingIds, selectedCategoryId, onChange])
-
   return (
     <OptionCard iconSrc="/icons/mag_glass.png">
+      {/* Category */}
       <select
         className="w3-select w3-border w3-padding option-select"
         value={cat1}
         onChange={e => {
-          setCat1(e.target.value)
+          const value = e.target.value
+          setCat1(value)
           setCat2('')
-          onCategorySelect?.()
+
+          if (!value) {
+            onCategorySelect?.([])
+            return
+          }
+
+          const ids = categoryData
+            .filter(row => row.cat1 === value)
+            .map(row => row.id)
+
+          onCategorySelect?.(ids)
         }}
       >
         <option value="">Select category</option>
@@ -74,13 +58,29 @@ export default function CategorySelectCard({ onChange, resetTrigger, onCategoryS
         ))}
       </select>
 
+      {/* Subcategory */}
       <select
         className="w3-select w3-border w3-padding option-select"
         value={cat2}
         disabled={!cat1}
         onChange={e => {
-          setCat2(e.target.value)
-          onCategorySelect?.()
+          const value = e.target.value
+          setCat2(value)
+
+          if (!value) {
+            const ids = categoryData
+              .filter(row => row.cat1 === cat1)
+              .map(row => row.id)
+
+            onCategorySelect?.(ids)
+            return
+          }
+
+          const match = categoryData.find(
+            row => row.cat1 === cat1 && row.cat2 === value
+          )
+
+          onCategorySelect?.(match ? [match.id] : [])
         }}
       >
         <option value="">Select subcategory</option>

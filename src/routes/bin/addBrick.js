@@ -1,26 +1,24 @@
 import { readBinData, writeBinData } from '../../data/binData.js'
 
-// Add a piece to a bin
+// Add a piece to a bin (and track category)
 const addBrick = (req, res) => {
-  const { pieceId, binId } = req.body
+  const { binId, pieceId, categoryId } = req.body
 
-  const binMappings = readBinData()
-
-  // Ensure bin exists
   if (!binMappings[binId]) {
-    binMappings[binId] = []
+    binMappings[binId] = { pairs: [] }
   }
 
-  // Already present, nothing to do
-  if (binMappings[binId].includes(pieceId)) {
-    res.send('Done')
-    return
+  const bin = binMappings[binId]
+
+  const exists = bin.pairs.some(
+    p => p.partId === pieceId && p.categoryId === categoryId
+  )
+
+  if (!exists) {
+    bin.pairs.push({ partId: pieceId, categoryId })
   }
 
-  // Add piece
-  binMappings[binId].push(pieceId)
   writeBinData(binMappings)
-
   res.send('Done')
 }
 

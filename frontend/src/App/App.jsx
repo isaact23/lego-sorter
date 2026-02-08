@@ -80,9 +80,9 @@ function App () {
         setCurrentBinContents([])
         setHelperText('Unable to load bin contents')
       }
-
-      setPage(SELECT_PAGE)
       setHelperText(`Select a brick from bin ${newBinId} or click Close to return home.`)
+      setPage(SELECT_PAGE)
+      
       return
     }
 
@@ -102,7 +102,8 @@ function App () {
         await operateBin({
           operation: binOperation,
           binId: newBinId,
-          partId: brick.part_num
+          partId: brick.part_num,
+          categoryId: brick.part_cat_id
         })
 
         // Keep UI in sync
@@ -151,7 +152,7 @@ function App () {
       console.error('Failed to fetch bins for brick', err)
       setHighlightedBinIds([])
     }
-    setHelperText(`Choose an operation for brick ${selectedBrick.part_num} or click Close to return home.`)
+    setHelperText(`Choose an operation or click Close to return home.`)
     setPage(BRICK_INFO)
   }
 
@@ -170,18 +171,20 @@ function App () {
 
   // Pass operationStatus to Table
   const getPage = () => {
+
     if (page === CAMERA_PAGE) 
-      return 
-        <Camera brickCallback={onBricksIdentified} />
+      return <Camera brickCallback={onBricksIdentified} />
 
     if (page === SELECT_PAGE)
       return (
         <Select
-          partIds={brickList.length ? brickList.map(b => b.part_num) : currentBinContents}
+          partIds={brickList.length
+            ? brickList.map(b => b.part_num)
+            : currentBinContents
+          }
           selectCallback={selectCallback}
           onClose={resetToHome}
         />
-
       )
     if (page === BRICK_INFO)
       return (
@@ -210,16 +213,10 @@ function App () {
           {/* Card 1: two dropdowns */}
           <CategorySelectCard
             resetTrigger={dropdownResetTrigger}
-            onChange={(catIdArray) => {
-              console.log('Category IDs from CategorySelectCard:', catIdArray)
-
+            onCategorySelect={(catIdArray) => {
+              console.log('Selected category IDs:', catIdArray)
               setSelectedCategoryIds(catIdArray)
-              setSearchQuery('') // Clear search when category is selected
-              setHelperText(
-                catIdArray.length
-                  ? `Selected category IDs: ${catIdArray.join(', ')}`
-                  : ''
-              )
+              setSearchQuery('')
             }}
           />
           

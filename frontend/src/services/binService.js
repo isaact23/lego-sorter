@@ -15,7 +15,7 @@ export async function getBinsForBrick (pieceId) {
 }
 
 // Add or remove a part from a bin
-export async function operateBin ({ binId, partId, operation }) {
+export async function operateBin ({ binId, partId, categoryId, operation }) {
   if (!binId || !partId || !operation) {
     throw new Error('operateBin requires binId, partId, and operation')
   }
@@ -27,13 +27,10 @@ export async function operateBin ({ binId, partId, operation }) {
         ? '/bin/remove'
         : null
 
-  if (!endpoint) {
-    throw new Error(`Invalid bin operation: ${operation}`)
-  }
-
   const response = await axios.post(`${BACKEND_URL}${endpoint}`, {
     binId,
-    pieceId: partId
+    pieceId: partId,
+    categoryId
   })
 
   return response.data

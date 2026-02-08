@@ -1,16 +1,19 @@
 import { readBinData } from '../../data/binData.js'
 
-// Given a bin ID, get all pieces in that bin
 const getBinContents = (req, res) => {
   const { binId } = req.body
 
-  console.log(`Looking for pieces in bin ID: ${binId}`)
-
   const binMappings = readBinData()
+  const bin = binMappings[binId]
 
-  const contents = binMappings[binId] || []
+  if (!bin) {
+    return res.json([])
+  }
 
-  res.send(contents)
+  // Return part IDs only (Select expects this)
+  const partIds = bin.items.map(item => item.partId)
+
+  res.json(partIds)
 }
 
 export default getBinContents
