@@ -6,6 +6,7 @@ import Table from '../Table/Table'
 import BrickInfo from '../Modules/BrickInfo'
 import { useState, useRef } from 'react'
 import { useEffect } from 'react'
+
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
 import { identify, takePicture, handleFileChange } from '../services/photoService'
@@ -38,7 +39,6 @@ function App () {
   const [currentBinContents, setCurrentBinContents] = useState([])
   const [helperText, setHelperText] = useState('')
 
-  const binsSelectable = !brick || binOperation
 
   useEffect(() => {
     // No categories selected → clear highlights
@@ -348,6 +348,13 @@ function App () {
     }
   }
 
+  const binDisplayMode = (() => {
+    if (brick && binOperation === 'remove') return 'REMOVE'
+    if (brick && binOperation === 'add') return 'ADD'
+    if (brick || selectedCategoryIds.length) return 'FILTER'
+    if (selectedBinId) return 'SELECT'
+    return 'DEFAULT'
+  })()
 
   // Clear everything and start over, equivalent to page refresh
   function resetToHome () {
@@ -372,10 +379,9 @@ function App () {
       </div>
       <Table
         onBinClick={onBinClicked}
-        highlightedBinIds={highlightedBinIds}
         selectedBinId={selectedBinId}
-        binsSelectable={binsSelectable}
-        binOperation={binOperation}
+        highlightedBinIds={highlightedBinIds}
+        displayMode={binDisplayMode}
       />
 
     </div>

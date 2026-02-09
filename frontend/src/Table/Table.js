@@ -5,47 +5,80 @@ function Table ({
   highlightedBinIds = [],
   selectedBinId = null,
   onBinClick,
-  binsSelectable = true,
-  binOperation = null
+  displayMode = 'DEFAULT'
 }) {
 
-const renderBin = binId => {
-  const hasHighlights = highlightedBinIds.length > 0
-  const isSelected = binId === selectedBinId
-  const isHighlighted = highlightedBinIds.includes(binId)
-  const isRemoveMode = binOperation === 'remove'
-  const canRemoveFromThisBin =
-    !isRemoveMode || highlightedBinIds.includes(binId)
-  const isClickable =
-    binsSelectable && canRemoveFromThisBin
+  // Decide how a bin looks + whether it can be clicked
+  const getBinState = (binId) => {
+    const isSelected = binId === selectedBinId
+    const isHighlighted = highlightedBinIds.includes(binId)
 
-  
- const classNames = [
-    'bin',
-    isSelected && 'bin-selected',
-    isHighlighted && 'bin-highlighted',
-    hasHighlights && !isHighlighted && 'bin-disabled'
-  ]
-    .filter(Boolean)
-    .join(' ')
+    switch (displayMode) {
+      case 'DEFAULT':
+        return {
+          className: 'bin',
+          clickable: true
+        }
 
+      case 'SELECT':
+        return {
+          className: isSelected
+            ? 'bin bin-selected'
+            : 'bin',
+          clickable: true
+        }
 
+      case 'FILTER':
+        return {
+          className: isHighlighted
+            ? 'bin bin-highlighted'
+            : 'bin bin-disabled',
+          clickable: isHighlighted
+        }
 
-  const displayId = binId.split('-').slice(1).join('-')
+      case 'ADD':
+        return {
+          className: isHighlighted
+            ? 'bin bin-highlighted bin-halftone'
+            : 'bin',
+          clickable: true
+        }
 
-  return (
-    <div
-      className={classNames}
-      onClick={() => {
-        if (!isClickable) return
-        onBinClick(binId)
-      }}
-    >
-      <p>{displayId}</p>
-    </div>
-  )
-}
+      case 'REMOVE':
+        return {
+          className: isHighlighted
+            ? 'bin bin-highlighted'
+            : 'bin bin-disabled',
+          clickable: isHighlighted
+        }
 
+      default:
+        return {
+          className: 'bin bin-disabled',
+          clickable: false
+        }
+    }
+  }
+
+  const renderBin = binId => {
+    const { className, clickable } = getBinState(binId)
+
+    // Remove system prefix (e.g. "A-")
+    const displayId = binId.split('-').slice(1).join('-')
+
+    return (
+      <div
+        key={binId}
+        className={className}
+        onClick={() => {
+          if (!clickable) return
+          onBinClick(binId)
+        }}
+      >
+        <p>{displayId}</p>
+      </div>
+    )
+  }
 
   // Static system layout
   const system = {
@@ -71,7 +104,7 @@ const renderBin = binId => {
     ]
   }
 
-  const renderContainer = container => {
+  const renderContainer = (container) => {
     const totalBins = container.bins[0] * container.bins[1]
 
     return (

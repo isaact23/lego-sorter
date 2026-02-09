@@ -116,20 +116,10 @@
     ]
   },
   "A-H-1": {
-    "items": [
-      {
-        "partId": "3001",
-        "categoryId": 11
-      }
-    ]
+    "items": []
   },
   "A-G-2": {
-    "items": [
-      {
-        "partId": "3004",
-        "categoryId": 11
-      }
-    ]
+    "items": []
   },
   "A-I-1": {
     "items": [
@@ -142,6 +132,20 @@
     "items": [
       {
         "partId": "3004"
+      }
+    ]
+  },
+  "A-G-6": {
+    "items": []
+  },
+  "A-G-3": {
+    "items": []
+  },
+  "A-H-2": {
+    "items": [
+      {
+        "partId": "3001",
+        "categoryId": 11
       }
     ]
   }
