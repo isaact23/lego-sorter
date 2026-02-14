@@ -324,6 +324,18 @@ function App () {
       video.srcObject = stream
       await video.play()
 
+      // Wait until video has real frame data
+      await new Promise(resolve => {
+        if (video.readyState >= 2) {
+          resolve()
+        } else {
+          video.onloadeddata = () => resolve()
+        }
+      })
+
+      // Small additional delay helps Pi stabilize exposure
+      await new Promise(resolve => setTimeout(resolve, 300))
+
       const canvas = document.createElement('canvas')
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
