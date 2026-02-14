@@ -341,6 +341,24 @@ function App () {
           return
         }
 
+        canvas.toBlob(blob => {
+  stream.getTracks().forEach(t => t.stop())
+  video.remove()
+
+  if (!blob) {
+    console.error('Blob creation failed')
+    setWaiting(false)
+    return
+  }
+
+  //temporary preview of captured image for debugging
+  const previewUrl = URL.createObjectURL(blob)
+  console.log('Preview image URL:', previewUrl)
+  window.open(previewUrl)
+
+  handleBlobUpload(blob)
+}, 'image/jpeg', 0.9)
+
         handleBlobUpload(blob)
       }, 'image/jpeg', 0.9)
       
