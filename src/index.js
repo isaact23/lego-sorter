@@ -3,48 +3,28 @@ import path from 'path'
 import cors from 'cors'
 import fs from 'fs'
 import axios from 'axios'
-
 import './data/binData.js'
 import binRouter from './routes/bin.js'
 
 import csv from 'csv-parser'
 
 const partsMap = new Map()
-
 const csvPath = path.join(import.meta.dirname, 'data', 'parts.csv')
-
-
-
 const app = express()
 const PORT = 3000
-
 const fetching = new Set()
 
 // Middleware
 app.use(cors())
 app.use(express.json())
 
-fs.createReadStream(csvPath)
-  .pipe(csv())
-  .on('data', (row) => {
-    partsMap.set(row.part_num, row)
-  })
-  .on('end', () => {
-    console.log('CSV loaded:', partsMap.size, 'parts')
-  })
-  .on('error', (err) => {
-    console.error('Error loading CSV:', err)
-  })
-
+// Bin routes
+app.use('/bin', binRouter)
 // Serve cached images
 app.use(
   '/images',
   express.static(path.join(import.meta.dirname, 'images'))
 )
-
-// React frontend
-app.use(express.static(path.join(import.meta.dirname, '../frontend/build')))
-
 app.get('/api/brick', (req, res) => {
   const part = req.query.part?.trim()
 
@@ -65,14 +45,6 @@ app.get('/api/brick', (req, res) => {
     part_material: brick.part_material
   })
 })
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(import.meta.dirname, '../frontend/build/index.html'))
-})
-
-// Bin routes
-app.use('/bin', binRouter)
-
 // Image endpoint with caching and graceful failure
 app.get('/api/image/:part', async (req, res) => {
   const part = req.params.part?.trim()
@@ -139,6 +111,33 @@ app.get('/api/image/:part', async (req, res) => {
     return res.status(204).end()
   }
 })
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(import.meta.dirname, '../frontend/build/index.html'))
+})
+
+fs.createReadStream(csvPath)
+  .pipe(csv())
+  .on('data', (row) => {
+    partsMap.set(row.part_num, row)
+  })
+  .on('end', () => {
+    console.log('CSV loaded:', partsMap.size, 'parts')
+  })
+  .on('error', (err) => {
+    console.error('Error loading CSV:', err)
+  })
+
+
+
+// React frontend
+app.use(express.static(path.join(import.meta.dirname, '../frontend/build')))
+
+
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`)
