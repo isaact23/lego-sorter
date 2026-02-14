@@ -7,7 +7,7 @@ export async function identify (base64Data, onSuccess, onError) {
     //const base64 = await fetch(base64Data)
     //const blob = await base64.blob()
     const base64 = await captureFromCamera()
-    identify(base64, onSuccess, onError)
+    const blob = await base64.blob()
 
     const formData = new FormData()
     formData.append('query_image', blob, 'image.jpg')
