@@ -214,10 +214,8 @@ function App () {
     if (page === SELECT_PAGE)
       return (
         <Select
-          partIds={brickList.length
-            ? brickList.map(b => b.part_num)
-            : currentBinContents
-          }
+          initialBricks={brickList.length ? brickList : null}
+          partIds={!brickList.length ? currentBinContents : []}
           selectCallback={selectCallback}
           onClose={resetToHome}
         />
@@ -292,13 +290,14 @@ function App () {
   }
 
   //
-  function handleIdentify (bricks) {
+  function handleIdentify(bricks) {
     setWaiting(false)
-    if (!bricks) {
+    if (!bricks || bricks.length === 0) {
       alert('No pieces identified, try again?')
-    } else {
-      brickCallback(bricks)
+      return
     }
+
+    onBricksIdentified(bricks)
   }
 
   function handleIdentifyError (error) {

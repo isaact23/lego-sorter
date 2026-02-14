@@ -2,7 +2,7 @@ import '../App/App.css'
 import { useEffect, useState } from 'react'
 import { fetchBrickData } from '../services/brickDataService'
 
-function Select ({ partIds = [], selectCallback, onClose }) {
+function Select({ initialBricks = null, partIds = [], selectCallback, onClose }) {
   const [bricks, setBricks] = useState([])
 
   console.log('[Select] render', {
@@ -13,48 +13,42 @@ function Select ({ partIds = [], selectCallback, onClose }) {
 
   // Load brick metadata from part IDs
   useEffect(() => {
-    console.log('[Select] useEffect fired', partIds)
-
     let cancelled = false
 
     async function loadBricks () {
-      console.log('[Select] loading bricks for IDs:', partIds)
-
       const results = []
 
       for (const id of partIds) {
         try {
-          console.log('[Select] fetching brick', id)
-          const brick = await fetchBrickData(id, 1.0)
-          if (brick) {
-            console.log('[Select] fetched brick OK', brick.part_num)
-            results.push(brick)
-          }
+          const brick = await fetchBrickData(id)
+          if (brick) results.push(brick)
         } catch (err) {
           console.error('[Select] failed to fetch brick:', id, err)
         }
       }
 
       if (!cancelled) {
-        console.log('[Select] setting bricks', results.length)
         setBricks(results)
-      } else {
-        console.log('[Select] load cancelled')
       }
     }
 
+    // If full brick objects are provided (camera flow)
+    if (initialBricks && initialBricks.length) {
+      setBricks(initialBricks)
+      return
+    }
+
+    // Otherwise load from part IDs (bin browsing flow)
     if (partIds.length) {
       loadBricks()
     } else {
-      console.log('[Select] no partIds, clearing bricks')
       setBricks([])
     }
 
     return () => {
-      console.log('[Select] cleanup')
       cancelled = true
     }
-  }, [partIds])
+  }, [initialBricks, partIds])
 
   if (!bricks.length) {
     console.log('[Select] no bricks, returning null')
@@ -75,12 +69,30 @@ function Select ({ partIds = [], selectCallback, onClose }) {
           >
             <div className="SelectImageFrame">
               <img
-                src={brick.part_img_url}
+                src={`/api/image/${brick.part_num}`}
                 alt={brick.name}
               />
             </div>
             <strong>{brick.name}</strong>
             <div>Part #{brick.part_num}</div>
+            {brick.confidence != null && (
+              <>
+                <div className="ConfidenceBar">
+                  <span
+                    className="ConfidenceFill"
+                    style={{
+                      width: `${brick.confidence * 100}%`,
+                      backgroundColor:
+                        brick.confidence > 0.9
+                          ? '#16a34a'
+                          : brick.confidence > 0.75
+                          ? '#eab308'
+                          : '#dc2626'
+                    }}
+                  />
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>

@@ -20,7 +20,7 @@ function BrickInfo({
 
         <div className="BrickImageFrame">
           <img
-            src={brick.part_img_url}
+            src={`/api/image/${brick.part_num}`}
             alt={brick.name}
           />
         </div>
