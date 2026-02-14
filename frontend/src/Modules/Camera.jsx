@@ -4,47 +4,80 @@ import { useState } from 'react'
 
 const API_ENDPOINT = 'https://api.brickognize.com/predict/'
 
-function Camera ({ brickCallback }) {
+function Camera({ brickCallback }) {
   const [waiting, setWaiting] = useState(false)
 
-  async function identify (base64Data) {
-    setWaiting(true)
+  async function captureFromCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-    const base64 = await fetch(base64Data)
-    const blob = await base64.blob()
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      video.style.position = 'fixed'
+      video.style.left = '-9999px'
+      document.body.appendChild(video)
+
+      video.srcObject = stream
+      video.play()
+
+      video.onloadedmetadata = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(video, 0, 0)
+
+        canvas.toBlob(blob => {
+          stream.getTracks().forEach(t => t.stop())
+          video.remove()
+          resolve(blob)
+        }, 'image/jpeg', 0.9)
+      }
+
+      video.onerror = reject
+    })
+  }
+
+  async function identifyFromBlob(blob) {
+    setWaiting(true)
 
     const formData = new FormData()
     formData.append('query_image', blob, 'image.jpg')
 
-    axios
-      .post(API_ENDPOINT, formData, {
+    try {
+      const res = await axios.post(API_ENDPOINT, formData, {
         headers: { Accept: 'application/json' }
       })
-      .then(res => {
-        const legoList = res.data.items
-        if (legoList.length === 0) {
-          alert('No pieces identified, try again?')
-        } else {
-          brickCallback(legoList)
-        }
-        setWaiting(false)
-      })
-      .catch(err => {
-        console.error(err)
-        alert('Something went wrong.')
-        setWaiting(false)
-      })
+
+      const legoList = res.data.items
+      if (legoList.length === 0) {
+        alert('No pieces identified, try again?')
+      } else {
+        brickCallback(legoList)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Something went wrong.')
+    }
+
+    setWaiting(false)
   }
 
-  function handleFileChange (event) {
+  async function handleCameraCapture() {
+    console.log('CAMERA BUTTON CLICKED')
+    try {
+      const blob = await captureFromCamera()
+      identifyFromBlob(blob)
+    } catch (err) {
+      console.error('Camera failed, falling back to file upload')
+      document.getElementById('cameraInput').click()
+    }
+  }
+
+  function handleFileChange(event) {
     const file = event.target.files[0]
     if (!file) return
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      identify(reader.result)
-    }
-    reader.readAsDataURL(file)
+    identifyFromBlob(file)
   }
 
   return (
@@ -53,7 +86,6 @@ function Camera ({ brickCallback }) {
         id='cameraInput'
         type='file'
         accept='image/*'
-        capture='environment'
         hidden
         onChange={handleFileChange}
       />
@@ -61,9 +93,9 @@ function Camera ({ brickCallback }) {
       <button
         className='ui-button blue'
         disabled={waiting}
-        onClick={() => document.getElementById('cameraInput').click()}
+        onClick={handleCameraCapture}
       >
-        Find Brick
+        Find Brick 2
       </button>
     </div>
   )

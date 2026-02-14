@@ -6,6 +6,7 @@ import Table from '../Table/Table'
 import BrickInfo from '../Modules/BrickInfo'
 import { useState, useRef } from 'react'
 import { useEffect } from 'react'
+import axios from 'axios'
 
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
@@ -21,6 +22,7 @@ const CAMERA_PAGE = 0
 const SELECT_PAGE = 1
 const OPTION_CARDS = 2
 const BRICK_INFO = 3
+const API_ENDPOINT = 'https://api.brickognize.com/predict/'
 
 
 
@@ -38,7 +40,7 @@ function App () {
   const [selectedBinId, setSelectedBinId] = useState(null)
   const [currentBinContents, setCurrentBinContents] = useState([])
   const [helperText, setHelperText] = useState('')
-
+  
 
   useEffect(() => {
     // No categories selected → clear highlights
@@ -291,6 +293,7 @@ function App () {
 
   //
   function handleIdentify(bricks) {
+    console.log('handleIdentify triggered')
     setWaiting(false)
     if (!bricks || bricks.length === 0) {
       alert('No pieces identified, try again?')
@@ -301,21 +304,96 @@ function App () {
   }
 
   function handleIdentifyError (error) {
+    console.log('handleIdentifyError triggered')
     alert(error)
     setWaiting(false)
   }
 
+  async function startCameraCapture() {
+    console.log('startCameraCapture triggered')
+    try {
+      console.log('Starting webcam capture')
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+
+      const video = document.createElement('video')
+      video.style.position = 'fixed'
+      video.style.left = '-9999px'
+      document.body.appendChild(video)
+
+      video.srcObject = stream
+      await video.play()
+
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(video, 0, 0)
+
+      canvas.toBlob(blob => {
+        stream.getTracks().forEach(t => t.stop())
+        video.remove()
+
+        if (!blob) {
+          console.error('Blob creation failed')
+          setWaiting(false)
+          return
+        }
+
+        handleBlobUpload(blob)
+      }, 'image/jpeg', 0.9)
+      
+    } catch (err) {
+      console.error('Camera failed, falling back:', err)
+      pictureInputRef.current?.click()
+    }
+  }
+
   // Handle when Take Picture button is pressed.
   function handleTakePicture () {
+    console.log('handleTakePicture triggered')
     if (waiting) return
     setWaiting(true)
     setSearchQuery('') // Clear search when taking picture
     setDropdownResetTrigger(prev => prev + 1) // Reset dropdown when taking picture
-    pictureInputRef.current?.click()
+    startCameraCapture()
   }
+  
+  function handleBlobUpload(blob) {
+    console.log('handleBlobUpload triggered')
+    const formData = new FormData()
+    formData.append('query_image', blob, 'image.jpg')
 
+    axios.post(API_ENDPOINT, formData, {
+      headers: { Accept: 'application/json' }
+    })
+    .then(res => {
+      const legoList = res.data.items
+
+      if (!legoList || legoList.length === 0) {
+        alert('No pieces identified, try again?')
+      } else {
+
+        const normalized = legoList.map(item => ({
+          part_num: item.id,
+          confidence: item.score
+        }))
+
+        brickCallback(normalized)
+      }
+
+      setWaiting(false)
+    })
+    .catch(err => {
+      console.error(err)
+      alert('Something went wrong.')
+      setWaiting(false)
+    })
+  }
   // Handle when an image is taken.
   function handleImageChange (event) {
+    console.log('handleImageChange triggered')
     handleFileChange(event, (base64Data) => {
       identify(base64Data, handleIdentify, handleIdentifyError)
     })

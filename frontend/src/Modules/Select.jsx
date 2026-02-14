@@ -18,12 +18,23 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
     async function loadBricks () {
       const results = []
 
-      for (const id of partIds) {
+      // Determine source
+      const source = initialBricks && initialBricks.length
+        ? initialBricks
+        : partIds.map(id => ({ part_num: id }))
+
+      for (const item of source) {
         try {
-          const brick = await fetchBrickData(id)
-          if (brick) results.push(brick)
+          const fullBrick = await fetchBrickData(item.part_num)
+
+          if (fullBrick) {
+            results.push({
+              ...fullBrick,
+              confidence: item.confidence ?? null
+            })
+          }
         } catch (err) {
-          console.error('[Select] failed to fetch brick:', id, err)
+          console.error('[Select] failed to fetch brick:', item.part_num, err)
         }
       }
 
@@ -32,18 +43,7 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
       }
     }
 
-    // If full brick objects are provided (camera flow)
-    if (initialBricks && initialBricks.length) {
-      setBricks(initialBricks)
-      return
-    }
-
-    // Otherwise load from part IDs (bin browsing flow)
-    if (partIds.length) {
-      loadBricks()
-    } else {
-      setBricks([])
-    }
+    loadBricks()
 
     return () => {
       cancelled = true
