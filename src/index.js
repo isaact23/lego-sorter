@@ -2,34 +2,38 @@ import express from 'express'
 import path from 'path'
 import cors from 'cors'
 import fs from 'fs'
-import axios from 'axios'
-import './data/binData.js'
-import binRouter from './routes/bin.js'
-
 import csv from 'csv-parser'
+import { fileURLToPath } from 'url'
+import binRouter from './routes/bin.js'
+import './data/binData.js'
 
-const partsMap = new Map()
-const csvPath = path.join(import.meta.dirname, 'data', 'parts.csv')
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const app = express()
 const PORT = 3000
-const fetching = new Set()
+
+const partsMap = new Map()
+const csvPath = path.join(__dirname, 'data', 'parts.csv')
 
 // Middleware
 app.use(cors())
 app.use(express.json())
 
 app.use((req, res, next) => {
-  console.log("REQ:", req.method, req.url)
+  console.log('REQ:', req.method, req.url)
   next()
 })
 
-// Bin routes
+// =====================
+// BIN ROUTES
+// =====================
 app.use('/bin', binRouter)
-// Serve cached images
-app.use(
-  '/images',
-  express.static(path.join(import.meta.dirname, 'images'))
-)
+
+// =====================
+// BRICK LOOKUP API
+// =====================
 app.get('/api/brick', (req, res) => {
   const part = req.query.part?.trim()
 
@@ -50,77 +54,29 @@ app.get('/api/brick', (req, res) => {
     part_material: brick.part_material
   })
 })
-// Image endpoint with caching and graceful failure
-app.get('/api/image/:part', async (req, res) => {
+
+// =====================
+// LOCAL IMAGE ENDPOINT
+// =====================
+app.get('/api/image/:part', (req, res) => {
   const part = req.params.part?.trim()
 
   if (!part) {
     return res.status(400).json({ error: 'Missing part number' })
   }
 
-  const imagePath = path.join(
-    import.meta.dirname,
-    'images',
-    `${part}.jpg`
-  )
+  const imagePath = path.join(__dirname, 'images', `${part}.jpg`)
 
-  // If cached locally, return it
-  if (fs.existsSync(imagePath)) {
-    return res.sendFile(imagePath)
+  if (!fs.existsSync(imagePath)) {
+    return res.status(404).json({ error: 'Image not found' })
   }
 
-  // Prevent duplicate simultaneous fetches
-  if (fetching.has(part)) {
-    return res.status(204).end()
-  }
-
-  fetching.add(part)
-
-  try {
-    /*
-    const metaResponse = await axios.get(
-      `https://rebrickable.com/api/v3/lego/parts/${part}/`,
-      {
-        headers: {
-          Authorization: `key ${process.env.REBRICKABLE_API_KEY}`
-        },
-        timeout: 5000
-      }
-    )
-    */
-    const imageUrl = metaResponse.data?.part_img_url
-
-    if (!imageUrl) {
-      fetching.delete(part)
-      return res.status(404).end()
-    }
-
-    const imageResponse = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      timeout: 5000
-    })
-
-    fs.writeFileSync(imagePath, imageResponse.data)
-
-    fetching.delete(part)
-
-    return res.sendFile(imagePath)
-
-  } catch (err) {
-    fetching.delete(part)
-
-    // External service unavailable
-    console.warn('Image fetch skipped for', part)
-
-    // Graceful failure: no image, but no crash
-    return res.status(204).end()
-  }
+  return res.sendFile(imagePath)
 })
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(import.meta.dirname, '../frontend/build/index.html'))
-})
-
+// =====================
+// LOAD CSV INTO MEMORY
+// =====================
 fs.createReadStream(csvPath)
   .pipe(csv())
   .on('data', (row) => {
@@ -133,17 +89,20 @@ fs.createReadStream(csvPath)
     console.error('Error loading CSV:', err)
   })
 
+// =====================
+// SERVE REACT BUILD
+// =====================
+const buildPath = path.join(__dirname, '../frontend/build')
 
+app.use(express.static(buildPath))
 
-// React frontend
-app.use(express.static(path.join(import.meta.dirname, '../frontend/build')))
+app.get('*', (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'))
+})
 
-
-
-
-
-
-
+// =====================
+// START SERVER
+// =====================
 app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`)
 })
