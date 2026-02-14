@@ -56,42 +56,41 @@ export function handleFileChange (event, onFileRead) {
   reader.readAsDataURL(file)
 }
 
-
 export async function captureFromCamera () {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: true
-  })
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true
+    })
 
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video')
-    video.style.position = 'fixed'
-    video.style.left = '-9999px'
-    document.body.appendChild(video)
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      video.style.position = 'fixed'
+      video.style.left = '-9999px'
+      document.body.appendChild(video)
 
-    video.srcObject = stream
-    video.playsInline = true
+      video.srcObject = stream
+      video.playsInline = true
 
-    video.onloadedmetadata = () => {
-      video.play()
+      video.onloadedmetadata = () => {
+        video.play()
 
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
 
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      canvas.toBlob(blob => {
-        stream.getTracks().forEach(track => track.stop())
-        video.remove()
-        resolve(blob)
-      }, 'image/jpeg', 0.9)
-    }
+        canvas.toBlob(blob => {
+          stream.getTracks().forEach(track => track.stop())
+          video.remove()
+          resolve(blob)
+        }, 'image/jpeg', 0.9)
+      }
+    })
 
-    video.onerror = err => {
-      stream.getTracks().forEach(track => track.stop())
-      video.remove()
-      reject(err)
-    }
-  })
+  } catch (err) {
+    console.error('getUserMedia failed:', err.name, err.message)
+    throw err
+  }
 }
