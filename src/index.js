@@ -139,8 +139,7 @@ app.get('/api/image/:part', async (req, res) => {
     console.log('Fetching image from Rebrickable for:', part)
 
     await enforceRateLimit()
-    console.log("API KEY VALUE:", REBRICKABLE_API_KEY)
-    console.log("API KEY TYPE:", typeof REBRICKABLE_API_KEY)
+
     const response = await axios.get(REBRICKABLE_BASE, {
       params: {
         part_nums: part,
