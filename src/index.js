@@ -157,14 +157,20 @@ app.get('/api/image/:part', async (req, res) => {
 
     return res.sendFile(imagePath)
 
-  } catch (err) {
-    console.error('Image route error:', err.message)
+  } 
+  catch (err) {
+    console.error('Image route error FULL:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      stack: err.stack
+    })
 
     if (err.response?.status === 429) {
       return res.status(429).json({ error: 'Rate limited by Rebrickable' })
     }
 
-    return res.status(500).json({ error: 'Image fetch failed' })
+    return res.status(500).json({ error: err.message })
   }
 })
 
