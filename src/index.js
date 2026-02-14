@@ -100,6 +100,7 @@ app.get('/api/image/:part', async (req, res) => {
   fetching.add(part)
 
   try {
+    /*
     const metaResponse = await axios.get(
       `https://rebrickable.com/api/v3/lego/parts/${part}/`,
       {
@@ -109,7 +110,7 @@ app.get('/api/image/:part', async (req, res) => {
         timeout: 5000
       }
     )
-
+    */
     const imageUrl = metaResponse.data?.part_img_url
 
     if (!imageUrl) {
