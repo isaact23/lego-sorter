@@ -18,6 +18,11 @@ const fetching = new Set()
 app.use(cors())
 app.use(express.json())
 
+app.use((req, res, next) => {
+  console.log("REQ:", req.method, req.url)
+  next()
+})
+
 // Bin routes
 app.use('/bin', binRouter)
 // Serve cached images
