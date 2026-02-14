@@ -2,12 +2,9 @@ import axios from 'axios'
 import { API_ENDPOINT } from '../config'
 import { fetchBrickData } from './brickDataService'
 
-export async function identify (base64Data, onSuccess, onError) {
+export async function identify (onSuccess, onError) {
   try {
-    //const base64 = await fetch(base64Data)
-    //const blob = await base64.blob()
-    const base64 = await captureFromCamera()
-    const blob = await base64.blob()
+    const blob = await captureFromCamera()
 
     const formData = new FormData()
     formData.append('query_image', blob, 'image.jpg')
@@ -59,6 +56,7 @@ export function handleFileChange (event, onFileRead) {
   reader.readAsDataURL(file)
 }
 
+
 export async function captureFromCamera () {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: true
@@ -67,7 +65,7 @@ export async function captureFromCamera () {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video')
     video.style.position = 'fixed'
-    video.style.left = '-9999px' // keep it off-screen
+    video.style.left = '-9999px'
     document.body.appendChild(video)
 
     video.srcObject = stream
@@ -83,13 +81,11 @@ export async function captureFromCamera () {
       const ctx = canvas.getContext('2d')
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      const base64 = canvas.toDataURL('image/jpeg', 0.9)
-
-      // Clean up
-      stream.getTracks().forEach(track => track.stop())
-      video.remove()
-
-      resolve(base64)
+      canvas.toBlob(blob => {
+        stream.getTracks().forEach(track => track.stop())
+        video.remove()
+        resolve(blob)
+      }, 'image/jpeg', 0.9)
     }
 
     video.onerror = err => {
