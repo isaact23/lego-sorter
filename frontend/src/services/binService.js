@@ -53,7 +53,7 @@ export async function getBinContents (binId) {
   }
 
   const response = await axios.post(
-    `${BACKEND_URL}/bin/Get-Info`,
+    `${BACKEND_URL}/bin/get-Info`,
     { binId }
   )
 
