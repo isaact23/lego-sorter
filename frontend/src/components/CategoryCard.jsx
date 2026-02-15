@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import OptionCard from './OptionCard'
-import '../app/App.css'
+import '../app_totallydifferenttemporaryname/App.css'
 
 export default function CategoryCard ({ resetTrigger, onCategorySelect }) {
   const [cat1, setCat1] = useState('')

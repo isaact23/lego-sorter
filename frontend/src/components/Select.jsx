@@ -1,4 +1,4 @@
-import '../app/App.css'
+import '../app_totallydifferenttemporaryname/App.css'
 import { useEffect, useState } from 'react'
 import { fetchBrickData } from '../services/brickService'
 
