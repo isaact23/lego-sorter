@@ -6,6 +6,7 @@ import Table from '../Table/Table'
 import BrickInfo from '../Modules/BrickInfo'
 import { useState, useRef } from 'react'
 import { useEffect } from 'react'
+import { useCallback } from 'react'
 import axios from 'axios'
 
 import OptionCard from '../Modules/OptionCard'
@@ -41,6 +42,11 @@ function App () {
   const [currentBinContents, setCurrentBinContents] = useState([])
   const [helperText, setHelperText] = useState('')
   
+  const handleCategorySelect = useCallback((catIdArray) => {
+    console.log('Selected category IDs:', catIdArray)
+    setSelectedCategoryIds(catIdArray)
+    setSearchQuery('')
+  }, [])
 
   useEffect(() => {
     // No categories selected → clear highlights
@@ -250,11 +256,7 @@ function App () {
           {/* Card 1: two dropdowns */}
           <CategorySelectCard
             resetTrigger={dropdownResetTrigger}
-            onCategorySelect={(catIdArray) => {
-              console.log('Selected category IDs:', catIdArray)
-              setSelectedCategoryIds(catIdArray)
-              setSearchQuery('')
-            }}
+            onCategorySelect={handleCategorySelect}
           />
           
           {/* Card 2: part number search */}
@@ -427,6 +429,7 @@ function App () {
 
   // Search for exact part number and show like camera results
   async function handleExactPartSearch () {
+    setDropdownResetTrigger(prev => prev + 1) 
     if (!searchQuery.trim()) {
       alert('Please enter a part number')
       return
