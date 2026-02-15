@@ -122,6 +122,9 @@ app.get('/api/brick', (req, res) => {
 // =====================
 
 app.get('/api/image/:part', async (req, res) => {
+  console.log({
+    Authorization: `key ${process.env.REBRICKABLE_API_KEY}`
+  })
   try {
     const part = req.params.part?.trim()
     if (!part) {
@@ -177,9 +180,10 @@ app.get('/api/image/:part', async (req, res) => {
 // =====================
 // SAFE REBRICKABLE FETCH
 // =====================
-
+/*
 app.post('/api/rebrickable/images', async (req, res) => {
   try {
+    
     if (!REBRICKABLE_API_KEY) {
       return res.status(500).json({ error: 'API key not configured' })
     }
@@ -227,7 +231,7 @@ app.post('/api/rebrickable/images', async (req, res) => {
     return res.status(500).json({ error: 'Image fetch failed' })
   }
 })
-
+*/
 // =====================
 // LOAD CSV
 // =====================
