@@ -4,21 +4,23 @@ import { fetchBrickData } from '../services/brickDataService'
 
 function Select({ initialBricks = null, partIds = [], selectCallback, onClose }) {
   const [bricks, setBricks] = useState([])
+  const [loading, setLoading] = useState(true)
 
   console.log('[Select] render', {
     partIds,
     partIdsLength: partIds.length,
-    bricksLength: bricks.length
+    bricksLength: bricks.length,
+    loading
   })
 
-  // Load brick metadata from part IDs
   useEffect(() => {
     let cancelled = false
 
-    async function loadBricks () {
+    async function loadBricks() {
+      setLoading(true)
+
       const results = []
 
-      // Determine source
       const source = initialBricks && initialBricks.length
         ? initialBricks
         : partIds.map(id => ({ part_num: id }))
@@ -38,9 +40,17 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
         }
       }
 
-      if (!cancelled) {
-        setBricks(results)
+      if (cancelled) return
+
+      // 🔥 Auto-select if exactly one result
+      if (results.length === 1) {
+        console.log('[Select] auto-selecting single brick', results[0].part_num)
+        selectCallback(results[0])
+        return
       }
+
+      setBricks(results)
+      setLoading(false)
     }
 
     loadBricks()
@@ -48,8 +58,12 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
     return () => {
       cancelled = true
     }
-  }, [initialBricks, partIds])
+  }, [initialBricks, partIds, selectCallback])
 
+  // ⛔ While loading OR auto-selecting → render nothing
+  if (loading) return null
+
+  // ⛔ If no bricks → render nothing (parent handles message/page state)
   if (!bricks.length) {
     console.log('[Select] no bricks, returning null')
     return null
@@ -73,25 +87,25 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
                 alt={brick.name}
               />
             </div>
+
             <strong>{brick.name}</strong>
             <div>Part #{brick.part_num}</div>
+
             {brick.confidence != null && (
-              <>
-                <div className="ConfidenceBar">
-                  <span
-                    className="ConfidenceFill"
-                    style={{
-                      width: `${brick.confidence * 100}%`,
-                      backgroundColor:
-                        brick.confidence > 0.9
-                          ? '#16a34a'
-                          : brick.confidence > 0.75
-                          ? '#eab308'
-                          : '#dc2626'
-                    }}
-                  />
-                </div>
-              </>
+              <div className="ConfidenceBar">
+                <span
+                  className="ConfidenceFill"
+                  style={{
+                    width: `${brick.confidence * 100}%`,
+                    backgroundColor:
+                      brick.confidence > 0.9
+                        ? '#16a34a'
+                        : brick.confidence > 0.75
+                        ? '#eab308'
+                        : '#dc2626'
+                  }}
+                />
+              </div>
             )}
           </div>
         ))}

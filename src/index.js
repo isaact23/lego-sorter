@@ -180,7 +180,7 @@ app.get('/api/image/:part', async (req, res) => {
 // =====================
 // SAFE REBRICKABLE FETCH
 // =====================
-/*
+
 app.post('/api/rebrickable/images', async (req, res) => {
   try {
     
@@ -231,7 +231,7 @@ app.post('/api/rebrickable/images', async (req, res) => {
     return res.status(500).json({ error: 'Image fetch failed' })
   }
 })
-*/
+
 // =====================
 // LOAD CSV
 // =====================

@@ -10,7 +10,7 @@ import axios from 'axios'
 
 import OptionCard from '../Modules/OptionCard'
 import CategorySelectCard from '../Modules/CategorySelectCard'
-import { identify, takePicture, handleFileChange } from '../services/photoService'
+import { identify, handleFileChange } from '../services/photoService'
 import { fetchBrickData } from '../services/brickDataService'
 import { getBinsbyBrick } from '../services/binService'
 import { getBinsbyCategory } from '../services/binService'
@@ -110,7 +110,8 @@ function App () {
           setHelperText(`Bin ${newBinId} is empty`)
           setPage(OPTION_CARDS)
           return
-        } else {
+        } 
+        else {
           setHelperText('')
         }
       } catch (err) {
