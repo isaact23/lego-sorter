@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import OptionCard from './OptionCard'
-import '../App/App.css'
+import '../app/App.css'
 
-export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) {
+export default function CategoryCard ({ resetTrigger, onCategorySelect }) {
   const [cat1, setCat1] = useState('')
   const [cat2, setCat2] = useState('')
 
@@ -72,7 +72,7 @@ export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) 
   useEffect(() => {
     setCat1('')
     setCat2('')
-    onCategorySelect?.([])
+    onCategorySelect?.({ ids: [], labels: [] })
   }, [resetTrigger, onCategorySelect])
 
   const cat1Options = useMemo(
@@ -96,11 +96,12 @@ export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) 
         value={cat1}
         onChange={e => {
           const value = e.target.value
+
           setCat1(value)
-          setCat2('')
+          setCat2('')   // reset subcategory
 
           if (!value) {
-            onCategorySelect?.([])
+            onCategorySelect?.({ ids: [], labels: [] })
             return
           }
 
@@ -108,7 +109,12 @@ export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) 
             .filter(row => row.cat1 === value)
             .map(row => row.id)
 
-          onCategorySelect?.(ids)
+          const cleanCat1 = value.replace('..', '')
+
+          onCategorySelect?.({
+            ids,
+            labels: [cleanCat1]
+          })
         }}
       >
         <option value="">Select category</option>
@@ -133,7 +139,12 @@ export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) 
               .filter(row => row.cat1 === cat1)
               .map(row => row.id)
 
-            onCategorySelect?.(ids)
+            const cleanLabel = cat1.replace('..', '')
+
+            onCategorySelect?.({
+              ids,
+              labels: [cleanLabel]
+            })
             return
           }
 
@@ -141,7 +152,12 @@ export default function CategorySelectCard ({ resetTrigger, onCategorySelect }) 
             row => row.cat1 === cat1 && row.cat2 === value
           )
 
-          onCategorySelect?.(match ? [match.id] : [])
+          const cleanCat1 = cat1.replace('..', '')
+
+          onCategorySelect?.({
+            ids: match ? [match.id] : [],
+            labels: match ? [cleanCat1, value] : []
+          })
         }}
       >
         <option value="">Select subcategory</option>

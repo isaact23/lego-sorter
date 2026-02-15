@@ -5,7 +5,7 @@ import { BACKEND_URL } from '../config'
 
 
 // Get all bins containing a specific brick
-export async function getBinsbyBrick (pieceId) {
+export async function getBinsByBrick (pieceId) {
   const res = await fetch('/bin/getBins_Brick', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

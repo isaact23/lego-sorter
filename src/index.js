@@ -23,12 +23,6 @@ const partsMap = new Map()
 const csvPath = path.join(__dirname, 'data', 'parts.csv')
 const IMAGE_DIR = path.join(__dirname, 'images')
 
-const MIN_DELAY_MS = 1000
-const MAX_DAILY_CALLS = 200
-
-let lastCallTime = 0
-let dailyCallCount = 0
-
 console.log('API KEY PRESENT:', !!process.env.REBRICKABLE_API_KEY)
 
 // =====================
@@ -37,7 +31,6 @@ console.log('API KEY PRESENT:', !!process.env.REBRICKABLE_API_KEY)
 
 app.use(cors())
 app.use(express.json())
-
 
 // =====================
 // LOAD CSV
@@ -51,8 +44,6 @@ fs.createReadStream(csvPath)
   .on('end', () => {
     console.log('CSV loaded:', partsMap.size, 'parts')
   })
-
-
 
 // =====================
 // ROUTES

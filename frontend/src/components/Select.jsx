@@ -1,6 +1,6 @@
-import '../App/App.css'
+import '../app/App.css'
 import { useEffect, useState } from 'react'
-import { fetchBrickData } from '../services/brickDataService'
+import { fetchBrickData } from '../services/brickService'
 
 function Select({ initialBricks = null, partIds = [], selectCallback, onClose }) {
   const [bricks, setBricks] = useState([])

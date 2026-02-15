@@ -1,31 +1,21 @@
 import './App.css'
 import './Button.css'
-import Camera from '../Modules/Camera'
-import Select from '../Modules/Select'
-import Table from '../Table/Table'
-import BrickInfo from '../Modules/BrickInfo'
-import { useState, useRef } from 'react'
-import { useEffect } from 'react'
-import { useCallback } from 'react'
-import axios from 'axios'
 
-import OptionCard from '../Modules/OptionCard'
-import CategorySelectCard from '../Modules/CategorySelectCard'
-import { identify, handleFileChange } from '../services/photoService'
-import { fetchBrickData } from '../services/brickDataService'
-import { getBinsbyBrick } from '../services/binService'
-import { getBinsbyCategory } from '../services/binService'
-import { operateBin } from '../services/binService'
-import { getBinContents } from '../services/binService'
+import Camera from '../components/Camera'
+import Select from '../components/Select'
+import Table from '../components/Table'
+import BrickInfo from '../components/BrickInfo'
+import OptionCard from '../components/OptionCard'
+import CategoryCard from '../components/CategoryCard'
 
+import { useState, useRef, useEffect, useCallback } from 'react'
 
-const CAMERA_PAGE = 0
+import { fetchBrickData } from '../services/brickService'
+import { getBinsByBrick, getBinsbyCategory, operateBin, getBinContents } from '../services/binService'
+
 const SELECT_PAGE = 1
 const OPTION_CARDS = 2
 const BRICK_INFO = 3
-const API_ENDPOINT = 'https://api.brickognize.com/predict/'
-
-
 
 function App () {
   const [page, setPage] = useState(2)
@@ -35,17 +25,30 @@ function App () {
   const [binOperation, setBinOperation] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([])
+  const [selectedCategoryLabels, setSelectedCategoryLabels] = useState([])
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
-  const pictureInputRef = useRef(null)
   const [highlightedBinIds, setHighlightedBinIds] = useState([])
   const [selectedBinId, setSelectedBinId] = useState(null)
   const [currentBinContents, setCurrentBinContents] = useState([])
-  const [helperText, setHelperText] = useState('')
-  
-  const handleCategorySelect = useCallback((catIdArray) => {
-    console.log('Selected category IDs:', catIdArray)
-    setSelectedCategoryIds(catIdArray)
+  const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')
+
+  const cameraRef = useRef()
+
+  const handleCategorySelect = useCallback((payload) => {
+    const ids = payload?.ids ?? []
+    const labels = payload?.labels ?? []
+
+    setSelectedCategoryIds(ids)
+    setSelectedCategoryLabels(labels)
     setSearchQuery('')
+
+    if (labels.length > 0) {
+      setHelperText(
+        `Showing bins containing Category: ${labels.join(' > ')}`
+      )
+    } else {
+      setHelperText('Select a bin or click an option above to get started')
+    }
   }, [])
 
   useEffect(() => {
@@ -174,9 +177,9 @@ function App () {
 
   function brickCallback (bricks) {
     if (!bricks || bricks.length === 0) return
-      setBrickList(bricks)
-      setPage(SELECT_PAGE)
-    }
+    setBrickList(bricks)
+    setPage(SELECT_PAGE)
+  }
 
   async function selectCallback (selectedBrick) {
     setSelectedBinId(null)
@@ -189,7 +192,7 @@ function App () {
     try {
       console.log('Fetching bins for brick:', selectedBrick.part_num)
 
-      const bins = await getBinsbyBrick(selectedBrick.part_num)
+      const bins = await getBinsByBrick(selectedBrick.part_num)
 
       console.log('Brick found in bins:', bins)
       setHighlightedBinIds(bins)
@@ -200,7 +203,6 @@ function App () {
     setHelperText(`Choose an operation or click Close to return home.`)
     setPage(BRICK_INFO)
   }
-
 
   function onBricksIdentified (bricks) {
     if (!bricks || bricks.length === 0) return
@@ -216,9 +218,6 @@ function App () {
 
   // Pass operationStatus to Table
   const getPage = () => {
-
-    if (page === CAMERA_PAGE) 
-      return <Camera brickCallback={onBricksIdentified} />
 
     if (page === SELECT_PAGE)
       return (
@@ -242,19 +241,9 @@ function App () {
     if (page === OPTION_CARDS)
       return (
         <div className='top-panel-row'>
-          <input
-            id='cameraInput'
-            type='file'
-            accept='image/*'
-            capture='environment'
-            hidden
-            onChange={handleImageChange}
-            ref={pictureInputRef}
-          />
-    
 
           {/* Card 1: two dropdowns */}
-          <CategorySelectCard
+          <CategoryCard
             resetTrigger={dropdownResetTrigger}
             onCategorySelect={handleCategorySelect}
           />
@@ -287,144 +276,19 @@ function App () {
 
 
           {/* Card 3: action button */}
-          <OptionCard iconSrc='/icons/cam.png' onClick={() => handleTakePicture()}>
+          <OptionCard
+            iconSrc="/icons/cam.png"
+            onClick={() => cameraRef.current?.triggerCapture()}
+          >
             <strong>Find Brick</strong>
           </OptionCard>
+
+          <Camera
+            ref={cameraRef}
+            onBricksIdentified={onBricksIdentified}
+          />
         </div>
       )
-  }
-
-  //
-  function handleIdentify(bricks) {
-    console.log('handleIdentify triggered')
-    setWaiting(false)
-    if (!bricks || bricks.length === 0) {
-      alert('No pieces identified, try again?')
-      return
-    }
-
-    onBricksIdentified(bricks)
-  }
-
-  function handleIdentifyError (error) {
-    console.log('handleIdentifyError triggered')
-    alert(error)
-    setWaiting(false)
-  }
-
-  async function startCameraCapture() {
-    console.log('startCameraCapture triggered')
-    try {
-      console.log('Starting webcam capture')
-
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-
-      const video = document.createElement('video')
-      video.style.position = 'fixed'
-      video.style.left = '-9999px'
-      document.body.appendChild(video)
-
-      video.srcObject = stream
-      await video.play()
-
-      // Wait until video has real frame data
-      await new Promise(resolve => {
-        if (video.readyState >= 2) {
-          resolve()
-        } else {
-          video.onloadeddata = () => resolve()
-        }
-      })
-
-      // Small additional delay helps Pi stabilize exposure
-      await new Promise(resolve => setTimeout(resolve, 300))
-
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0)
-
-      canvas.toBlob(blob => {
-        stream.getTracks().forEach(t => t.stop())
-        video.remove()
-
-        if (!blob) {
-          console.error('Blob creation failed')
-          setWaiting(false)
-          return
-        }
-
-        canvas.toBlob(blob => {
-  stream.getTracks().forEach(t => t.stop())
-  video.remove()
-
-  if (!blob) {
-    console.error('Blob creation failed')
-    setWaiting(false)
-    return
-  }
-
-  handleBlobUpload(blob)
-}, 'image/jpeg', 0.9)
-
-        handleBlobUpload(blob)
-      }, 'image/jpeg', 0.9)
-      
-    } catch (err) {
-      console.error('Camera failed, falling back:', err)
-      pictureInputRef.current?.click()
-    }
-  }
-
-  // Handle when Take Picture button is pressed.
-  function handleTakePicture () {
-    console.log('handleTakePicture triggered')
-    if (waiting) return
-    setWaiting(true)
-    setSearchQuery('') // Clear search when taking picture
-    setDropdownResetTrigger(prev => prev + 1) // Reset dropdown when taking picture
-    startCameraCapture()
-  }
-  
-  function handleBlobUpload(blob) {
-    console.log('handleBlobUpload triggered')
-    const formData = new FormData()
-    formData.append('query_image', blob, 'image.jpg')
-
-    axios.post(API_ENDPOINT, formData, {
-      headers: { Accept: 'application/json' }
-    })
-    .then(res => {
-      const legoList = res.data.items
-
-      if (!legoList || legoList.length === 0) {
-        alert('No pieces identified, try again?')
-      } else {
-
-        const normalized = legoList.map(item => ({
-          part_num: item.id,
-          confidence: item.score
-        }))
-
-        brickCallback(normalized)
-      }
-
-      setWaiting(false)
-    })
-    .catch(err => {
-      console.error(err)
-      alert('Something went wrong.')
-      setWaiting(false)
-    })
-  }
-  // Handle when an image is taken.
-  function handleImageChange (event) {
-    console.log('handleImageChange triggered')
-    handleFileChange(event, (base64Data) => {
-      identify(base64Data, handleIdentify, handleIdentifyError)
-    })
   }
 
   // Search for exact part number and show like camera results
@@ -469,7 +333,7 @@ function App () {
     setBrickList([])
     setBinOperation(null)
     setSearchQuery('')
-    setHelperText('')
+    setHelperText('Select a bin or click an option above to get started')
     setSelectedBinId(null)
     setPage(OPTION_CARDS)
     setCurrentBinContents([])
