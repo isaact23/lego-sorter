@@ -13,8 +13,8 @@ const overlayStyle = {
 
 const windowStyle = {
   width: '100%',
-  maxWidth: 760,
-  maxHeight: '90vh',
+  maxWidth: 600,
+  maxHeight: '75vh',
   background: '#111',
   borderRadius: 14,
   boxShadow: '0 0 40px rgba(0,0,0,.45)',
@@ -35,7 +35,8 @@ const videoStyle = {
   width: '100%',
   height: 'auto',
   maxHeight: '72vh',
-  background: '#000'
+  background: '#000',
+  transform: 'rotate(180deg)'
 }
 
 const shutterRowStyle = {

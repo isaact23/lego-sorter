@@ -58,7 +58,9 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
     canvas.height = video.videoHeight || 480
 
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    ctx.translate(canvas.width / 2, canvas.height / 2)
+    ctx.rotate(Math.PI)
+    ctx.drawImage(video, -canvas.width / 2, -canvas.height / 2)
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9)
