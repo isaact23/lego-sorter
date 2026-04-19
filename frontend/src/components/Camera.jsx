@@ -186,31 +186,63 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
       )}
 
       {previewUrl && !cameraOpen && (
-        <div style={{ marginTop: '12px' }}>
-          <img
-            src={previewUrl}
-            alt="Preview"
-            style={{ width: '100%', maxWidth: 420, borderRadius: 8, display: 'block' }}
-          />
-          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-            <button
-              type="button"
-              className="ui-button blue"
-              onClick={() => processBlob(capturedBlob)}
-              disabled={waiting}
-              style={{ flex: 1 }}
-            >
-              Use Photo
-            </button>
-            <button
-              type="button"
-              className="ui-button"
-              onClick={handleRetake}
-              disabled={waiting}
-              style={{ flex: 1 }}
-            >
-              Retake
-            </button>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0, 0, 0, 0.72)',
+            zIndex: 10000,
+            padding: 16
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 640,
+              maxHeight: '90vh',
+              background: '#111',
+              borderRadius: 12,
+              padding: 12,
+              boxShadow: '0 0 24px rgba(0,0,0,0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          >
+            <img
+              src={previewUrl}
+              alt="Preview"
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '72vh',
+                borderRadius: 8,
+                objectFit: 'contain'
+              }}
+            />
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, width: '100%' }}>
+              <button
+                type="button"
+                className="ui-button blue"
+                onClick={() => processBlob(capturedBlob)}
+                disabled={waiting}
+                style={{ flex: 1 }}
+              >
+                Use Photo
+              </button>
+              <button
+                type="button"
+                className="ui-button"
+                onClick={handleRetake}
+                disabled={waiting}
+                style={{ flex: 1 }}
+              >
+                Retake
+              </button>
+            </div>
           </div>
         </div>
       )}

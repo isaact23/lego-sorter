@@ -7,6 +7,7 @@ import Table from '../components/Table'
 import BrickInfo from '../components/BrickInfo'
 import OptionCard from '../components/OptionCard'
 import CategoryCard from '../components/CategoryCard'
+import OnScreenKeyboard from '../components/OnScreenKeyboard'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 
@@ -31,8 +32,11 @@ function App () {
   const [selectedBinId, setSelectedBinId] = useState(null)
   const [currentBinContents, setCurrentBinContents] = useState([])
   const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')
+  const [keyboardVisible, setKeyboardVisible] = useState(false)
 
   const cameraRef = useRef()
+  const searchInputRef = useRef(null)
+  const keyboardContainerRef = useRef(null)
 
   const handleCategorySelect = useCallback((payload) => {
     const ids = payload?.ids ?? []
@@ -84,6 +88,25 @@ function App () {
       cancelled = true
     }
   }, [selectedCategoryIds])
+
+  useEffect(() => {
+    if (!keyboardVisible) return
+
+    function handleClickOutside(event) {
+      if (
+        searchInputRef.current?.contains(event.target) ||
+        keyboardContainerRef.current?.contains(event.target)
+      ) {
+        return
+      }
+      setKeyboardVisible(false)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [keyboardVisible])
 
   async function onBinClicked (newBinId) {
     console.log('onBinClicked', {
@@ -257,9 +280,11 @@ function App () {
               }}
             >
               <input
+                ref={searchInputRef}
                 className='w3-input w3-border'
                 placeholder='Enter part #'
                 value={searchQuery}
+                onFocus={() => setKeyboardVisible(true)}
                 onChange={e => setSearchQuery(e.target.value)}
               />
 
@@ -274,6 +299,15 @@ function App () {
             </form>
           </OptionCard>
 
+          <OnScreenKeyboard
+            visible={keyboardVisible}
+            inputRef={searchInputRef}
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onEnter={handleExactPartSearch}
+            onClose={() => setKeyboardVisible(false)}
+            containerRef={keyboardContainerRef}
+          />
 
           {/* Card 3: action button */}
           <OptionCard
