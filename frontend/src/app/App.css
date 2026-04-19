@@ -9,7 +9,10 @@
     height: 100%;
 }
 
-
+/* Prevent pinch zoom and double-tap zoom on mobile devices */
+html, body {
+  touch-action: manipulation;
+}
 
 /* Bounding box for the top panel */
 .top-panel {
