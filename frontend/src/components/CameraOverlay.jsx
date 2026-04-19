@@ -33,10 +33,10 @@ const topBarStyle = {
 
 const videoStyle = {
   width: '100%',
-  height: 'auto',
-  maxHeight: '72vh',
+  height: '60vh',
   background: '#000',
-  transform: 'rotate(180deg)'
+  transform: 'rotate(180deg)',
+  objectFit: 'cover'
 }
 
 const shutterRowStyle = {

@@ -11,12 +11,6 @@ function disableZoom() {
     }
   }
 
-  document.addEventListener('wheel', (e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault()
-    }
-  }, { passive: false })
-
   document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase()
     if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '0'].includes(key)) {
