@@ -27,12 +27,6 @@ function disableZoom() {
   document.addEventListener('gestureend', (e) => {
     e.preventDefault()
   })
-
-  document.addEventListener('touchmove', (e) => {
-    if (e.ctrlKey || e.scale !== 1) {
-      e.preventDefault()
-    }
-  }, { passive: false })
 }
 
 disableZoom()

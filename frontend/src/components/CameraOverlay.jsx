@@ -14,7 +14,7 @@ const overlayStyle = {
 const windowStyle = {
   width: '100%',
   maxWidth: 600,
-  maxHeight: '75vh',
+  maxHeight: '90vh',
   background: '#111',
   borderRadius: 14,
   boxShadow: '0 0 40px rgba(0,0,0,.45)',
@@ -33,7 +33,7 @@ const topBarStyle = {
 
 const videoStyle = {
   width: '100%',
-  height: '60vh',
+  height: '70vh',
   background: '#000',
   transform: 'rotate(180deg)',
   objectFit: 'cover'
