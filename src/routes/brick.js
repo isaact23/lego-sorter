@@ -34,13 +34,20 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
   async function downloadImage(url, partNum) {
     const response = await axios.get(url, { responseType: 'stream' })
     const filePath = path.join(IMAGE_DIR, `${partNum}.jpg`)
+    console.log('[downloadImage] Downloading', partNum, 'to', filePath)
     const writer = fs.createWriteStream(filePath)
 
     response.data.pipe(writer)
 
     return new Promise((resolve, reject) => {
-      writer.on('finish', resolve)
-      writer.on('error', reject)
+      writer.on('finish', () => {
+        console.log('[downloadImage] Successfully saved', partNum)
+        resolve()
+      })
+      writer.on('error', (err) => {
+        console.error('[downloadImage] Error writing', partNum, err.message)
+        reject(err)
+      })
     })
   }
 
@@ -99,10 +106,13 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
       }
 
       const imagePath = path.join(IMAGE_DIR, `${part}.jpg`)
+      console.log('[/api/image] Requested:', part, 'path:', imagePath)
 
       if (fs.existsSync(imagePath)) {
+        console.log('[/api/image] File exists, sending:', part)
         return res.sendFile(imagePath)
       }
+      console.log('[/api/image] File NOT found:', part)
 
       await enforceRateLimit()
 

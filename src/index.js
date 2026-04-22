@@ -23,6 +23,20 @@ const partsMap = new Map()
 const csvPath = path.join(__dirname, 'data', 'parts.csv')
 const IMAGE_DIR = path.join(__dirname, 'images')
 
+// Ensure IMAGE_DIR exists
+if (!fs.existsSync(IMAGE_DIR)) {
+  fs.mkdirSync(IMAGE_DIR, { recursive: true })
+  console.log('[INIT] Created IMAGE_DIR:', IMAGE_DIR)
+} else {
+  console.log('[INIT] IMAGE_DIR exists:', IMAGE_DIR)
+  try {
+    const files = fs.readdirSync(IMAGE_DIR)
+    console.log('[INIT] Images in directory:', files.length)
+  } catch (err) {
+    console.error('[INIT] Error reading IMAGE_DIR:', err.message)
+  }
+}
+
 console.log('API KEY PRESENT:', !!process.env.REBRICKABLE_API_KEY)
 
 // =====================
