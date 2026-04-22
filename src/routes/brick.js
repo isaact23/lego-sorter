@@ -51,7 +51,7 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
     })
   }
 
-  router.get('/brick', async (req, res) => {
+  router.get('/brick', (req, res) => {
     const part = req.query.part?.trim()
 
     if (!part) {
@@ -62,32 +62,6 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
 
     if (!brick) {
       return res.status(404).json({ error: 'Part not found' })
-    }
-
-    // Check if image exists, if not, fetch it asynchronously
-    const imagePath = path.join(IMAGE_DIR, `${part}.jpg`)
-    if (!fs.existsSync(imagePath)) {
-      // Fire and forget to avoid blocking the brick data response
-      enforceRateLimit().then(async () => {
-        try {
-          const response = await axios.get(REBRICKABLE_BASE, {
-            params: {
-              part_nums: part,
-              key: REBRICKABLE_API_KEY
-            }
-          })
-
-          const partData = response.data.results[0]
-
-          if (partData?.part_img_url) {
-            await downloadImage(partData.part_img_url, part)
-          }
-        } catch (err) {
-          console.error('Failed to fetch image for', part, err.message)
-        }
-      }).catch(err => {
-        console.error('Rate limit error for', part, err.message)
-      })
     }
 
     return res.json({
