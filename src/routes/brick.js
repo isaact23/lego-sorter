@@ -58,7 +58,19 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
       return res.status(400).json({ error: 'Missing part parameter' })
     }
 
-    const brick = partsMap.get(part)
+    // Try exact match first
+    let brick = partsMap.get(part)
+
+    // If not found, search for any part starting with this base number
+    // (handles variants like 2454, 2454a, 2454b, etc.)
+    if (!brick) {
+      for (const [key, value] of partsMap.entries()) {
+        if (key.startsWith(part)) {
+          brick = value
+          break
+        }
+      }
+    }
 
     if (!brick) {
       return res.status(404).json({ error: 'Part not found' })
