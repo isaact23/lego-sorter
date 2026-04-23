@@ -1,28 +1,53 @@
+import { useState } from 'react'
+
 function BrickInfo({
   brick,
   selectedOperation,
   onOperationSelect,
   onClose
 }) {
+  const [imageError, setImageError] = useState(false)
+
   if (!brick) return null
 
   const isAddActive = selectedOperation === 'add'
   const isRemoveActive = selectedOperation === 'remove'
 
+  // Show warning if brick data is incomplete
+  const isIncomplete = !brick.name || !brick.part_cat_id
+
   return (
     <div className="top-panel-row">
       <div className="Top-Panel-BrickInfo">
         <div className="BrickText">
-          <h2>{brick.name}</h2>
-          <p><strong>Category:</strong> {brick.part_cat_id}</p>
+          <h2>{brick.name || 'Unknown Part'}</h2>
+          <p><strong>Category:</strong> {brick.part_cat_id || 'Unknown'}</p>
           <p><strong>ID:</strong> {brick.part_num}</p>
+          {isIncomplete && (
+            <p style={{ color: 'orange' }}>⚠️ Partial data - part may not be in database</p>
+          )}
         </div>
 
         <div className="BrickImageFrame">
-          <img
-            src={`/api/image/${brick.part_num}`}
-            alt={brick.name}
-          />
+          {imageError ? (
+            <div style={{ 
+              width: '100%', 
+              height: '200px', 
+              background: '#ddd', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: '#666'
+            }}>
+              Image not available
+            </div>
+          ) : (
+            <img
+              src={`/api/image/${brick.part_num}`}
+              alt={brick.name}
+              onError={() => setImageError(true)}
+            />
+          )}
         </div>
 
         <div className="BrickActions">

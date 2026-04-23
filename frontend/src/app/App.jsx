@@ -227,15 +227,48 @@ function App () {
     setPage(BRICK_INFO)
   }
 
-  function onBricksIdentified (bricks) {
+  async function onBricksIdentified (bricks) {
     if (!bricks || bricks.length === 0) return
 
     if (bricks.length > 1) {
-      setBrickList(bricks)
-      setPage(SELECT_PAGE)
+      // For multiple bricks, enrich them with full data
+      setWaiting(true)
+      try {
+        const enrichedBricks = await Promise.all(
+          bricks.map(async (brick) => {
+            const fullData = await fetchBrickData(brick.part_num)
+            return fullData || brick // fallback to camera data if not found
+          })
+        )
+        setBrickList(enrichedBricks)
+        setPage(SELECT_PAGE)
+      } catch (err) {
+        console.error('Error enriching brick data:', err)
+        setBrickList(bricks) // show camera data as fallback
+        setPage(SELECT_PAGE)
+      } finally {
+        setWaiting(false)
+      }
     } 
     else {
-      selectCallback(bricks[0])
+      // For single brick, fetch full data then select
+      setWaiting(true)
+      try {
+        const fullData = await fetchBrickData(bricks[0].part_num)
+        if (fullData) {
+          selectCallback(fullData)
+        } else {
+          console.warn(`Brick ${bricks[0].part_num} not found in database`)
+          setHelperText(`Part #${bricks[0].part_num} not found in database`)
+          setPage(OPTION_CARDS)
+        }
+      } catch (err) {
+        console.error('Error fetching brick data:', err)
+        setHelperText(`Error loading part details`)
+        setPage(OPTION_CARDS)
+      } finally {
+        setWaiting(false)
+      }
     }
   }
 

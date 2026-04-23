@@ -100,8 +100,15 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
       }
       console.log('[/api/image] File NOT found:', part)
 
+      // Check if REBRICKABLE_API_KEY is configured
+      if (!REBRICKABLE_API_KEY) {
+        console.error('[/api/image] REBRICKABLE_API_KEY not set')
+        return res.status(503).json({ error: 'Image service not configured' })
+      }
+
       await enforceRateLimit()
 
+      console.log('[/api/image] Fetching from Rebrickable for part:', part)
       const response = await axios.get(REBRICKABLE_BASE, {
         params: {
           part_nums: part,
@@ -109,10 +116,13 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
         }
       })
 
-      const partData = response.data.results[0]
+      console.log('[/api/image] Rebrickable response:', response.data)
+      
+      const partData = response.data.results?.[0]
 
       if (!partData?.part_img_url) {
-        return res.status(404).json({ error: 'No image available' })
+        console.log('[/api/image] No image URL from Rebrickable for part:', part)
+        return res.status(404).json({ error: 'No image available from Rebrickable' })
       }
 
       await downloadImage(partData.part_img_url, part)
@@ -120,11 +130,17 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
       return res.sendFile(imagePath)
 
     } catch (err) {
+      console.error('[/api/image] Error:', err.message, err.response?.status)
+      
       if (err.response?.status === 429) {
         return res.status(429).json({ error: 'Rate limited by Rebrickable' })
       }
 
-      return res.status(500).json({ error: err.message })
+      if (err.code === 'ENOENT') {
+        return res.status(404).json({ error: 'Image file not found and could not download from Rebrickable' })
+      }
+
+      return res.status(500).json({ error: `Failed to load image: ${err.message}` })
     }
   })
 
