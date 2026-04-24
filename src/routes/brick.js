@@ -92,23 +92,24 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
       }
 
       const imagePath = path.join(IMAGE_DIR, `${part}.jpg`)
-      console.log('[/api/image] Requested:', part, 'path:', imagePath)
+      console.log('[/api/image] Requested:', part)
 
+      // Try local cache first
       if (fs.existsSync(imagePath)) {
         console.log('[/api/image] File exists, sending:', part)
         return res.sendFile(imagePath)
       }
-      console.log('[/api/image] File NOT found:', part)
 
-      // Check if REBRICKABLE_API_KEY is configured
+      // If no local file, try Rebrickable if API key is available
       if (!REBRICKABLE_API_KEY) {
-        console.error('[/api/image] REBRICKABLE_API_KEY not set')
-        return res.status(503).json({ error: 'Image service not configured' })
+        console.log('[/api/image] Image not in cache and API key not available for:', part)
+        return res.status(404).json({ error: 'Image not available locally. Configure REBRICKABLE_API_KEY to auto-download images.' })
       }
+
+      console.log('[/api/image] Image not cached, fetching from Rebrickable for part:', part)
 
       await enforceRateLimit()
 
-      console.log('[/api/image] Fetching from Rebrickable for part:', part)
       const response = await axios.get(REBRICKABLE_BASE, {
         params: {
           part_nums: part,
@@ -116,28 +117,27 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
         }
       })
 
-      console.log('[/api/image] Rebrickable response:', response.data)
-      
       const partData = response.data.results?.[0]
 
       if (!partData?.part_img_url) {
         console.log('[/api/image] No image URL from Rebrickable for part:', part)
-        return res.status(404).json({ error: 'No image available from Rebrickable' })
+        return res.status(404).json({ error: 'No image available' })
       }
 
+      console.log('[/api/image] Downloading image for part:', part)
       await downloadImage(partData.part_img_url, part)
 
       return res.sendFile(imagePath)
 
     } catch (err) {
-      console.error('[/api/image] Error:', err.message, err.response?.status)
+      console.error('[/api/image] Error:', err.message)
       
       if (err.response?.status === 429) {
         return res.status(429).json({ error: 'Rate limited by Rebrickable' })
       }
 
       if (err.code === 'ENOENT') {
-        return res.status(404).json({ error: 'Image file not found and could not download from Rebrickable' })
+        return res.status(404).json({ error: 'Image not available' })
       }
 
       return res.status(500).json({ error: `Failed to load image: ${err.message}` })
