@@ -237,15 +237,32 @@ function App () {
         const enrichedBricks = await Promise.all(
           bricks.map(async (brick) => {
             const fullData = await fetchBrickData(brick.part_num)
-            return fullData || brick // fallback to camera data if not found
+            return fullData || null // return null if not found (will be filtered out)
           })
         )
-        setBrickList(enrichedBricks)
-        setPage(SELECT_PAGE)
+        
+        // Filter out null values (parts not in database)
+        const validBricks = enrichedBricks.filter(b => b !== null)
+        
+        if (validBricks.length === 0) {
+          setHelperText('No identified parts found in database. Try again.')
+          setPage(OPTION_CARDS)
+          setWaiting(false)
+          return
+        }
+        
+        if (validBricks.length === 1) {
+          // Only one valid brick - select it directly
+          selectCallback(validBricks[0])
+        } else {
+          // Multiple valid bricks - show selection
+          setBrickList(validBricks)
+          setPage(SELECT_PAGE)
+        }
       } catch (err) {
         console.error('Error enriching brick data:', err)
-        setBrickList(bricks) // show camera data as fallback
-        setPage(SELECT_PAGE)
+        setHelperText('Error loading brick data')
+        setPage(OPTION_CARDS)
       } finally {
         setWaiting(false)
       }
@@ -259,7 +276,7 @@ function App () {
           selectCallback(fullData)
         } else {
           console.warn(`Brick ${bricks[0].part_num} not found in database`)
-          setHelperText(`Part #${bricks[0].part_num} not found in database`)
+          setHelperText(`Part #${bricks[0].part_num} not found in database. Try another brick.`)
           setPage(OPTION_CARDS)
         }
       } catch (err) {
