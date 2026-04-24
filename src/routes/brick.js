@@ -51,48 +51,83 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
     })
   }
 
-  router.get('/brick', (req, res) => {
-    const part = req.query.part?.trim()
+  router.get('/brick', async (req, res) => {
+    try {
+      let part = req.query.part?.trim()
 
-    if (!part) {
-      return res.status(400).json({ error: 'Missing part parameter' })
-    }
-
-    // Try exact match first
-    let brick = partsMap.get(part)
-
-    // If not found, try to handle variant suffixes (e.g., 4589b -> 4589)
-    if (!brick) {
-      // Strip trailing letters (variant suffixes like a, b, c, etc.)
-      const basePart = part.replace(/[a-z]+$/i, '')
-      
-      if (basePart !== part) {
-        // We stripped something, try the base part
-        brick = partsMap.get(basePart)
+      if (!part) {
+        return res.status(400).json({ error: 'Missing part parameter' })
       }
-    }
 
-    // If still not found, search for any part that starts with the input or base part
-    if (!brick) {
-      const searchTerm = part.replace(/[a-z]+$/i, '')
-      for (const [key, value] of partsMap.entries()) {
-        if (key.startsWith(searchTerm)) {
-          brick = value
-          break
+      // Strip off "pr" and anything that follows (for printed pieces)
+      const cleanPart = part.replace(/pr.*$/i, '')
+
+      // Try exact match in CSV first
+      let brick = partsMap.get(cleanPart)
+
+      if (brick) {
+        return res.json({
+          part_num: brick.part_num,
+          name: brick.name,
+          part_cat_id: brick.part_cat_id,
+          part_material: brick.part_material
+        })
+      }
+
+      // If not found in CSV, try Rebrickable API
+      console.log('[/brick] Part not found in CSV, attempting Rebrickable API for:', cleanPart)
+
+      if (!REBRICKABLE_API_KEY) {
+        console.error('[/brick] REBRICKABLE_API_KEY not configured')
+        return res.status(404).json({ error: 'Part not found in CSV and API key not configured' })
+      }
+
+      await enforceRateLimit()
+
+      console.log('[/brick] Calling Rebrickable API with bricklink_id:', cleanPart)
+      const response = await axios.get(REBRICKABLE_BASE, {
+        params: {
+          bricklink_id: cleanPart,
+          key: REBRICKABLE_API_KEY
+        }
+      })
+
+      console.log('[/brick] Rebrickable response status:', response.status)
+      
+      const partData = response.data.results?.[0]
+
+      if (!partData) {
+        console.log('[/brick] Part not found on Rebrickable:', cleanPart)
+        return res.status(404).json({ error: 'Part not found' })
+      }
+
+      // Download image if available
+      if (partData.part_img_url) {
+        try {
+          console.log('[/brick] Downloading image for:', partData.part_num)
+          await downloadImage(partData.part_img_url, partData.part_num)
+        } catch (imgErr) {
+          console.error('[/brick] Error downloading image:', imgErr.message)
+          // Don't fail the request if image download fails
         }
       }
-    }
 
-    if (!brick) {
-      return res.status(404).json({ error: 'Part not found' })
-    }
+      return res.json({
+        part_num: partData.part_num,
+        name: partData.name,
+        part_cat_id: partData.part_cat_id,
+        part_img_url: partData.part_img_url
+      })
 
-    return res.json({
-      part_num: brick.part_num,
-      name: brick.name,
-      part_cat_id: brick.part_cat_id,
-      part_material: brick.part_material
-    })
+    } catch (err) {
+      console.error('[/brick] Error:', err.message, err.response?.status)
+      
+      if (err.response?.status === 429) {
+        return res.status(429).json({ error: 'Rate limited by Rebrickable' })
+      }
+
+      return res.status(500).json({ error: `Error: ${err.message}` })
+    }
   })
 
   router.get('/image/:part', async (req, res) => {
