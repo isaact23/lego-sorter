@@ -61,11 +61,22 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
     // Try exact match first
     let brick = partsMap.get(part)
 
-    // If not found, search for any part starting with this base number
-    // (handles variants like 2454, 2454a, 2454b, etc.)
+    // If not found, try to handle variant suffixes (e.g., 4589b -> 4589)
     if (!brick) {
+      // Strip trailing letters (variant suffixes like a, b, c, etc.)
+      const basePart = part.replace(/[a-z]+$/i, '')
+      
+      if (basePart !== part) {
+        // We stripped something, try the base part
+        brick = partsMap.get(basePart)
+      }
+    }
+
+    // If still not found, search for any part that starts with the input or base part
+    if (!brick) {
+      const searchTerm = part.replace(/[a-z]+$/i, '')
       for (const [key, value] of partsMap.entries()) {
-        if (key.startsWith(part)) {
+        if (key.startsWith(searchTerm)) {
           brick = value
           break
         }
