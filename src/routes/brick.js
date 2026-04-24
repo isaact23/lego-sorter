@@ -96,20 +96,21 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
 
       // Try local cache first
       if (fs.existsSync(imagePath)) {
-        console.log('[/api/image] File exists, sending:', part)
+        console.log('[/api/image] File exists locally, sending:', part)
         return res.sendFile(imagePath)
       }
 
-      // If no local file, try Rebrickable if API key is available
-      if (!REBRICKABLE_API_KEY) {
-        console.log('[/api/image] Image not in cache and API key not available for:', part)
-        return res.status(404).json({ error: 'Image not available locally. Configure REBRICKABLE_API_KEY to auto-download images.' })
-      }
+      // No local file - try Rebrickable
+      console.log('[/api/image] Not cached, attempting Rebrickable API for:', part)
 
-      console.log('[/api/image] Image not cached, fetching from Rebrickable for part:', part)
+      if (!REBRICKABLE_API_KEY) {
+        console.error('[/api/image] REBRICKABLE_API_KEY not configured')
+        return res.status(404).json({ error: 'Image not cached and API key not configured' })
+      }
 
       await enforceRateLimit()
 
+      console.log('[/api/image] Calling Rebrickable API...')
       const response = await axios.get(REBRICKABLE_BASE, {
         params: {
           part_nums: part,
@@ -117,30 +118,33 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
         }
       })
 
+      console.log('[/api/image] Rebrickable response status:', response.status)
+      
       const partData = response.data.results?.[0]
 
-      if (!partData?.part_img_url) {
-        console.log('[/api/image] No image URL from Rebrickable for part:', part)
-        return res.status(404).json({ error: 'No image available' })
+      if (!partData) {
+        console.log('[/api/image] Part not found on Rebrickable:', part)
+        return res.status(404).json({ error: 'Part not found on Rebrickable' })
       }
 
-      console.log('[/api/image] Downloading image for part:', part)
+      if (!partData.part_img_url) {
+        console.log('[/api/image] Part on Rebrickable has no image:', part)
+        return res.status(404).json({ error: 'No image URL on Rebrickable' })
+      }
+
+      console.log('[/api/image] Downloading from:', partData.part_img_url)
       await downloadImage(partData.part_img_url, part)
 
       return res.sendFile(imagePath)
 
     } catch (err) {
-      console.error('[/api/image] Error:', err.message)
+      console.error('[/api/image] Error:', err.message, err.response?.status)
       
       if (err.response?.status === 429) {
         return res.status(429).json({ error: 'Rate limited by Rebrickable' })
       }
 
-      if (err.code === 'ENOENT') {
-        return res.status(404).json({ error: 'Image not available' })
-      }
-
-      return res.status(500).json({ error: `Failed to load image: ${err.message}` })
+      return res.status(500).json({ error: `Error: ${err.message}` })
     }
   })
 

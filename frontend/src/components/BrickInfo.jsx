@@ -33,13 +33,15 @@ function BrickInfo({
             <div style={{ 
               width: '100%', 
               height: '200px', 
-              background: '#ddd', 
+              background: '#f0f0f0', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              color: '#666'
+              color: '#999',
+              fontSize: '14px',
+              border: '1px solid #ddd'
             }}>
-              Image not available
+              📦 No image cached
             </div>
           ) : (
             <img
