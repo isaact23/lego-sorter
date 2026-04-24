@@ -59,27 +59,22 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
         return res.status(400).json({ error: 'Missing part parameter' })
       }
 
-      // Strip off "pr" and anything that follows (for printed pieces)
+      // Step 1: Normalize the input - strip off "pr" and anything that follows (for printed pieces)
       const cleanPart = part.replace(/pr.*$/i, '')
+      console.log('[/brick] Received part:', part, '-> cleaned:', cleanPart)
 
-      // Try exact match in CSV first
-      let brick = partsMap.get(cleanPart)
-
-      if (brick) {
-        return res.json({
-          part_num: brick.part_num,
-          name: brick.name,
-          part_cat_id: brick.part_cat_id,
-          part_material: brick.part_material
-        })
+      // Step 2: Check CSV for quick validation (optional - for reference)
+      let csvData = partsMap.get(cleanPart)
+      if (csvData) {
+        console.log('[/brick] Found in CSV')
+      } else {
+        console.log('[/brick] Not found in CSV')
       }
 
-      // If not found in CSV, try Rebrickable API
-      console.log('[/brick] Part not found in CSV, attempting Rebrickable API for:', cleanPart)
-
+      // Step 3: Make single API call to Rebrickable for canonical data and image
       if (!REBRICKABLE_API_KEY) {
         console.error('[/brick] REBRICKABLE_API_KEY not configured')
-        return res.status(404).json({ error: 'Part not found in CSV and API key not configured' })
+        return res.status(404).json({ error: 'API key not configured' })
       }
 
       await enforceRateLimit()
@@ -101,23 +96,28 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
         return res.status(404).json({ error: 'Part not found' })
       }
 
-      // Download image if available
-      if (partData.part_img_url) {
+      // Step 4: Build canonical response with Rebrickable data
+      const canonicalData = {
+        part_num: partData.part_num,
+        name: partData.name,
+        part_cat_id: partData.part_cat_id,
+        part_img_url: partData.part_img_url
+      }
+
+      // Step 5: Download and cache the image using the canonical part number
+      if (canonicalData.part_img_url) {
         try {
-          console.log('[/brick] Downloading image for:', partData.part_num)
-          await downloadImage(partData.part_img_url, partData.part_num)
+          console.log('[/brick] Downloading image for canonical part:', canonicalData.part_num)
+          await downloadImage(canonicalData.part_img_url, canonicalData.part_num)
         } catch (imgErr) {
           console.error('[/brick] Error downloading image:', imgErr.message)
           // Don't fail the request if image download fails
         }
       }
 
-      return res.json({
-        part_num: partData.part_num,
-        name: partData.name,
-        part_cat_id: partData.part_cat_id,
-        part_img_url: partData.part_img_url
-      })
+      // Step 6: Return the canonical data
+      console.log('[/brick] Returning canonical part_num:', canonicalData.part_num)
+      return res.json(canonicalData)
 
     } catch (err) {
       console.error('[/brick] Error:', err.message, err.response?.status)
