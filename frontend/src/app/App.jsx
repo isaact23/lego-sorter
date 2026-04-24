@@ -205,6 +205,7 @@ function App () {
   }
 
   async function selectCallback (selectedBrick) {
+    console.log('[selectCallback] Called with brick data:', selectedBrick)
     setSelectedBinId(null)
     setBrick(selectedBrick)
     setBinOperation(null)
@@ -213,7 +214,7 @@ function App () {
 
 
     try {
-      console.log('Fetching bins for brick:', selectedBrick.part_num)
+      console.log('[selectCallback] Fetching bins for brick:', selectedBrick.part_num, 'name:', selectedBrick.name, 'cat_id:', selectedBrick.part_cat_id)
 
       const bins = await getBinsByBrick(selectedBrick.part_num)
 
@@ -228,15 +229,22 @@ function App () {
   }
 
   async function onBricksIdentified (bricks) {
-    if (!bricks || bricks.length === 0) return
+    console.log('[onBricksIdentified] Called with', bricks?.length, 'bricks:', bricks)
+    if (!bricks || bricks.length === 0) {
+      console.log('[onBricksIdentified] No bricks provided')
+      return
+    }
 
     if (bricks.length > 1) {
+      console.log('[onBricksIdentified] Multiple bricks detected, enriching each...')
       // For multiple bricks, enrich them with full data
       setWaiting(true)
       try {
         const enrichedBricks = await Promise.all(
           bricks.map(async (brick) => {
+            console.log('[onBricksIdentified] Enriching brick:', brick.part_num)
             const fullData = await fetchBrickData(brick.part_num)
+            console.log('[onBricksIdentified] Enrichment result for', brick.part_num, ':', fullData)
             return fullData || null // return null if not found (will be filtered out)
           })
         )
@@ -269,18 +277,24 @@ function App () {
     } 
     else {
       // For single brick, fetch full data then select
+      console.log('[onBricksIdentified] Single brick detected:', bricks[0])
       setWaiting(true)
       try {
-        const fullData = await fetchBrickData(bricks[0].part_num)
+        const originalPart = bricks[0].part_num
+        console.log('[onBricksIdentified] Enriching single brick:', originalPart)
+        const fullData = await fetchBrickData(originalPart)
+        console.log('[onBricksIdentified] Enrichment result:', fullData)
+        
         if (fullData) {
+          console.log('[onBricksIdentified] Valid data received, calling selectCallback')
           selectCallback(fullData)
         } else {
-          console.warn(`Brick ${bricks[0].part_num} not found in database`)
-          setHelperText(`Part #${bricks[0].part_num} not found in database. Try another brick.`)
+          console.warn(`[onBricksIdentified] Brick ${originalPart} enrichment returned null/empty`)
+          setHelperText(`Part #${originalPart} not found in database. Try another brick.`)
           setPage(OPTION_CARDS)
         }
       } catch (err) {
-        console.error('Error fetching brick data:', err)
+        console.error('[onBricksIdentified] Error fetching brick data:', err)
         setHelperText(`Error loading part details`)
         setPage(OPTION_CARDS)
       } finally {
