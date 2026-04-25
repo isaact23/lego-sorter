@@ -43,11 +43,11 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
       if (cancelled) return
 
       // 🔥 Auto-select if exactly one result
-      if (results.length === 1) {
-        console.log('[Select] auto-selecting single brick', results[0].part_num)
-        selectCallback(results[0])
-        return
-      }
+      //if (results.length === 1) {
+      //  console.log('[Select] auto-selecting single brick', results[0].part_num)
+      //  selectCallback(results[0])
+      //  //  return
+      //  }
 
       setBricks(results)
       setLoading(false)
