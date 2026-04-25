@@ -14,30 +14,54 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { fetchBrickData } from '../services/brickService'
 import { getBinsByBrick, getBinsbyCategory, operateBin, getBinContents } from '../services/binService'
 
-const SELECT_PAGE = 1
-const OPTION_CARDS = 2
-const BRICK_INFO = 3
+// =====================
+// PAGE CONSTANTS
+// =====================
+// These define which top panel view is shown
+const SELECT_PAGE = 1      // Shows a list of bricks to select from
+const OPTION_CARDS = 2     // Shows the main menu with search, category filter, and camera options
+const BRICK_INFO = 3       // Shows details of a selected brick with Add/Remove bin operations
 
 function App () {
-  const [page, setPage] = useState(2)
-  const [brickList, setBrickList] = useState([])
-  const [brick, setBrick] = useState(null)
-  const [waiting, setWaiting] = useState(false)
-  const [binOperation, setBinOperation] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState([])
-  const [selectedCategoryLabels, setSelectedCategoryLabels] = useState([])
-  const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)
-  const [highlightedBinIds, setHighlightedBinIds] = useState([])
-  const [selectedBinId, setSelectedBinId] = useState(null)
-  const [currentBinContents, setCurrentBinContents] = useState([])
-  const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')
-  const [keyboardVisible, setKeyboardVisible] = useState(false)
+  // =====================
+  // UI STATE
+  // =====================
+  const [page, setPage] = useState(2)                          // Which view to show (SELECT_PAGE, OPTION_CARDS, BRICK_INFO)
+  const [waiting, setWaiting] = useState(false)                // Loading state for async operations
+  const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')  // Helper message at bottom
+  const [keyboardVisible, setKeyboardVisible] = useState(false)  // On-screen keyboard for part# search
 
-  const cameraRef = useRef()
-  const searchInputRef = useRef(null)
-  const keyboardContainerRef = useRef(null)
+  // =====================
+  // BRICK DATA STATE
+  // =====================
+  const [brick, setBrick] = useState(null)                   // Currently selected brick (enriched with part_num, name, part_cat_id)
+  const [brickList, setBrickList] = useState([])             // List of bricks to choose from (multiple identified from camera or bin contents)
 
+  // =====================
+  // BIN OPERATION STATE
+  // =====================
+  const [binOperation, setBinOperation] = useState(null)     // Current operation: 'add' or 'remove' (null = browsing only)
+  const [selectedBinId, setSelectedBinId] = useState(null)   // Bin currently selected/highlighted
+  const [highlightedBinIds, setHighlightedBinIds] = useState([])  // Bins to highlight (contains brick or category)
+  const [currentBinContents, setCurrentBinContents] = useState([])  // Bricks in the currently selected bin
+
+  // =====================
+  // SEARCH/FILTER STATE
+  // =====================
+  const [searchQuery, setSearchQuery] = useState('')                    // Text in the part# search box
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([])    // Category IDs selected in filter
+  const [selectedCategoryLabels, setSelectedCategoryLabels] = useState([])  // Category labels (for display)
+  const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)   // Used to reset category dropdowns
+
+  // =====================
+  // REFS
+  // =====================
+  const cameraRef = useRef()              // Reference to Camera component to trigger capture
+  const searchInputRef = useRef(null)     // Reference to search input for keyboard focus
+  const keyboardContainerRef = useRef(null)  // Reference to keyboard container for click-outside detection
+
+
+  
   const handleCategorySelect = useCallback((payload) => {
     const ids = payload?.ids ?? []
     const labels = payload?.labels ?? []
@@ -55,6 +79,7 @@ function App () {
     }
   }, [])
 
+  // When category selection changes, fetch bins for those categories and highlight them
   useEffect(() => {
     // No categories selected → clear highlights
     if (!selectedCategoryIds.length) {
@@ -89,6 +114,7 @@ function App () {
     }
   }, [selectedCategoryIds])
 
+  // Click outside handler to close keyboard
   useEffect(() => {
     if (!keyboardVisible) return
 
@@ -108,6 +134,7 @@ function App () {
     }
   }, [keyboardVisible])
 
+  // Handler for when a bin is clicked in the Table
   async function onBinClicked (newBinId) {
     console.log('onBinClicked', {
       newBinId,
@@ -116,10 +143,12 @@ function App () {
       brick
     })
 
+    // If we're on the brick info page but no operation is selected, ignore bin clicks (force user to choose operation first)
     if (page === BRICK_INFO && !binOperation) {
       return
     }
 
+    // Clicking the same bin again deselects it (only in browsing mode)
     const clickingSameBin = newBinId === selectedBinId
 
     // No brick, no operation → normal bin browsing
@@ -151,6 +180,7 @@ function App () {
         setCurrentBinContents([])
         setHelperText('Unable to load bin contents')
       }
+
       setHelperText(`Select a brick from bin ${newBinId} or click Close to return home.`)
       setPage(SELECT_PAGE)
       
@@ -259,14 +289,16 @@ function App () {
           return
         }
         
-        if (validBricks.length === 1) {
+        // Testing change - always show select page, even if only one valid brick, to let user confirm which one they want and see details
+        //if (validBricks.length === 1) {
           // Only one valid brick - select it directly
-          selectCallback(validBricks[0])
-        } else {
+        //  selectCallback(validBricks[0])
+        //} else {
           // Multiple valid bricks - show selection
           setBrickList(validBricks)
           setPage(SELECT_PAGE)
-        }
+        //}
+
       } catch (err) {
         console.error('Error enriching brick data:', err)
         setHelperText('Error loading brick data')

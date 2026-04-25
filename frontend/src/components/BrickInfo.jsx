@@ -5,7 +5,8 @@ function BrickInfo({
   selectedOperation,
   onOperationSelect,
   onClose
-}) {
+  }) {
+
   const [imageError, setImageError] = useState(false)
 
   console.log('[BrickInfo] Rendered with brick:', brick)
