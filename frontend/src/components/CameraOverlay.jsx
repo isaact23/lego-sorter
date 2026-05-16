@@ -33,7 +33,9 @@ const topBarStyle = {
 
 const videoStyle = {
   width: '100%',
-  height: '70vh',
+  //height: '70vh',
+  flex: 1,
+  minHeight: 0, 
   background: '#000',
   transform: 'rotate(180deg)',
   objectFit: 'cover'

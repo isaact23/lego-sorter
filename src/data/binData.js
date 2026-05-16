@@ -2,6 +2,8 @@ import fs from 'fs'
 import path from 'path'
 
 const BIN_DATA = path.resolve('data/bins.json')
+const BACKUP_DIR = path.resolve('data/backups')
+const MAX_BACKUPS = 10
 
 // In-memory cache
 let binMappings = {}
@@ -62,7 +64,66 @@ export function readBinData () {
   return binMappings
 }
 
-export function writeBinData (data) {
+function ensureBackupDir() {
+  if (!fs.existsSync(BACKUP_DIR)) {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true })
+  }
+}
+
+function writeBackup(data) {
+  ensureBackupDir()
+
+  // Write timestamped backup
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const backupPath = path.join(BACKUP_DIR, `bins-${timestamp}.json`)
+  fs.writeFileSync(backupPath, JSON.stringify(data, null, 2))
+
+  // Prune oldest backups beyond MAX_BACKUPS
+  const backups = fs.readdirSync(BACKUP_DIR)
+    .filter(f => f.startsWith('bins-') && f.endsWith('.json'))
+    .sort() // ISO timestamps sort lexicographically = chronologically
+
+  if (backups.length > MAX_BACKUPS) {
+    backups.slice(0, backups.length - MAX_BACKUPS).forEach(f => {
+      fs.unlinkSync(path.join(BACKUP_DIR, f))
+    })
+  }
+}
+
+export function writeBinData(data) {
   binMappings = normalizeBinData(data)
+
+  // Backup before overwriting
+  if (fs.existsSync(BIN_DATA)) {
+    const existing = fs.readFileSync(BIN_DATA, 'utf8')
+    writeBackup(JSON.parse(existing))
+  }
+
   fs.writeFileSync(BIN_DATA, JSON.stringify(binMappings, null, 2))
+}
+
+// Restore from a specific backup file, or latest if omitted
+export function restoreBinData(filename) {
+  ensureBackupDir()
+  const backups = fs.readdirSync(BACKUP_DIR)
+    .filter(f => f.startsWith('bins-') && f.endsWith('.json'))
+    .sort()
+
+  if (backups.length === 0) throw new Error('No backups found')
+
+  const target = filename ?? backups[backups.length - 1]
+  const backupPath = path.join(BACKUP_DIR, target)
+  const raw = fs.readFileSync(backupPath, 'utf8')
+
+  binMappings = normalizeBinData(JSON.parse(raw))
+  fs.writeFileSync(BIN_DATA, JSON.stringify(binMappings, null, 2))
+  console.log(`Restored from backup: ${target}`)
+}
+
+export function listBackups() {
+  ensureBackupDir()
+  return fs.readdirSync(BACKUP_DIR)
+    .filter(f => f.startsWith('bins-') && f.endsWith('.json'))
+    .sort()
+    .reverse() // newest first
 }
