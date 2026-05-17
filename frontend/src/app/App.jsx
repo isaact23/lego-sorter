@@ -12,7 +12,15 @@ import OnScreenKeyboard from '../components/OnScreenKeyboard'
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 import { fetchBrickData } from '../services/brickService'
-import { getBinsByBrick, getBinsbyCategory, operateBin, getBinContents } from '../services/binService'
+import {
+  getBinsByBrick,
+  getBinsbyCategory,
+  getAllBins,
+  getBinContents,
+  operateBin,
+  updateBinProperties,
+  emptyBin
+} from '../services/binService'
 
 // =====================
 // PAGE CONSTANTS
@@ -21,6 +29,15 @@ import { getBinsByBrick, getBinsbyCategory, operateBin, getBinContents } from '.
 const SELECT_PAGE = 1      // Shows a list of bricks to select from
 const OPTION_CARDS = 2     // Shows the main menu with search, category filter, and camera options
 const BRICK_INFO = 3       // Shows details of a selected brick with Add/Remove bin operations
+
+// BIN PROPERTY DEFINITIONS
+// id: internal id, label: display, className: CSS class applied to bins with this property
+const BIN_PROPERTIES = [
+  { id: 'Empty', label: 'Empty', className: 'bin-empty' },
+  { id: 'Full', label: 'Full', className: 'bin-full' },
+  { id: 'Overwhelmed', label: 'Overwhelmed', className: 'bin-overwhelmed' },
+  { id: 'Half Capacity', label: '1/2 Capacity', className: 'bin-half' }
+]
 
 function App () {
   // =====================
@@ -44,6 +61,13 @@ function App () {
   const [selectedBinId, setSelectedBinId] = useState(null)   // Bin currently selected/highlighted
   const [highlightedBinIds, setHighlightedBinIds] = useState([])  // Bins to highlight (contains brick or category)
   const [currentBinContents, setCurrentBinContents] = useState([])  // Bricks in the currently selected bin
+  const [binPropertyMap, setBinPropertyMap] = useState({})
+  const [adminMode, setAdminMode] = useState(false)
+  const [showPropertyHighlights, setShowPropertyHighlights] = useState(false)
+  const [adminBinId, setAdminBinId] = useState(null)
+  const [adminAction, setAdminAction] = useState(null)
+  const [adminPropertySelection, setAdminPropertySelection] = useState([])
+  const [swapSelection, setSwapSelection] = useState([])
 
   // =====================
   // SEARCH/FILTER STATE
@@ -114,6 +138,35 @@ function App () {
     }
   }, [selectedCategoryIds])
 
+  // Load full bin data on startup so properties are available to admin mode
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadAllBins () {
+      try {
+        const bins = await getAllBins()
+        if (cancelled) return
+
+        const mapped = Object.fromEntries(
+          Object.entries(bins).map(([binId, bin]) => [
+            binId,
+            Array.isArray(bin.properties) ? bin.properties : []
+          ])
+        )
+
+        setBinPropertyMap(mapped)
+      } catch (err) {
+        console.error('Failed to load all bin data', err)
+      }
+    }
+
+    loadAllBins()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // Click outside handler to close keyboard
   useEffect(() => {
     if (!keyboardVisible) return
@@ -140,8 +193,30 @@ function App () {
       newBinId,
       selectedBinId,
       binOperation,
-      brick
+      brick,
+      adminMode,
+      adminAction,
+      adminBinId,
+      swapSelection
     })
+
+    if (adminMode) {
+      // If swap mode is active, select the second bin and wait for confirm
+      if (adminAction === 'swap-bins' && swapSelection.length === 1) {
+        if (swapSelection[0] === newBinId) {
+          return
+        }
+        setSwapSelection([swapSelection[0], newBinId])
+        setHelperText(`Swap target selected: ${newBinId}. Confirm or cancel below.`)
+        return
+      }
+
+      setAdminBinId(newBinId)
+      setAdminAction(null)
+      setAdminPropertySelection(binPropertyMap[newBinId] ?? [])
+      setHelperText(`Admin selected bin ${newBinId}. Choose Modify Properties, Swap Bins, or Empty Bin.`)
+      return
+    }
 
     // If we're on the brick info page but no operation is selected, ignore bin clicks (force user to choose operation first)
     if (page === BRICK_INFO && !binOperation) {
@@ -164,15 +239,16 @@ function App () {
       setSelectedBinId(newBinId)
 
       try {
-        const contents = await getBinContents(newBinId)
-        console.log('Bin contents:', contents)
-        setCurrentBinContents(contents)
-        if (contents.length === 0) {
+        const res = await getBinContents(newBinId)
+        const items = Array.isArray(res) ? res : (res.items ?? [])
+        console.log('Bin contents:', items, 'properties:', res.properties)
+        setCurrentBinContents(items)
+        setBinPropertyMap(prev => ({ ...prev, [newBinId]: res.properties ?? [] }))
+        if (items.length === 0) {
           setHelperText(`Bin ${newBinId} is empty`)
           setPage(OPTION_CARDS)
           return
-        } 
-        else {
+        } else {
           setHelperText('')
         }
       } catch (err) {
@@ -469,6 +545,150 @@ function App () {
     setCurrentBinContents([])
   }
 
+  function toggleAdminMode () {
+    setAdminMode(prev => {
+      const next = !prev
+      if (next) {
+        setHelperText('Admin mode active. Click a bin to manage it.')
+      } else {
+        setHelperText('Select a bin or click an option above to get started')
+        setAdminAction(null)
+        setAdminBinId(null)
+        setShowPropertyHighlights(false)
+        setSwapSelection([])
+      }
+      return next
+    })
+  }
+
+  function togglePropertyHighlights () {
+    setShowPropertyHighlights(prev => !prev)
+  }
+
+  function setAdminActionMode (action) {
+    setAdminAction(action)
+    if (action === 'modify-properties') {
+      setAdminPropertySelection(binPropertyMap[adminBinId] ?? [])
+      setHelperText(`Modify properties on ${adminBinId}. Toggle options and apply.`)
+    }
+    if (action === 'swap-bins') {
+      setSwapSelection([adminBinId])
+      setHelperText(`Swap ${adminBinId} with another bin. Click a second bin to continue.`)
+    }
+  }
+
+  function toggleAdminProperty (propertyId) {
+    setAdminPropertySelection(prev => {
+      if (prev.includes(propertyId)) {
+        return prev.filter(id => id !== propertyId)
+      }
+      return [...prev, propertyId]
+    })
+  }
+
+  async function applyAdminProperties () {
+    if (!adminBinId) return
+    setWaiting(true)
+    try {
+      await updateBinProperties({ binId: adminBinId, properties: adminPropertySelection })
+      await refreshBinProperties()
+      setAdminAction(null)
+      setHelperText(`Properties updated for ${adminBinId}`)
+    } catch (err) {
+      console.error('Failed to update properties', err)
+      alert('Unable to save properties')
+    } finally {
+      setWaiting(false)
+    }
+  }
+
+  async function cancelAdminAction () {
+    setAdminAction(null)
+    setSwapSelection([])
+    if (adminBinId) {
+      setHelperText(`Admin selected bin ${adminBinId}. Choose Modify Properties, Swap Bins, or Empty Bin.`)
+    } else {
+      setHelperText('Admin mode active. Click a bin to manage it.')
+    }
+  }
+
+  async function refreshBinProperties () {
+    try {
+      const bins = await getAllBins()
+      const mapped = Object.fromEntries(
+        Object.entries(bins).map(([binId, bin]) => [binId, Array.isArray(bin.properties) ? bin.properties : []])
+      )
+      setBinPropertyMap(mapped)
+    } catch (err) {
+      console.error('Failed to refresh bin properties', err)
+    }
+  }
+
+  async function confirmAdminSwap () {
+    if (swapSelection.length !== 2) {
+      alert('Select two bins to swap')
+      return
+    }
+
+    const [a, b] = swapSelection
+    const ok = window.confirm(`Swap contents of ${a} ⇄ ${b}?`)
+    if (!ok) return
+
+    setWaiting(true)
+    try {
+      const resA = await getBinContents(a)
+      const resB = await getBinContents(b)
+      const contentsA = Array.isArray(resA) ? resA : (resA.items ?? [])
+      const contentsB = Array.isArray(resB) ? resB : (resB.items ?? [])
+
+      for (const part of contentsA) {
+        try { await operateBin({ operation: 'add', binId: b, partId: part }) } catch (err) { console.error('Add failed', err) }
+      }
+      for (const part of contentsB) {
+        try { await operateBin({ operation: 'add', binId: a, partId: part }) } catch (err) { console.error('Add failed', err) }
+      }
+      for (const part of contentsA) {
+        try { await operateBin({ operation: 'remove', binId: a, partId: part }) } catch (err) { console.error('Remove failed', err) }
+      }
+      for (const part of contentsB) {
+        try { await operateBin({ operation: 'remove', binId: b, partId: part }) } catch (err) { console.error('Remove failed', err) }
+      }
+
+      await refreshBinProperties()
+      alert('Swap complete')
+      setSwapSelection([])
+      setAdminAction(null)
+      setHelperText(`Swapped ${a} and ${b}`)
+    } catch (err) {
+      console.error('Swap failed', err)
+      alert('Swap failed — see console')
+    } finally {
+      setWaiting(false)
+    }
+  }
+
+  async function handleEmptyBin () {
+    if (!adminBinId) return
+    const ok = window.confirm(`Empty bin ${adminBinId} and set property Empty?`)
+    if (!ok) return
+
+    setWaiting(true)
+    try {
+      await emptyBin(adminBinId)
+      await refreshBinProperties()
+      if (selectedBinId === adminBinId) {
+        setCurrentBinContents([])
+      }
+      setAdminAction(null)
+      setHelperText(`Bin ${adminBinId} emptied and marked Empty`)
+    } catch (err) {
+      console.error('Empty bin failed', err)
+      alert('Unable to empty bin')
+    } finally {
+      setWaiting(false)
+    }
+  }
+
   return (
     <div className='App w3-theme-light'>
       <div className='top-panel'>
@@ -477,11 +697,94 @@ function App () {
       <div className="helper-text">
         {helperText}
       </div>
+      {/* Bottom controls: property assignment and swap */}
+      <div className="bottom-controls" style={{ padding: '8px 20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+        <button className={`ui-button ${adminMode ? 'blue' : ''}`} onClick={toggleAdminMode}>
+          {adminMode ? 'Exit Admin Mode' : 'Enter Admin Mode'}
+        </button>
+
+        {adminMode && (
+          <>
+            <button className={`ui-button ${showPropertyHighlights ? 'blue' : ''}`} onClick={togglePropertyHighlights}>
+              {showPropertyHighlights ? 'Hide Property Highlights' : 'Show Property Highlights'}
+            </button>
+
+            {adminBinId && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <span><strong>Bin:</strong> {adminBinId}</span>
+                <button className='ui-button' onClick={() => setAdminActionMode('modify-properties')}>Modify Properties</button>
+                <button className='ui-button' onClick={() => setAdminActionMode('swap-bins')}>Swap Bins</button>
+                <button className='ui-button' onClick={handleEmptyBin}>Empty Bin</button>
+                <button className='ui-button' onClick={cancelAdminAction}>Clear</button>
+              </div>
+              <div style={{ width: '100%', marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <strong>Current Properties:</strong>
+                {(binPropertyMap[adminBinId] ?? []).length === 0 ? (
+                  <span>None</span>
+                ) : (
+                  (binPropertyMap[adminBinId] ?? []).map(propId => {
+                    const prop = BIN_PROPERTIES.find(p => p.id === propId)
+                    return (
+                      <span key={propId} className='property-badge'>
+                        {prop ? prop.label : propId}
+                      </span>
+                    )
+                  })
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {adminMode && adminAction === 'modify-properties' && adminBinId && (
+        <div className='admin-panel' style={{ padding: '10px 20px', margin: '10px 20px', border: '1px solid #ccc', borderRadius: 12, background: '#fafafa' }}>
+          <strong>Modify properties for {adminBinId}</strong>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: 10 }}>
+            {BIN_PROPERTIES.map(prop => (
+              <button
+                key={prop.id}
+                className={`ui-button ${adminPropertySelection.includes(prop.id) ? 'blue' : ''}`}
+                onClick={() => toggleAdminProperty(prop.id)}
+                style={{ padding: '6px 8px' }}
+              >
+                {prop.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', gap: '8px' }}>
+            <button className='ui-button blue' onClick={applyAdminProperties}>Apply Properties</button>
+            <button className='ui-button' onClick={cancelAdminAction}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {adminMode && adminAction === 'swap-bins' && (
+        <div className='admin-panel' style={{ padding: '10px 20px', margin: '10px 20px', border: '1px solid #ccc', borderRadius: 12, background: '#fafafa' }}>
+          <strong>Swap bins</strong>
+          <div style={{ marginTop: 10 }}>
+            {swapSelection.length === 1
+              ? `Selected source: ${swapSelection[0]}. Click a second bin to choose the destination.`
+              : `Selected bins: ${swapSelection.join(' ↔ ')}`}
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {swapSelection.length === 2 && (
+              <button className='ui-button blue' onClick={confirmAdminSwap}>Confirm Swap</button>
+            )}
+            <button className='ui-button' onClick={cancelAdminAction}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       <Table
         onBinClick={onBinClicked}
-        selectedBinId={selectedBinId}
+        selectedBinId={adminMode ? adminBinId : selectedBinId}
         highlightedBinIds={highlightedBinIds}
         displayMode={binDisplayMode}
+        // pass property defs and assignments so Table can render extra classes
+        propertyDefs={BIN_PROPERTIES}
+        propertyMap={binPropertyMap}
+        showPropertyClasses={adminMode && showPropertyHighlights}
       />
 
     </div>

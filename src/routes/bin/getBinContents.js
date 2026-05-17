@@ -7,13 +7,14 @@ const getBinContents = (req, res) => {
   const bin = binMappings[binId]
 
   if (!bin) {
-    return res.json([])
+    return res.json({ items: [], properties: [] })
   }
 
   // Return part IDs only (Select expects this)
   const partIds = bin.items.map(item => item.partId)
+  const properties = Array.isArray(bin.properties) ? bin.properties : []
 
-  res.json(partIds)
+  res.json({ items: partIds, properties })
 }
 
 export default getBinContents

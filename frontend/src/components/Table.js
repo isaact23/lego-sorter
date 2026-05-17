@@ -5,7 +5,10 @@ function Table ({
   highlightedBinIds = [],
   selectedBinId = null,
   onBinClick,
-  displayMode = 'DEFAULT'
+  displayMode = 'DEFAULT',
+  propertyDefs = [],
+  propertyMap = {},
+  showPropertyClasses = false
 }) {
 
   // Decide how a bin looks + whether it can be clicked
@@ -13,42 +16,54 @@ function Table ({
     const isSelected = binId === selectedBinId
     const isHighlighted = highlightedBinIds.includes(binId)
 
+    // compute property classes
+    const assigned = propertyMap[binId] ?? []
+    const propClassNames = showPropertyClasses
+      ? assigned
+        .map(pid => {
+          const def = propertyDefs.find(d => d.id === pid)
+          return def ? def.className : null
+        })
+        .filter(Boolean)
+        .join(' ')
+      : ''
+
     switch (displayMode) {
       case 'DEFAULT':
         return {
-          className: 'bin',
+          className: `bin ${propClassNames}`,
           clickable: true
         }
 
       case 'SELECT':
         return {
           className: isSelected
-            ? 'bin bin-selected'
-            : 'bin',
+            ? `bin bin-selected ${propClassNames}`
+            : `bin ${propClassNames}`,
           clickable: true
         }
 
       case 'FILTER':
         return {
           className: isHighlighted
-            ? 'bin bin-highlighted'
-            : 'bin bin-disabled',
+            ? `bin bin-highlighted ${propClassNames}`
+            : `bin bin-disabled ${propClassNames}`,
           clickable: isHighlighted
         }
 
       case 'ADD':
         return {
           className: isHighlighted
-            ? 'bin bin-highlighted bin-halftone'
-            : 'bin',
+            ? `bin bin-highlighted bin-halftone ${propClassNames}`
+            : `bin ${propClassNames}`,
           clickable: true
         }
 
       case 'REMOVE':
         return {
           className: isHighlighted
-            ? 'bin bin-highlighted'
-            : 'bin bin-disabled',
+            ? `bin bin-highlighted ${propClassNames}`
+            : `bin bin-disabled ${propClassNames}`,
           clickable: isHighlighted
         }
 

@@ -39,6 +39,36 @@
   background: #ffb74d;
 }
 
+/* Property styles */
+.bin-empty {
+  border-color: #2c3e50;
+  background: linear-gradient(180deg, rgba(44,62,80,0.08), transparent);
+}
+
+.bin-full {
+  border-color: #27ae60;
+  background: linear-gradient(180deg, rgba(39,174,96,0.08), transparent);
+}
+
+.bin-overwhelmed {
+  border-color: #c0392b;
+  background: linear-gradient(180deg, rgba(192,57,43,0.12), transparent);
+}
+
+.bin-half {
+  border-color: #f39c12;
+  background: linear-gradient(180deg, rgba(243,156,18,0.08), transparent);
+}
+
+.property-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(46, 64, 83, 0.12);
+  color: #2c3e50;
+  font-size: 0.85rem;
+}
+
 .System {
   display: grid;
   height: 80vh;

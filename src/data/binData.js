@@ -37,9 +37,10 @@ function normalizeBinData (data) {
     }
 
     // New format
-    normalized[binId] = {
-      items: Array.isArray(value.items) ? value.items : []
-    }
+      normalized[binId] = {
+        items: Array.isArray(value.items) ? value.items : [],
+        properties: Array.isArray(value.properties) ? value.properties : []
+      }
   }
 
   return normalized
@@ -50,7 +51,26 @@ function loadBinData () {
   try {
     const raw = fs.readFileSync(BIN_DATA, 'utf8')
     const parsed = JSON.parse(raw)
-    binMappings = normalizeBinData(parsed)
+    const normalized = normalizeBinData(parsed)
+    binMappings = normalized
+    // If original file lacked a `properties` array on any bin, persist normalized form
+    let needWrite = false
+    for (const [binId, normBin] of Object.entries(normalized)) {
+      const orig = parsed[binId]
+      if (!orig || !Array.isArray(orig.properties)) {
+        needWrite = true
+        break
+      }
+    }
+
+    if (needWrite) {
+      try {
+        writeBinData(normalized)
+        console.log('Updated bin data file to include missing properties arrays')
+      } catch (err) {
+        console.error('Failed to write normalized bin data', err)
+      }
+    }
     console.log('Loaded bin mappings (normalized)')
   } catch (err) {
     console.error('Failed to load bin mappings', err)

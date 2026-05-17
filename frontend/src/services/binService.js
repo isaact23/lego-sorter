@@ -24,6 +24,38 @@ export async function getBinsbyCategory (categoryId) {
   return res.json()
 }
 
+// Get all bins with full loaded data
+export async function getAllBins () {
+  const response = await axios.get(`${BACKEND_URL}/bin/all`)
+  return response.data ?? {}
+}
+
+// Get bins which have a specific property assigned
+export async function getBinsByProperty (propertyId) {
+  const res = await fetch('/bin/getBins_Property', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ propertyId })
+  })
+  return res.json()
+}
+
+export async function updateBinProperties ({ binId, properties }) {
+  const response = await axios.post(
+    `${BACKEND_URL}/bin/updateProperties`,
+    { binId, properties }
+  )
+  return response.data
+}
+
+export async function emptyBin (binId) {
+  const response = await axios.post(
+    `${BACKEND_URL}/bin/empty`,
+    { binId }
+  )
+  return response.data
+}
+
 // Add or remove a part from a bin
 export async function operateBin ({ binId, partId, categoryId, operation }) {
   if (!binId || !partId || !operation) {
@@ -57,6 +89,6 @@ export async function getBinContents (binId) {
     { binId }
   )
 
-  // Expecting an array of part IDs
-  return response.data ?? []
+  // Expecting an object: { items: [partIds], properties: [propId] }
+  return response.data ?? { items: [], properties: [] }
 }
