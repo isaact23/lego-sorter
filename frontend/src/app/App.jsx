@@ -215,7 +215,7 @@ function App () {
       setAdminAction(null)
       setAdminPropertySelection(binPropertyMap[newBinId] ?? [])
       setHelperText(`Admin selected bin ${newBinId}. Choose Modify Properties, Swap Bins, or Empty Bin.`)
-      return
+      // allow normal bin browsing and operations to continue below
     }
 
     // If we're on the brick info page but no operation is selected, ignore bin clicks (force user to choose operation first)
@@ -638,20 +638,28 @@ function App () {
     try {
       const resA = await getBinContents(a)
       const resB = await getBinContents(b)
-      const contentsA = Array.isArray(resA) ? resA : (resA.items ?? [])
-      const contentsB = Array.isArray(resB) ? resB : (resB.items ?? [])
+      const contentsA = Array.isArray(resA.details)
+        ? resA.details
+        : Array.isArray(resA.items)
+          ? resA.items.map(partId => ({ partId, categoryId: undefined }))
+          : []
+      const contentsB = Array.isArray(resB.details)
+        ? resB.details
+        : Array.isArray(resB.items)
+          ? resB.items.map(partId => ({ partId, categoryId: undefined }))
+          : []
 
       for (const part of contentsA) {
-        try { await operateBin({ operation: 'add', binId: b, partId: part }) } catch (err) { console.error('Add failed', err) }
+        try { await operateBin({ operation: 'add', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Add failed', err) }
       }
       for (const part of contentsB) {
-        try { await operateBin({ operation: 'add', binId: a, partId: part }) } catch (err) { console.error('Add failed', err) }
+        try { await operateBin({ operation: 'add', binId: a, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Add failed', err) }
       }
       for (const part of contentsA) {
-        try { await operateBin({ operation: 'remove', binId: a, partId: part }) } catch (err) { console.error('Remove failed', err) }
+        try { await operateBin({ operation: 'remove', binId: a, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
       }
       for (const part of contentsB) {
-        try { await operateBin({ operation: 'remove', binId: b, partId: part }) } catch (err) { console.error('Remove failed', err) }
+        try { await operateBin({ operation: 'remove', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
       }
 
       await refreshBinProperties()
@@ -710,28 +718,30 @@ function App () {
             </button>
 
             {adminBinId && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                <span><strong>Bin:</strong> {adminBinId}</span>
-                <button className='ui-button' onClick={() => setAdminActionMode('modify-properties')}>Modify Properties</button>
-                <button className='ui-button' onClick={() => setAdminActionMode('swap-bins')}>Swap Bins</button>
-                <button className='ui-button' onClick={handleEmptyBin}>Empty Bin</button>
-                <button className='ui-button' onClick={cancelAdminAction}>Clear</button>
-              </div>
-              <div style={{ width: '100%', marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                <strong>Current Properties:</strong>
-                {(binPropertyMap[adminBinId] ?? []).length === 0 ? (
-                  <span>None</span>
-                ) : (
-                  (binPropertyMap[adminBinId] ?? []).map(propId => {
-                    const prop = BIN_PROPERTIES.find(p => p.id === propId)
-                    return (
-                      <span key={propId} className='property-badge'>
-                        {prop ? prop.label : propId}
-                      </span>
-                    )
-                  })
-                )}
-              </div>
+              <>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                  <span><strong>Bin:</strong> {adminBinId}</span>
+                  <button className='ui-button' onClick={() => setAdminActionMode('modify-properties')}>Modify Properties</button>
+                  <button className='ui-button' onClick={() => setAdminActionMode('swap-bins')}>Swap Bins</button>
+                  <button className='ui-button' onClick={handleEmptyBin}>Empty Bin</button>
+                  <button className='ui-button' onClick={cancelAdminAction}>Clear</button>
+                </div>
+                <div style={{ width: '100%', marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                  <strong>Current Properties:</strong>
+                  {(binPropertyMap[adminBinId] ?? []).length === 0 ? (
+                    <span>None</span>
+                  ) : (
+                    (binPropertyMap[adminBinId] ?? []).map(propId => {
+                      const prop = BIN_PROPERTIES.find(p => p.id === propId)
+                      return (
+                        <span key={propId} className='property-badge'>
+                          {prop ? prop.label : propId}
+                        </span>
+                      )
+                    })
+                  )}
+                </div>
+              </>
             )}
           </>
         )}
