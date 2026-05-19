@@ -45,7 +45,8 @@ function App () {
   // =====================
   const [page, setPage] = useState(2)                          // Which view to show (SELECT_PAGE, OPTION_CARDS, BRICK_INFO)
   const [waiting, setWaiting] = useState(false)                // Loading state for async operations
-  const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')  // Helper message at bottom
+  const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')  // Helper message for the help popup
+  const [showHelperPopup, setShowHelperPopup] = useState(false)
   const [keyboardVisible, setKeyboardVisible] = useState(false)  // On-screen keyboard for part# search
 
   // =====================
@@ -63,7 +64,6 @@ function App () {
   const [currentBinContents, setCurrentBinContents] = useState([])  // Bricks in the currently selected bin
   const [binPropertyMap, setBinPropertyMap] = useState({})
   const [adminMode, setAdminMode] = useState(false)
-  const [showPropertyHighlights, setShowPropertyHighlights] = useState(false)
   const [adminBinId, setAdminBinId] = useState(null)
   const [adminAction, setAdminAction] = useState(null)
   const [adminPropertySelection, setAdminPropertySelection] = useState([])
@@ -74,8 +74,8 @@ function App () {
   // =====================
   const [searchQuery, setSearchQuery] = useState('')                    // Text in the part# search box
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([])    // Category IDs selected in filter
-  const [selectedCategoryLabels, setSelectedCategoryLabels] = useState([])  // Category labels (for display)
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)   // Used to reset category dropdowns
+  const [menuOpen, setMenuOpen] = useState(false)
 
   // =====================
   // REFS
@@ -91,7 +91,6 @@ function App () {
     const labels = payload?.labels ?? []
 
     setSelectedCategoryIds(ids)
-    setSelectedCategoryLabels(labels)
     setSearchQuery('')
 
     if (labels.length > 0) {
@@ -201,14 +200,20 @@ function App () {
     })
 
     if (adminMode) {
-      // If swap mode is active, select the second bin and wait for confirm
-      if (adminAction === 'swap-bins' && swapSelection.length === 1) {
-        if (swapSelection[0] === newBinId) {
-          return
-        }
-        setSwapSelection([swapSelection[0], newBinId])
-        setHelperText(`Swap target selected: ${newBinId}. Confirm or cancel below.`)
-        return
+        // If swap mode is active, select the first or second bin and wait for confirm
+        if (adminAction === 'swap-bins') {
+          if (swapSelection.length === 1) {
+            if (swapSelection[0] === newBinId) {
+              return
+            }
+            setSwapSelection([swapSelection[0], newBinId])
+            setHelperText(`Swap target selected: ${newBinId}. Confirm or cancel below.`)
+            return
+          }
+
+          setAdminBinId(newBinId)
+          setSwapSelection([newBinId])
+          setHelperText(`Swap source selected: ${newBinId}. Click a second bin to swap with.`)
       }
 
       setAdminBinId(newBinId)
@@ -554,15 +559,26 @@ function App () {
         setHelperText('Select a bin or click an option above to get started')
         setAdminAction(null)
         setAdminBinId(null)
-        setShowPropertyHighlights(false)
         setSwapSelection([])
       }
       return next
     })
   }
 
-  function togglePropertyHighlights () {
-    setShowPropertyHighlights(prev => !prev)
+  function toggleMenu () {
+    setMenuOpen(prev => !prev)
+  }
+
+  function closeMenu () {
+    setMenuOpen(false)
+  }
+
+  function toggleHelperPopup () {
+    setShowHelperPopup(prev => !prev)
+  }
+
+  function closeHelperPopup () {
+    setShowHelperPopup(false)
   }
 
   function setAdminActionMode (action) {
@@ -572,8 +588,13 @@ function App () {
       setHelperText(`Modify properties on ${adminBinId}. Toggle options and apply.`)
     }
     if (action === 'swap-bins') {
-      setSwapSelection([adminBinId])
-      setHelperText(`Swap ${adminBinId} with another bin. Click a second bin to continue.`)
+      if (adminBinId) {
+        setSwapSelection([adminBinId])
+        setHelperText(`Swap ${adminBinId} with another bin. Click a second bin to continue.`)
+      } else {
+        setSwapSelection([])
+        setHelperText('Select the first bin to swap, then select the second bin.')
+      }
     }
   }
 
@@ -605,11 +626,9 @@ function App () {
   async function cancelAdminAction () {
     setAdminAction(null)
     setSwapSelection([])
-    if (adminBinId) {
-      setHelperText(`Admin selected bin ${adminBinId}. Choose Modify Properties, Swap Bins, or Empty Bin.`)
-    } else {
-      setHelperText('Admin mode active. Click a bin to manage it.')
-    }
+    setAdminBinId(null)
+    setAdminPropertySelection([])
+    setHelperText('Admin mode active. Click a bin to manage it.')
   }
 
   async function refreshBinProperties () {
@@ -698,25 +717,46 @@ function App () {
   }
 
   return (
-    <div className='App w3-theme-light'>
+    <div className={`App w3-theme-light${adminMode ? ' admin-active' : ''}`}>
+      <div className='top-right-controls'>
+        <button className='help-toggle-button' onClick={toggleHelperPopup} aria-label='Show help'>?</button>
+        <div className='menu-container'>
+          <button className='menu-toggle-button' onClick={toggleMenu} aria-label='Open menu'>
+            <span className='menu-icon'>☰</span>
+          </button>
+          {menuOpen && (
+            <div className='menu-popup-overlay' onClick={closeMenu}>
+              <div className='menu-popup' onClick={e => e.stopPropagation()}>
+                <button className='menu-popup-item' onClick={() => { toggleAdminMode(); closeMenu() }}>
+                  {adminMode ? 'Exit Admin Mode' : 'Toggle Admin Mode'}
+                </button>
+                <button className='menu-popup-item' onClick={() => { setShowHelperPopup(true); closeMenu() }}>
+                  Show help
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      {adminMode && <div className='admin-banner'>Admin mode enabled</div>}
       <div className='top-panel'>
         {getPage()}
       </div>
-      <div className="helper-text">
-        {helperText}
-      </div>
-      {/* Bottom controls: property assignment and swap */}
-      <div className="bottom-controls" style={{ padding: '8px 20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-        <button className={`ui-button ${adminMode ? 'blue' : ''}`} onClick={toggleAdminMode}>
-          {adminMode ? 'Exit Admin Mode' : 'Enter Admin Mode'}
-        </button>
-
-        {adminMode && (
-          <>
-            <button className={`ui-button ${showPropertyHighlights ? 'blue' : ''}`} onClick={togglePropertyHighlights}>
-              {showPropertyHighlights ? 'Hide Property Highlights' : 'Show Property Highlights'}
-            </button>
-
+      {showHelperPopup && (
+        <div className='helper-popup-overlay' onClick={closeHelperPopup}>
+          <div className='helper-popup' onClick={e => e.stopPropagation()}>
+            <div className='helper-popup-header'>
+              <span>Help</span>
+              <button className='helper-popup-close' onClick={closeHelperPopup} aria-label='Close help'>×</button>
+            </div>
+            <div className='helper-popup-body'>
+              {helperText}
+            </div>
+          </div>
+        </div>
+      )}
+      {adminMode && (
+        <div className="bottom-controls" style={{ padding: '8px 20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
             {adminBinId && (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
@@ -743,9 +783,8 @@ function App () {
                 </div>
               </>
             )}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {adminMode && adminAction === 'modify-properties' && adminBinId && (
         <div className='admin-panel' style={{ padding: '10px 20px', margin: '10px 20px', border: '1px solid #ccc', borderRadius: 12, background: '#fafafa' }}>
@@ -794,10 +833,10 @@ function App () {
         // pass property defs and assignments so Table can render extra classes
         propertyDefs={BIN_PROPERTIES}
         propertyMap={binPropertyMap}
-        showPropertyClasses={adminMode && showPropertyHighlights}
+        showPropertyClasses={adminMode}
       />
-
     </div>
   )
 }
 export default App
+

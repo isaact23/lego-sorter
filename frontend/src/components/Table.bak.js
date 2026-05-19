@@ -119,6 +119,29 @@ function Table ({
     ]
   }
 
+  const system = {
+  id: 'A',
+  size: [24, 60],  // was [24, 20]
+  containers: [
+    { id: 'A', pos: [0, 0],  size: [6, 30], bins: [6, 10] },
+    { id: 'B', pos: [0, 30], size: [6, 30], bins: [6, 10] },
+    { id: 'C', pos: [6, 0],  size: [4, 15], bins: [2, 3] },
+    { id: 'G', pos: [10, 0], size: [4, 15], bins: [2, 3] },
+    { id: 'D', pos: [6, 15], size: [4, 15], bins: [2, 3] },
+    { id: 'H', pos: [10, 15],size: [4, 15], bins: [2, 3] },
+    { id: 'E', pos: [6, 30], size: [4, 15], bins: [1, 3] },
+    { id: 'I', pos: [10, 30],size: [4, 15], bins: [2, 3] },
+    { id: 'F', pos: [6, 45], size: [4, 15], bins: [1, 3] },
+    { id: 'J', pos: [10, 45],size: [4, 15], bins: [2, 3] },
+    { id: 'K', pos: [14, 0], size: [6, 30], bins: [6, 10] },
+    { id: 'L', pos: [14, 30],size: [6, 30], bins: [6, 10] },
+    { id: 'M', pos: [20, 0], size: [4, 15], bins: [2, 3] },
+    { id: 'N', pos: [20, 15],size: [4, 15], bins: [2, 3] },
+    { id: 'O', pos: [20, 30],size: [4, 15], bins: [1, 3] },
+    { id: 'P', pos: [20, 45],size: [4, 15], bins: [1, 3] }
+  ]
+}
+
   const renderContainer = (container) => {
     const totalBins = container.bins[0] * container.bins[1]
 
