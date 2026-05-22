@@ -2,6 +2,7 @@ import express from 'express'
 import fs from 'fs'
 import path from 'path'
 import axios from 'axios'
+import { readBinData } from '../data/binData.js'
 
 export default function createBrickRouter(partsMap, IMAGE_DIR) {
   const router = express.Router()
@@ -117,6 +118,106 @@ export default function createBrickRouter(partsMap, IMAGE_DIR) {
       console.error('[/brick] Error:', err.message, err.response?.status)
       if (err.response?.status === 429) return res.status(429).json({ error: 'Rate limited by Rebrickable' })
       return res.status(500).json({ error: `Error: ${err.message}` })
+    }
+  })
+
+  // Cache: set_num → { setInfo: {name, set_img_url}, parts: [...] }
+  // Parts list and set info are stable; bin mappings are re-computed each request
+  // so they always reflect current bin contents.
+  const setCache = new Map()
+
+  // Set endpoint - fetch all parts for a set and map them to bins
+  router.get('/set-bins', async (req, res) => {
+    try {
+      let { set_num } = req.query
+      if (!set_num) return res.status(400).json({ error: 'Missing set_num parameter' })
+
+      // Auto-append variant suffix if missing (75257 → 75257-1)
+      if (!set_num.includes('-')) set_num = `${set_num}-1`
+
+      if (!REBRICKABLE_API_KEY) {
+        return res.status(500).json({ error: 'API key not configured' })
+      }
+
+      let cached = setCache.get(set_num)
+
+      if (!cached) {
+        console.log('[/set-bins] Cache miss for', set_num, '— fetching from Rebrickable')
+
+        // Fetch set info (name + image) — one API call
+        await enforceRateLimit()
+        const setInfoRes = await axios.get(
+          `https://rebrickable.com/api/v3/lego/sets/${set_num}/`,
+          { params: { key: REBRICKABLE_API_KEY } }
+        )
+        const setInfo = {
+          name: setInfoRes.data.name,
+          set_img_url: setInfoRes.data.set_img_url,
+        }
+
+        // Fetch all parts with pagination (page_size=1000 minimises calls)
+        const allParts = []
+        let page = 1
+        let hasMore = true
+
+        while (hasMore) {
+          await enforceRateLimit()
+          const response = await axios.get(
+            `https://rebrickable.com/api/v3/lego/sets/${set_num}/parts/`,
+            { params: { key: REBRICKABLE_API_KEY, page_size: 1000, page } }
+          )
+          allParts.push(...response.data.results)
+          hasMore = !!response.data.next
+          page++
+        }
+
+        // Normalise part entries, excluding spares
+        const parts = allParts.filter(item => !item.is_spare).map(item => ({
+          part_num:  item.part.part_num,
+          name:      item.part.name,
+          quantity:  item.quantity,
+          colorId:   item.color.id,
+          colorName: item.color.name,
+          colorRgb:  item.color.rgb,
+        }))
+
+        cached = { setInfo, parts }
+        setCache.set(set_num, cached)
+        console.log('[/set-bins] Cached', parts.length, 'parts for', set_num)
+      } else {
+        console.log('[/set-bins] Cache hit for', set_num)
+      }
+
+      const { setInfo, parts } = cached
+
+      // Re-compute bin mappings against current bin state every request
+      const binMappings = readBinData()
+      const binPartsMap = {}
+
+      for (const part of parts) {
+        for (const [binId, bin] of Object.entries(binMappings)) {
+          if (!Array.isArray(bin.items)) continue
+          const inBin = bin.items.some(item => String(item.partId) === part.part_num)
+          if (inBin) {
+            if (!binPartsMap[binId]) binPartsMap[binId] = []
+            binPartsMap[binId].push(part)
+          }
+        }
+      }
+
+      res.json({
+        setNum: set_num,
+        setInfo,
+        totalParts: parts.length,
+        binIds: Object.keys(binPartsMap),
+        binPartsMap,
+      })
+
+    } catch (err) {
+      console.error('[/set-bins] Error:', err.message, err.response?.status)
+      if (err.response?.status === 404) return res.status(404).json({ error: 'Set not found' })
+      if (err.response?.status === 429) return res.status(429).json({ error: 'Rate limited by Rebrickable' })
+      return res.status(500).json({ error: err.message })
     }
   })
 

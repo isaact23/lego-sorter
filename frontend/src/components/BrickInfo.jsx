@@ -24,68 +24,34 @@ function BrickInfo({
   return (
     <div className="top-panel-row">
       <div className="Top-Panel-BrickInfo">
-        <div className="BrickText">
-          <h2>{brick.name || 'Unknown Part'}</h2>
-          <p><strong>Category:</strong> {brick.part_cat_id || 'Unknown'}</p>
-          <p><strong>ID:</strong> {brick.part_num}</p>
-          {isIncomplete && (
-            <p style={{ color: 'orange' }}>⚠️ Partial data - part may not be in database</p>
-          )}
+        <div className="BrickImageFrame">
+          {imageError
+            ? null
+            : <img src={`/api/image/${brick.part_num}`} alt={brick.name} onError={() => setImageError(true)} />
+          }
         </div>
 
-        <div className="BrickImageFrame">
-          {imageError ? (
-            <div style={{ 
-              width: '100%', 
-              height: '200px', 
-              background: '#f0f0f0', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: '#999',
-              fontSize: '14px',
-              border: '1px solid #ddd'
-            }}>
-              📦 No image cached
-            </div>
-          ) : (
-            <img
-              src={`/api/image/${brick.part_num}`}
-              alt={brick.name}
-              onError={() => setImageError(true)}
-            />
-          )}
+        <div className="BrickText">
+          <h2>{brick.name || 'Unknown Part'}</h2>
+          <p>Part #{brick.part_num}</p>
+          {brick.part_cat_id && <p>Category {brick.part_cat_id}</p>}
+          {isIncomplete && <p style={{ color: '#f59e0b' }}>Partial data</p>}
         </div>
 
         <div className="BrickActions">
           <button
-            className={`ui-button green ${
-              isAddActive ? 'pending' : ''
-            }`}
-            onClick={() =>
-              onOperationSelect(isAddActive ? null : 'add')
-            }
+            className={`ui-button green${isAddActive ? ' pending' : ''}`}
+            onClick={() => onOperationSelect(isAddActive ? null : 'add')}
           >
             Add to Bin
           </button>
-
           <button
-            className={`ui-button red ${
-              isRemoveActive ? 'pending' : ''
-            }`}
-            onClick={() =>
-              onOperationSelect(isRemoveActive ? null : 'remove')
-            }
+            className={`ui-button red${isRemoveActive ? ' pending' : ''}`}
+            onClick={() => onOperationSelect(isRemoveActive ? null : 'remove')}
           >
             Remove from Bin
           </button>
-
-          <button
-            className="ui-button blue"
-            onClick={onClose}
-          >
-            Close
-          </button>
+          <button className="ui-button" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

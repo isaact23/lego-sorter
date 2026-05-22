@@ -74,7 +74,9 @@ function Table ({
   propertyDefs = [],
   propertyMap = {},
   showPropertyClasses = false,
-  systemDef = SYSTEM_DEF,   // injectable for future JSON-driven systems
+  pulledBinIds = [],
+  partialBinIds = [],
+  systemDef = SYSTEM_DEF,
   unitTypes = UNIT_TYPES,
 }) {
 
@@ -104,6 +106,12 @@ function Table ({
         return { className: isHighlighted ? `bin bin-highlighted bin-halftone ${propClassNames}` : `bin ${propClassNames}`, clickable: true }
       case 'REMOVE':
         return { className: isHighlighted ? `bin bin-highlighted ${propClassNames}` : `bin bin-disabled ${propClassNames}`, clickable: isHighlighted }
+      case 'SET_BROWSE':
+        if (isSelected)                    return { className: `bin bin-selected ${propClassNames}`,      clickable: true  }
+        if (pulledBinIds.includes(binId))  return { className: `bin bin-set-pulled ${propClassNames}`,    clickable: true  }
+        if (partialBinIds.includes(binId)) return { className: `bin bin-set-partial ${propClassNames}`,   clickable: true  }
+        if (isHighlighted)                 return { className: `bin bin-set-pending ${propClassNames}`,   clickable: true  }
+        return { className: `bin bin-disabled ${propClassNames}`, clickable: false }
       default:
         return { className: 'bin bin-disabled', clickable: false }
     }

@@ -17,15 +17,21 @@
 
   --bin-highlight-border: #2ecc71;
   --bin-selected-border: #ff9800;
-  --bin-selected-bg: #fce0ba;
-  --bin-empty-border: #2c3e50;
-  --bin-empty-bg: rgba(44,62,80,0.08);
-  --bin-full-border: #27ae60;
-  --bin-full-bg: rgba(39,174,96,0.08);
-  --bin-overwhelmed-border: #c0392b;
-  --bin-overwhelmed-bg: rgba(192,57,43,0.12);
-  --bin-half-border: #f39c12;
-  --bin-half-bg: rgba(243,156,18,0.08);
+  --bin-selected-bg: var(--table-bg);
+
+  --bin-empty-border: #157e00;
+  --bin-empty-bg: #11b31f;
+  --bin-full-border: #131f18;
+  --bin-full-bg: #264e37;
+  --bin-overwhelmed-border: #6c0e04;
+  --bin-overwhelmed-bg: #bd1c0a;
+  --bin-half-border: #900052;
+  --bin-half-bg: #bb0095;
+
+  --bin-set-pending-border: #f59e0b;
+  --bin-set-partial-border: #ea580c;
+  --bin-set-pulled-border: #16a34a;
+
   --badge-bg: rgba(15, 23, 42, 0.08);
   --badge-color: #10222f;
   --surface-start: #f8fbff;
@@ -41,8 +47,7 @@
   align-items: stretch;
   gap: var(--gap);
   height: 80vh;
-  margin: 20px;
-  padding: 20px;
+  padding: 10px;
 }
 
 /* ─── Col: invisible layout scaffold only ─────────────────────────── */
@@ -71,9 +76,10 @@
 }
 
 /* ─── BinGrid: independent grid inside each unit ──────────────────── */
+/* No z-index here — keeping it out of a stacking context so .bin-selected
+   (z-index:50) can paint above bins in neighbouring units. */
 .BinGrid {
   position: relative;
-  z-index: 1;
   display: grid;
   width: 100%;
   height: 100%;
@@ -112,6 +118,10 @@
   opacity: 1 !important;
 }
 
+.selected {
+  border-width: 4px;
+}
+
 @keyframes bin-pulse {
   0%   { box-shadow: 0 0 0 0   var(--table-shadow-highlight-strong); }
   70%  { box-shadow: 0 0 0 8px var(--table-shadow-highlight-fade);   }
@@ -123,7 +133,7 @@
   z-index: 50;
   border-color: var(--bin-selected-border);
   background: var(--bin-selected-bg);
-  transform: translateY(6px) scale(1.15);
+  transform: translateY(4px) scale(1.09);
   box-shadow: var(--table-shadow-heavy);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
@@ -150,22 +160,49 @@
 /* ─── Property styles ─────────────────────────────────────────────── */
 .bin-empty {
   border-color: var(--bin-empty-border);
-  background: linear-gradient(180deg, var(--bin-empty-bg), transparent);
+  background: var(--bin-empty-bg);
 }
 
 .bin-full {
   border-color: var(--bin-full-border);
-  background: linear-gradient(180deg, var(--bin-full-bg), transparent);
+  background: var(--bin-full-bg);
 }
 
 .bin-overwhelmed {
   border-color: var(--bin-overwhelmed-border);
-  background: linear-gradient(180deg, var(--bin-overwhelmed-bg), transparent);
+  background: var(--bin-overwhelmed-bg);
 }
 
 .bin-half {
   border-color: var(--bin-half-border);
-  background: linear-gradient(180deg, var(--bin-half-bg), transparent);
+  background: var(--bin-half-bg);
+}
+
+/* ─── Set browse mode ─────────────────────────────────────────────── */
+
+.bin-set-pending {
+  border-color: var(--bin-set-pending-border);
+  background: var(--table-bg);
+  animation: bin-pulse-amber 1.4s infinite;
+  opacity: 1 !important;
+}
+
+@keyframes bin-pulse-amber {
+  0%   { box-shadow: 0 0 0 0   rgba(245, 158, 11, 0.8); }
+  70%  { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(245, 158, 11, 0);   }
+}
+
+.bin-set-partial {
+  border-color: var(--bin-set-partial-border);
+  background: var(--table-bg);
+  opacity: 1 !important;
+}
+
+.bin-set-pulled {
+  border-color: var(--bin-set-pulled-border);
+  background: var(--table-bg);
+  opacity: 1 !important;
 }
 
 /* ─── Badge ───────────────────────────────────────────────────────── */

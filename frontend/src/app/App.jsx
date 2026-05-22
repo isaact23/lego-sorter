@@ -5,13 +5,16 @@ import Camera from '../components/Camera'
 import Select from '../components/Select'
 import Table from '../components/Table'
 import BrickInfo from '../components/BrickInfo'
-import OptionCard from '../components/OptionCard'
-import CategoryCard from '../components/CategoryCard'
+import SearchPanel from '../components/SearchPanel'
+import FilterPanel from '../components/FilterPanel'
 import OnScreenKeyboard from '../components/OnScreenKeyboard'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+
+import SetBinPanel from '../components/SetBinPanel'
 
 import { fetchBrickData } from '../services/brickService'
+import { getSetBins } from '../services/setService'
 import {
   getBinsByBrick,
   getBinsbyCategory,
@@ -21,6 +24,15 @@ import {
   updateBinProperties,
   emptyBin
 } from '../services/binService'
+
+// ─── Toolbar icons (consistent stroke-based linework) ───────────────────────
+const IC = { strokeWidth: '1.75', strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none', stroke: 'currentColor' }
+const IconCamera   = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><rect x="1" y="7" width="22" height="15" rx="2"/><path d="M16 7l-1.5-4h-5L8 7"/><circle cx="12" cy="14.5" r="3.5"/></svg>
+const IconSearch   = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><circle cx="11" cy="11" r="7.5"/><line x1="17" y1="17" x2="22" y2="22"/></svg>
+const IconFilter   = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+const IconHelp     = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.5a3 3 0 015.5 1c0 2.5-3 3-3 3"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor" stroke="none"/></svg>
+const IconSettings = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+const IconChevron  = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 
 // =====================
 // PAGE CONSTANTS
@@ -48,6 +60,7 @@ function App () {
   const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')  // Helper message for the help popup
   const [showHelperPopup, setShowHelperPopup] = useState(false)
   const [keyboardVisible, setKeyboardVisible] = useState(false)  // On-screen keyboard for part# search
+  const [toolbarOpen, setToolbarOpen] = useState(false)          // Whether toolbar drawer is expanded
 
   // =====================
   // BRICK DATA STATE
@@ -75,7 +88,17 @@ function App () {
   const [searchQuery, setSearchQuery] = useState('')                    // Text in the part# search box
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([])    // Category IDs selected in filter
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)   // Used to reset category dropdowns
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [showSearchPanel, setShowSearchPanel] = useState(true)          // Toggle search panel visibility
+  const [showFilterPanel, setShowFilterPanel] = useState(false)         // Toggle category filter panel visibility
+  const [searchError, setSearchError] = useState(null)                  // Inline error shown in SearchPanel
+
+  // =====================
+  // SET BROWSE STATE
+  // =====================
+  const [setMode, setSetMode] = useState(false)                         // Whether we're in set browse mode
+  const [setInfo, setSetInfo] = useState(null)                          // { name, set_img_url } for the active set
+  const [setBinPartsMap, setSetBinPartsMap] = useState({})              // { binId: [{part_num, name, quantity, colorId, ...}] }
+  const [pulledPartKeys, setPulledPartKeys] = useState([])              // "${part_num}-${colorId}" for each pulled part
 
   // =====================
   // REFS
@@ -83,6 +106,8 @@ function App () {
   const cameraRef = useRef()              // Reference to Camera component to trigger capture
   const searchInputRef = useRef(null)     // Reference to search input for keyboard focus
   const keyboardContainerRef = useRef(null)  // Reference to keyboard container for click-outside detection
+  const searchToggleRef = useRef(null)    // Reference to 🔍 button so click-outside ignores it
+  const filterToggleRef = useRef(null)    // Reference to filter button so click-outside ignores it
 
 
   
@@ -90,16 +115,22 @@ function App () {
     const ids = payload?.ids ?? []
     const labels = payload?.labels ?? []
 
-    setSelectedCategoryIds(ids)
-    setSearchQuery('')
-
-    if (labels.length > 0) {
-      setHelperText(
-        `Showing bins containing Category: ${labels.join(' > ')}`
-      )
+    if (ids.length > 0) {
+      // Clear all active state before applying the filter
+      setBrick(null)
+      setBrickList([])
+      setBinOperation(null)
+      setSelectedBinId(null)
+      setCurrentBinContents([])
+      setHighlightedBinIds([])
+      setPage(OPTION_CARDS)
+      setSearchQuery('')
+      setHelperText(`Showing bins containing Category: ${labels.join(' > ')}`)
     } else {
       setHelperText('Select a bin or click an option above to get started')
     }
+
+    setSelectedCategoryIds(ids)
   }, [])
 
   // When category selection changes, fetch bins for those categories and highlight them
@@ -199,6 +230,17 @@ function App () {
       swapSelection
     })
 
+    // Set browse mode — clicking a highlighted bin opens its parts panel
+    if (setMode) {
+      if (!highlightedBinIds.includes(newBinId)) return
+      if (newBinId === selectedBinId) {
+        setSelectedBinId(null)
+        return
+      }
+      setSelectedBinId(newBinId)
+      return
+    }
+
     if (adminMode) {
         // If swap mode is active, select the first or second bin and wait for confirm
         if (adminAction === 'swap-bins') {
@@ -214,6 +256,15 @@ function App () {
           setAdminBinId(newBinId)
           setSwapSelection([newBinId])
           setHelperText(`Swap source selected: ${newBinId}. Click a second bin to swap with.`)
+      }
+
+      // Clicking the currently selected admin bin deselects it (mirrors Clear button)
+      if (newBinId === adminBinId) {
+        cancelAdminAction()
+        setSelectedBinId(null)
+        setPage(OPTION_CARDS)
+        setCurrentBinContents([])
+        return
       }
 
       setAdminBinId(newBinId)
@@ -370,15 +421,8 @@ function App () {
           return
         }
         
-        // Testing change - always show select page, even if only one valid brick, to let user confirm which one they want and see details
-        //if (validBricks.length === 1) {
-          // Only one valid brick - select it directly
-        //  selectCallback(validBricks[0])
-        //} else {
-          // Multiple valid bricks - show selection
           setBrickList(validBricks)
           setPage(SELECT_PAGE)
-        //}
 
       } catch (err) {
         console.error('Error enriching brick data:', err)
@@ -419,6 +463,26 @@ function App () {
   // Pass operationStatus to Table
   const getPage = () => {
 
+    if (setMode)
+      return (
+        <div className='top-panel-row'>
+          <div className='Top-Panel-BrickInfo'>
+            {setInfo?.set_img_url && (
+              <div className='BrickImageFrame'>
+                <img src={setInfo.set_img_url} alt={setInfo.name} />
+              </div>
+            )}
+            <div className='BrickText'>
+              <h2 style={{ fontSize: '1rem', marginBottom: 4 }}>Building Set {setInfo ? setInfo.name : ''}</h2>
+              <p>{Object.keys(setBinPartsMap).length} bins &nbsp;·&nbsp; {pulledBinIds.length} done</p>
+            </div>
+            <div className='BrickActions'>
+              <button className='ui-button' onClick={resetToHome}>Done</button>
+            </div>
+          </div>
+        </div>
+      )
+
     if (page === SELECT_PAGE)
       return (
         <Select
@@ -441,59 +505,6 @@ function App () {
     if (page === OPTION_CARDS)
       return (
         <div className='top-panel-row'>
-
-          {/* Card 1: two dropdowns */}
-          <CategoryCard
-            resetTrigger={dropdownResetTrigger}
-            onCategorySelect={handleCategorySelect}
-          />
-          
-          {/* Card 2: part number search */}
-          <OptionCard iconSrc='/icons/typewriter.png'>
-            <form
-              onSubmit={e => {
-                e.preventDefault()       // prevent page reload
-                handleExactPartSearch()  // trigger same logic as button
-              }}
-            >
-              <input
-                ref={searchInputRef}
-                className='w3-input w3-border'
-                placeholder='Enter part #'
-                value={searchQuery}
-                onFocus={() => setKeyboardVisible(true)}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-
-              <button
-                type='submit'
-                className='ui-button blue'
-                disabled={waiting || !searchQuery.trim()}
-                style={{ width: '100%', marginTop: '4px' }}
-              >
-                Search Part
-              </button>
-            </form>
-          </OptionCard>
-
-          <OnScreenKeyboard
-            visible={keyboardVisible}
-            inputRef={searchInputRef}
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onEnter={handleExactPartSearch}
-            onClose={() => setKeyboardVisible(false)}
-            containerRef={keyboardContainerRef}
-          />
-
-          {/* Card 3: action button */}
-          <OptionCard
-            iconSrc="/icons/cam.png"
-            onClick={() => cameraRef.current?.triggerCapture()}
-          >
-            <strong>Find Brick</strong>
-          </OptionCard>
-
           <Camera
             ref={cameraRef}
             onBricksIdentified={onBricksIdentified}
@@ -502,34 +513,68 @@ function App () {
       )
   }
 
-  // Search for exact part number and show like camera results
+  // Search for exact part or set number
   async function handleExactPartSearch () {
-    setDropdownResetTrigger(prev => prev + 1) 
-    if (!searchQuery.trim()) {
-      alert('Please enter a part number')
-      return
-    }
+    setDropdownResetTrigger(prev => prev + 1)
+    if (!searchQuery.trim()) return
 
     setWaiting(true)
+    setSearchError(null)
 
     try {
+      // Try part lookup first (fast — local CSV)
       const part = await fetchBrickData(searchQuery, 1.0)
 
       if (part) {
-        // Funnel through Select logic like camera results
+        setShowSearchPanel(false)
         brickCallback([part])
-      } else {
-        setHelperText(`Part #${searchQuery} not found`)
+        return
+      }
+
+      // Not a part — try as set number
+      try {
+        const setData = await getSetBins(searchQuery)
+        if (setData?.binIds?.length > 0) {
+          setSetMode(true)
+          setSetInfo(setData.setInfo ?? null)
+          setSetBinPartsMap(setData.binPartsMap)
+          setHighlightedBinIds(setData.binIds)
+          setPulledPartKeys([])
+          setSelectedBinId(null)
+          setShowSearchPanel(false)
+        } else {
+          setSearchError(`Set ${searchQuery} found but no parts matched your bins`)
+        }
+      } catch (setErr) {
+        const status = setErr.response?.status
+        if (status === 404) {
+          setSearchError(`"${searchQuery}" not found as a part or set number`)
+        } else {
+          setSearchError(`Error looking up set — ${setErr.message}`)
+        }
       }
     } catch (err) {
-      console.error('Error searching part:', err)
-      alert('Error searching for part')
+      console.error('Error searching:', err)
+      setSearchError('Search error — check the console')
     } finally {
       setWaiting(false)
     }
   }
 
+  // Derive per-bin completion state from pulled parts
+  const { pulledBinIds, partialBinIds } = useMemo(() => {
+    const pulledSet = new Set(pulledPartKeys)
+    const pulled = [], partial = []
+    for (const [binId, parts] of Object.entries(setBinPartsMap)) {
+      const count = parts.filter(p => pulledSet.has(`${p.part_num}-${p.colorId}`)).length
+      if (count === parts.length) pulled.push(binId)
+      else if (count > 0) partial.push(binId)
+    }
+    return { pulledBinIds: pulled, partialBinIds: partial }
+  }, [pulledPartKeys, setBinPartsMap])
+
   const binDisplayMode = (() => {
+    if (setMode) return 'SET_BROWSE'
     if (brick && binOperation === 'remove') return 'REMOVE'
     if (brick && binOperation === 'add') return 'ADD'
     if (brick || selectedCategoryIds.length) return 'FILTER'
@@ -548,6 +593,14 @@ function App () {
     setSelectedBinId(null)
     setPage(OPTION_CARDS)
     setCurrentBinContents([])
+    setSelectedCategoryIds([])
+    setDropdownResetTrigger(prev => prev + 1)
+    setShowFilterPanel(false)
+    setSetMode(false)
+    setSetInfo(null)
+    setSetBinPartsMap({})
+    setPulledPartKeys([])
+    setSearchError(null)
   }
 
   function toggleAdminMode () {
@@ -563,14 +616,6 @@ function App () {
       }
       return next
     })
-  }
-
-  function toggleMenu () {
-    setMenuOpen(prev => !prev)
-  }
-
-  function closeMenu () {
-    setMenuOpen(false)
   }
 
   function toggleHelperPopup () {
@@ -599,12 +644,22 @@ function App () {
   }
 
   function toggleAdminProperty (propertyId) {
-    setAdminPropertySelection(prev => {
-      if (prev.includes(propertyId)) {
-        return prev.filter(id => id !== propertyId)
-      }
-      return [...prev, propertyId]
-    })
+    if (!adminBinId) return
+    
+    // Check if this property is currently selected
+    const currentProperties = binPropertyMap[adminBinId] ?? []
+    const isCurrentlySelected = currentProperties.includes(propertyId)
+    
+    // If clicking the selected property, deselect it. Otherwise, replace with new property.
+    const newProperties = isCurrentlySelected ? [] : [propertyId]
+    
+    // Apply immediately
+    updateBinProperties({ binId: adminBinId, properties: newProperties })
+      .then(() => refreshBinProperties())
+      .catch(err => {
+        console.error('Failed to update property', err)
+        alert('Unable to save property')
+      })
   }
 
   async function applyAdminProperties () {
@@ -717,31 +772,90 @@ function App () {
   }
 
   return (
-    <div className={`App w3-theme-light${adminMode ? ' admin-active' : ''}`}>
-      <div className='top-right-controls'>
-        <button className='help-toggle-button' onClick={toggleHelperPopup} aria-label='Show help'>?</button>
-        <div className='menu-container'>
-          <button className='menu-toggle-button' onClick={toggleMenu} aria-label='Open menu'>
-            <span className='menu-icon'>☰</span>
-          </button>
-          {menuOpen && (
-            <div className='menu-popup-overlay' onClick={closeMenu}>
-              <div className='menu-popup' onClick={e => e.stopPropagation()}>
-                <button className='menu-popup-item' onClick={() => { toggleAdminMode(); closeMenu() }}>
-                  {adminMode ? 'Exit Admin Mode' : 'Toggle Admin Mode'}
-                </button>
-                <button className='menu-popup-item' onClick={() => { setShowHelperPopup(true); closeMenu() }}>
-                  Show help
-                </button>
-              </div>
-            </div>
-          )}
+    <div className='App w3-theme-light'>
+      <div className={`toolbar-drawer${toolbarOpen ? ' open' : ''}`}>
+        <button className='toolbar-handle' onClick={() => setToolbarOpen(prev => !prev)} aria-label='Toggle toolbar'>
+          <IconChevron />
+        </button>
+        <div className='toolbar-buttons'>
+          <button className='toolbar-btn' onClick={() => { cameraRef.current?.triggerCapture(); setToolbarOpen(false) }} aria-label='Capture with camera'><IconCamera /></button>
+          <button
+            ref={searchToggleRef}
+            className={`toolbar-btn${showSearchPanel ? ' active active-search' : ''}`}
+            onClick={() => { setShowSearchPanel(prev => !prev); setShowFilterPanel(false) }}
+            aria-label='Toggle search'
+          ><IconSearch /></button>
+          <button
+            ref={filterToggleRef}
+            className={`toolbar-btn${selectedCategoryIds.length || showFilterPanel ? ' active active-search' : ''}`}
+            onClick={() => {
+              if (selectedCategoryIds.length) {
+                setSelectedCategoryIds([])
+                setDropdownResetTrigger(prev => prev + 1)
+                setShowFilterPanel(false)
+              } else {
+                setShowFilterPanel(prev => !prev)
+                setShowSearchPanel(false)
+              }
+            }}
+            aria-label='Toggle category filter'
+          ><IconFilter /></button>
+          <div className='toolbar-sep' />
+          <button className={`toolbar-btn${showHelperPopup ? ' active active-help' : ''}`} onClick={toggleHelperPopup} aria-label='Show help'><IconHelp /></button>
+          <button className={`toolbar-btn${adminMode ? ' active active-admin' : ''}`} onClick={toggleAdminMode} aria-label='Toggle admin mode'><IconSettings /></button>
         </div>
       </div>
-      {adminMode && <div className='admin-banner'>Admin mode enabled</div>}
       <div className='top-panel'>
         {getPage()}
       </div>
+
+      <SearchPanel
+        visible={showSearchPanel}
+        onClose={() => setShowSearchPanel(false)}
+        triggerRef={searchToggleRef}
+        searchQuery={searchQuery}
+        onSearchChange={v => { setSearchQuery(v); setSearchError(null) }}
+        onSearch={handleExactPartSearch}
+        waiting={waiting}
+        searchInputRef={searchInputRef}
+        onSearchFocus={() => setKeyboardVisible(true)}
+        searchError={searchError}
+      />
+
+      <FilterPanel
+        visible={showFilterPanel}
+        onClose={() => setShowFilterPanel(false)}
+        triggerRef={filterToggleRef}
+        resetTrigger={dropdownResetTrigger}
+        onCategorySelect={handleCategorySelect}
+      />
+
+      {setMode && selectedBinId && (
+        <SetBinPanel
+          binId={selectedBinId}
+          parts={setBinPartsMap[selectedBinId]}
+          pulledPartKeys={pulledPartKeys}
+          onTogglePart={(partKey) => {
+            setPulledPartKeys(prev =>
+              prev.includes(partKey)
+                ? prev.filter(k => k !== partKey)
+                : [...prev, partKey]
+            )
+          }}
+          onClose={() => setSelectedBinId(null)}
+        />
+      )}
+
+      <OnScreenKeyboard
+        visible={keyboardVisible}
+        inputRef={searchInputRef}
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onEnter={handleExactPartSearch}
+        onClose={() => setKeyboardVisible(false)}
+        containerRef={keyboardContainerRef}
+      />
+
       {showHelperPopup && (
         <div className='helper-popup-overlay' onClick={closeHelperPopup}>
           <div className='helper-popup' onClick={e => e.stopPropagation()}>
@@ -756,57 +870,35 @@ function App () {
         </div>
       )}
       {adminMode && (
-        <div className="bottom-controls" style={{ padding: '8px 20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-            {adminBinId && (
-              <>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                  <span><strong>Bin:</strong> {adminBinId}</span>
-                  <button className='ui-button' onClick={() => setAdminActionMode('modify-properties')}>Modify Properties</button>
-                  <button className='ui-button' onClick={() => setAdminActionMode('swap-bins')}>Swap Bins</button>
-                  <button className='ui-button' onClick={handleEmptyBin}>Empty Bin</button>
-                  <button className='ui-button' onClick={cancelAdminAction}>Clear</button>
-                </div>
-                <div style={{ width: '100%', marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                  <strong>Current Properties:</strong>
-                  {(binPropertyMap[adminBinId] ?? []).length === 0 ? (
-                    <span>None</span>
-                  ) : (
-                    (binPropertyMap[adminBinId] ?? []).map(propId => {
-                      const prop = BIN_PROPERTIES.find(p => p.id === propId)
-                      return (
-                        <span key={propId} className='property-badge'>
-                          {prop ? prop.label : propId}
-                        </span>
-                      )
-                    })
-                  )}
-                </div>
-              </>
-            )}
+        <div className="bottom-controls">
+          <div className="admin-left-group">
+            {BIN_PROPERTIES.map(prop => {
+              const isSelected = adminBinId && (binPropertyMap[adminBinId] ?? []).includes(prop.id)
+              return (
+                <button
+                  key={prop.id}
+                  className={`ui-button ${prop.className}${isSelected ? ' selected' : ''}`}
+                  onClick={() => { if (adminBinId) toggleAdminProperty(prop.id) }}
+                  disabled={!adminBinId}
+                  title={prop.label}
+                >
+                  {prop.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="admin-divider" />
+
+          <div className="admin-right-group">
+            <button className='ui-button' onClick={() => setAdminActionMode('swap-bins')} disabled={!adminBinId}>Swap Bins</button>
+            <button className='ui-button' onClick={handleEmptyBin} disabled={!adminBinId}>Empty Bin</button>
+            <button className='ui-button' onClick={cancelAdminAction}>Clear</button>
+          </div>
         </div>
       )}
 
-      {adminMode && adminAction === 'modify-properties' && adminBinId && (
-        <div className='admin-panel' style={{ padding: '10px 20px', margin: '10px 20px', border: '1px solid #ccc', borderRadius: 12, background: '#fafafa' }}>
-          <strong>Modify properties for {adminBinId}</strong>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: 10 }}>
-            {BIN_PROPERTIES.map(prop => (
-              <button
-                key={prop.id}
-                className={`ui-button ${adminPropertySelection.includes(prop.id) ? 'blue' : ''}`}
-                onClick={() => toggleAdminProperty(prop.id)}
-                style={{ padding: '6px 8px' }}
-              >
-                {prop.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ marginTop: 10, display: 'flex', gap: '8px' }}>
-            <button className='ui-button blue' onClick={applyAdminProperties}>Apply Properties</button>
-            <button className='ui-button' onClick={cancelAdminAction}>Cancel</button>
-          </div>
-        </div>
-      )}
+
 
       {adminMode && adminAction === 'swap-bins' && (
         <div className='admin-panel' style={{ padding: '10px 20px', margin: '10px 20px', border: '1px solid #ccc', borderRadius: 12, background: '#fafafa' }}>
@@ -830,7 +922,8 @@ function App () {
         selectedBinId={adminMode ? adminBinId : selectedBinId}
         highlightedBinIds={highlightedBinIds}
         displayMode={binDisplayMode}
-        // pass property defs and assignments so Table can render extra classes
+        pulledBinIds={pulledBinIds}
+        partialBinIds={partialBinIds}
         propertyDefs={BIN_PROPERTIES}
         propertyMap={binPropertyMap}
         showPropertyClasses={adminMode}

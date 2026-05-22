@@ -1,0 +1,158 @@
+.set-bin-panel {
+  position: fixed;
+  top: 90px;
+  right: 16px;
+  width: min(300px, calc(100vw - 32px));
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  padding: 14px 16px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  animation: set-panel-drop 0.16s ease;
+}
+
+@keyframes set-panel-drop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.set-bin-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.set-bin-panel-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.set-bin-panel-close {
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #475569;
+  padding: 0 4px;
+}
+
+.set-bin-panel-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.set-bin-panel-progress {
+  font-size: 0.82rem;
+  color: #64748b;
+  text-align: center;
+  padding: 2px 0;
+}
+
+.set-bin-part-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px;
+  margin: 0 -4px;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.set-bin-part-row:active {
+  background: rgba(15, 23, 42, 0.07);
+}
+
+.set-bin-part-row.pulled {
+  opacity: 0.45;
+}
+
+.set-bin-part-row.pulled .set-bin-part-name {
+  text-decoration: line-through;
+}
+
+.set-bin-part-img-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.set-bin-part-img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.set-bin-part-img-placeholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.set-bin-part-color-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+}
+
+.set-bin-part-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.set-bin-part-name {
+  font-size: 0.88rem;
+  color: #0f172a;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.set-bin-part-color {
+  font-size: 0.78rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.set-bin-part-qty {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.set-bin-part-check {
+  width: 18px;
+  text-align: center;
+  font-size: 1rem;
+  color: #16a34a;
+  font-weight: 700;
+  flex-shrink: 0;
+}
