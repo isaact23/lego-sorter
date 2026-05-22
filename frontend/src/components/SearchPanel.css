@@ -76,3 +76,30 @@
   color: #dc2626;
   padding: 0 2px;
 }
+
+.search-disambig {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px 2px;
+}
+
+.search-disambig-label {
+  font-size: 0.87rem;
+  color: #334155;
+}
+
+.search-disambig-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-disambig-btn {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -12,6 +12,7 @@ import OnScreenKeyboard from '../components/OnScreenKeyboard'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 
 import SetBinPanel from '../components/SetBinPanel'
+import RecentDrawer from '../components/RecentDrawer'
 
 import { fetchBrickData } from '../services/brickService'
 import { getSetBins } from '../services/setService'
@@ -33,6 +34,28 @@ const IconFilter   = () => <svg width="22" height="22" viewBox="0 0 24 24" {...I
 const IconHelp     = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.5a3 3 0 015.5 1c0 2.5-3 3-3 3"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor" stroke="none"/></svg>
 const IconSettings = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
 const IconChevron  = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+const IconRefresh  = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+
+// ─── Set progress + recent searches (localStorage) ─────────────────────────
+function saveSetProgress (setNum, keys) {
+  try { localStorage.setItem(`lego_prog_${setNum}`, JSON.stringify(keys)) } catch {}
+}
+function loadSetProgress (setNum) {
+  try { return JSON.parse(localStorage.getItem(`lego_prog_${setNum}`)) ?? [] } catch { return [] }
+}
+function clearSetProgress (setNum) {
+  try { localStorage.removeItem(`lego_prog_${setNum}`) } catch {}
+}
+function addRecentItem (item) {
+  try {
+    const prev = getRecentItems()
+    const deduped = prev.filter(i => !(i.type === item.type && i.id === item.id))
+    localStorage.setItem('lego_recent', JSON.stringify([item, ...deduped].slice(0, 5)))
+  } catch {}
+}
+function getRecentItems () {
+  try { return JSON.parse(localStorage.getItem('lego_recent')) ?? [] } catch { return [] }
+}
 
 // =====================
 // PAGE CONSTANTS
@@ -91,6 +114,7 @@ function App () {
   const [showSearchPanel, setShowSearchPanel] = useState(true)          // Toggle search panel visibility
   const [showFilterPanel, setShowFilterPanel] = useState(false)         // Toggle category filter panel visibility
   const [searchError, setSearchError] = useState(null)                  // Inline error shown in SearchPanel
+  const [searchDisambig, setSearchDisambig] = useState(null)            // { query, part } when both part+set match
 
   // =====================
   // SET BROWSE STATE
@@ -99,6 +123,8 @@ function App () {
   const [setInfo, setSetInfo] = useState(null)                          // { name, set_img_url } for the active set
   const [setBinPartsMap, setSetBinPartsMap] = useState({})              // { binId: [{part_num, name, quantity, colorId, ...}] }
   const [pulledPartKeys, setPulledPartKeys] = useState([])              // "${part_num}-${colorId}" for each pulled part
+  const [activeSetNum, setActiveSetNum] = useState(null)                // Canonical set number (e.g. "2064-1") while in set mode
+  const [recentItems, setRecentItems] = useState(() => getRecentItems())
 
   // =====================
   // REFS
@@ -216,6 +242,13 @@ function App () {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [keyboardVisible])
+
+  // Auto-save set progress whenever pulled parts change
+  useEffect(() => {
+    if (setMode && activeSetNum) {
+      saveSetProgress(activeSetNum, pulledPartKeys)
+    }
+  }, [pulledPartKeys, setMode, activeSetNum])
 
   // Handler for when a bin is clicked in the Table
   async function onBinClicked (newBinId) {
@@ -477,7 +510,8 @@ function App () {
               <p>{Object.keys(setBinPartsMap).length} bins &nbsp;·&nbsp; {pulledBinIds.length} done</p>
             </div>
             <div className='BrickActions'>
-              <button className='ui-button' onClick={resetToHome}>Done</button>
+              <button className='ui-button red' onClick={handleResetSet}>Reset</button>
+              <button className='ui-button blue' onClick={resetToHome}>Done</button>
             </div>
           </div>
         </div>
@@ -513,19 +547,57 @@ function App () {
       )
   }
 
-  // Search for exact part or set number
-  async function handleExactPartSearch () {
+  // Shared helper: open a set that has already been fetched
+  function openSetData (query, setData) {
+    const canonical = query.includes('-') ? query : `${query}-1`
+    const savedProgress = loadSetProgress(canonical)
+    addRecentItem({ type: 'set', id: canonical, name: setData.setInfo?.name, img_url: setData.setInfo?.set_img_url, timestamp: Date.now() })
+    setRecentItems(getRecentItems())
+    setSetMode(true)
+    setActiveSetNum(canonical)
+    setSetInfo(setData.setInfo ?? null)
+    setSetBinPartsMap(setData.binPartsMap)
+    setHighlightedBinIds(setData.binIds)
+    setPulledPartKeys(savedProgress)
+    setSelectedBinId(null)
+    setShowSearchPanel(false)
+    setSearchDisambig(null)
+  }
+
+  // Search for exact part or set number. queryOverride bypasses the input (used by recent drawer).
+  async function handleExactPartSearch (queryOverride) {
+    const query = (queryOverride !== undefined ? queryOverride : searchQuery).trim()
     setDropdownResetTrigger(prev => prev + 1)
-    if (!searchQuery.trim()) return
+    if (!query) return
 
     setWaiting(true)
     setSearchError(null)
+    setSearchDisambig(null)
 
     try {
-      // Try part lookup first (fast — local CSV)
-      const part = await fetchBrickData(searchQuery, 1.0)
+      const part = await fetchBrickData(query, 1.0)
+      const couldBeSet = /^\d+$/.test(query)  // pure digits are ambiguous
+
+      if (part && couldBeSet) {
+        // Run set lookup in parallel — if it succeeds, ask the user which they meant
+        try {
+          const setData = await getSetBins(query)
+          if (setData?.binIds?.length > 0) {
+            setSearchDisambig({ query, partName: part.name, part, setData })
+            return
+          }
+        } catch { /* set 404 or error — fall through to part */ }
+        // Set lookup failed — safe to commit to part
+        addRecentItem({ type: 'part', id: part.part_num, name: part.name, timestamp: Date.now() })
+        setRecentItems(getRecentItems())
+        setShowSearchPanel(false)
+        brickCallback([part])
+        return
+      }
 
       if (part) {
+        addRecentItem({ type: 'part', id: part.part_num, name: part.name, timestamp: Date.now() })
+        setRecentItems(getRecentItems())
         setShowSearchPanel(false)
         brickCallback([part])
         return
@@ -533,22 +605,16 @@ function App () {
 
       // Not a part — try as set number
       try {
-        const setData = await getSetBins(searchQuery)
+        const setData = await getSetBins(query)
         if (setData?.binIds?.length > 0) {
-          setSetMode(true)
-          setSetInfo(setData.setInfo ?? null)
-          setSetBinPartsMap(setData.binPartsMap)
-          setHighlightedBinIds(setData.binIds)
-          setPulledPartKeys([])
-          setSelectedBinId(null)
-          setShowSearchPanel(false)
+          openSetData(query, setData)
         } else {
-          setSearchError(`Set ${searchQuery} found but no parts matched your bins`)
+          setSearchError(`Set ${query} found but no parts matched your bins`)
         }
       } catch (setErr) {
         const status = setErr.response?.status
         if (status === 404) {
-          setSearchError(`"${searchQuery}" not found as a part or set number`)
+          setSearchError(`"${query}" not found as a part or set number`)
         } else {
           setSearchError(`Error looking up set — ${setErr.message}`)
         }
@@ -559,6 +625,22 @@ function App () {
     } finally {
       setWaiting(false)
     }
+  }
+
+  // Disambiguation: user chose the part result
+  function handleDisambigPart () {
+    const { part } = searchDisambig
+    addRecentItem({ type: 'part', id: part.part_num, name: part.name, timestamp: Date.now() })
+    setRecentItems(getRecentItems())
+    setSearchDisambig(null)
+    setShowSearchPanel(false)
+    brickCallback([part])
+  }
+
+  // Disambiguation: user chose the set result
+  function handleDisambigSet () {
+    const { query, setData } = searchDisambig
+    openSetData(query, setData)
   }
 
   // Derive per-bin completion state from pulled parts
@@ -582,7 +664,7 @@ function App () {
     return 'DEFAULT'
   })()
 
-  // Clear everything and start over, equivalent to page refresh
+  // Clear everything and start over. Progress stays in localStorage so it can be resumed.
   function resetToHome () {
     setBrick(null)
     setHighlightedBinIds([])
@@ -597,10 +679,17 @@ function App () {
     setDropdownResetTrigger(prev => prev + 1)
     setShowFilterPanel(false)
     setSetMode(false)
+    setActiveSetNum(null)
     setSetInfo(null)
     setSetBinPartsMap({})
     setPulledPartKeys([])
     setSearchError(null)
+  }
+
+  // Reset set progress (clears localStorage) and restart from zero
+  function handleResetSet () {
+    if (activeSetNum) clearSetProgress(activeSetNum)
+    setPulledPartKeys([])
   }
 
   function toggleAdminMode () {
@@ -803,6 +892,8 @@ function App () {
           <div className='toolbar-sep' />
           <button className={`toolbar-btn${showHelperPopup ? ' active active-help' : ''}`} onClick={toggleHelperPopup} aria-label='Show help'><IconHelp /></button>
           <button className={`toolbar-btn${adminMode ? ' active active-admin' : ''}`} onClick={toggleAdminMode} aria-label='Toggle admin mode'><IconSettings /></button>
+          <div className='toolbar-sep' />
+          <button className='toolbar-btn' onClick={() => window.location.reload()} aria-label='Refresh page'><IconRefresh /></button>
         </div>
       </div>
       <div className='top-panel'>
@@ -813,13 +904,17 @@ function App () {
         visible={showSearchPanel}
         onClose={() => setShowSearchPanel(false)}
         triggerRef={searchToggleRef}
+        exemptRefs={[keyboardContainerRef]}
         searchQuery={searchQuery}
-        onSearchChange={v => { setSearchQuery(v); setSearchError(null) }}
+        onSearchChange={v => { setSearchQuery(v); setSearchError(null); setSearchDisambig(null) }}
         onSearch={handleExactPartSearch}
         waiting={waiting}
         searchInputRef={searchInputRef}
         onSearchFocus={() => setKeyboardVisible(true)}
         searchError={searchError}
+        disambig={searchDisambig}
+        onDisambigPart={handleDisambigPart}
+        onDisambigSet={handleDisambigSet}
       />
 
       <FilterPanel
@@ -845,6 +940,11 @@ function App () {
           onClose={() => setSelectedBinId(null)}
         />
       )}
+
+      <RecentDrawer
+        items={recentItems}
+        onSelect={item => handleExactPartSearch(item.id)}
+      />
 
       <OnScreenKeyboard
         visible={keyboardVisible}
@@ -891,9 +991,8 @@ function App () {
           <div className="admin-divider" />
 
           <div className="admin-right-group">
-            <button className='ui-button' onClick={() => setAdminActionMode('swap-bins')} disabled={!adminBinId}>Swap Bins</button>
-            <button className='ui-button' onClick={handleEmptyBin} disabled={!adminBinId}>Empty Bin</button>
-            <button className='ui-button' onClick={cancelAdminAction}>Clear</button>
+            <button className='ui-button blue' onClick={() => setAdminActionMode('swap-bins')} disabled={!adminBinId}>Swap Bins</button>
+            <button className='ui-button red' onClick={handleEmptyBin} disabled={!adminBinId}>Empty Bin</button>
           </div>
         </div>
       )}
@@ -912,7 +1011,7 @@ function App () {
             {swapSelection.length === 2 && (
               <button className='ui-button blue' onClick={confirmAdminSwap}>Confirm Swap</button>
             )}
-            <button className='ui-button' onClick={cancelAdminAction}>Cancel</button>
+            <button className='ui-button neutral' onClick={cancelAdminAction}>Cancel</button>
           </div>
         </div>
       )}

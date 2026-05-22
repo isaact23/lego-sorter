@@ -2,25 +2,29 @@ import { useEffect } from 'react'
 
 const overlayStyle = {
   position: 'fixed',
-  inset: 0,
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
   background: 'rgba(0, 0, 0, 0.8)',
   zIndex: 10000,
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'center',
-  padding: 12
+  padding: 12,
+  boxSizing: 'border-box',
 }
 
 const windowStyle = {
   width: '100%',
   maxWidth: 600,
-  maxHeight: '90vh',
+  height: '100%',
   background: '#111',
   borderRadius: 14,
   boxShadow: '0 0 40px rgba(0,0,0,.45)',
   overflow: 'hidden',
   display: 'flex',
-  flexDirection: 'column'
+  flexDirection: 'column',
 }
 
 const topBarStyle = {

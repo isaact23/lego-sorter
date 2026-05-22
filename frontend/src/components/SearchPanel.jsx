@@ -5,6 +5,7 @@ export default function SearchPanel ({
   visible,
   onClose,
   triggerRef,
+  exemptRefs = [],
   searchQuery,
   onSearchChange,
   onSearch,
@@ -12,21 +13,23 @@ export default function SearchPanel ({
   searchInputRef,
   onSearchFocus,
   searchError,
+  disambig,
+  onDisambigPart,
+  onDisambigSet,
 }) {
   const panelRef = useRef(null)
 
   useEffect(() => {
     if (!visible) return
     function handleMouseDown (e) {
-      if (
-        panelRef.current?.contains(e.target) ||
-        triggerRef?.current?.contains(e.target)
-      ) return
+      if (panelRef.current?.contains(e.target)) return
+      if (triggerRef?.current?.contains(e.target)) return
+      if (exemptRefs.some(r => r?.current?.contains(e.target))) return
       onClose?.()
     }
     document.addEventListener('mousedown', handleMouseDown)
     return () => document.removeEventListener('mousedown', handleMouseDown)
-  }, [visible, onClose, triggerRef])
+  }, [visible, onClose, triggerRef, exemptRefs])
 
   if (!visible) return null
 
@@ -50,7 +53,21 @@ export default function SearchPanel ({
         </button>
       </form>
 
-      {searchError && (
+      {disambig && (
+        <div className='search-disambig'>
+          <div className='search-disambig-label'>"{disambig.query}" could be a part or a set — which were you looking for?</div>
+          <div className='search-disambig-options'>
+            <button className='ui-button green search-disambig-btn' onClick={onDisambigPart}>
+              Part: {disambig.partName}
+            </button>
+            <button className='ui-button blue search-disambig-btn' onClick={onDisambigSet}>
+              Set {disambig.query}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {searchError && !disambig && (
         <div className='search-panel-error'>{searchError}</div>
       )}
     </div>
