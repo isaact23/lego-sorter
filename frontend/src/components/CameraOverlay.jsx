@@ -1,80 +1,8 @@
 import { useEffect } from 'react'
 
-const overlayStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: 'rgba(0, 0, 0, 0.8)',
-  zIndex: 10000,
-  display: 'flex',
-  alignItems: 'flex-start',
-  justifyContent: 'center',
-  padding: 12,
-  boxSizing: 'border-box',
-}
-
-const windowStyle = {
-  width: '100%',
-  maxWidth: 600,
-  height: '100%',
-  background: '#111',
-  borderRadius: 14,
-  boxShadow: '0 0 40px rgba(0,0,0,.45)',
-  overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
-}
-
-const topBarStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '12px 16px 8px',
-  color: '#fff'
-}
-
-const videoStyle = {
-  width: '100%',
-  //height: '70vh',
-  flex: 1,
-  minHeight: 0, 
-  background: '#000',
-  transform: 'rotate(180deg)',
-  objectFit: 'cover'
-}
-
-const shutterRowStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  padding: '16px',
-  background: '#111'
-}
-
-const shutterStyle = {
-  width: 72,
-  height: 72,
-  borderRadius: '50%',
-  border: '4px solid #fff',
-  background: '#e74c3c',
-  boxShadow: '0 0 20px rgba(231, 76, 60, 0.45)',
-  cursor: 'pointer'
-}
-
-const closeButtonStyle = {
-  background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.35)',
-  borderRadius: 8,
-  color: '#fff',
-  padding: '8px 12px',
-  cursor: 'pointer'
-}
-
 const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRef }) => {
   useEffect(() => {
     if (!visible || !stream || !videoRef?.current) return
-
     const video = videoRef.current
     video.srcObject = stream
     video.play().catch(() => {})
@@ -84,37 +12,84 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
 
   return (
     <div
-      style={overlayStyle}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose()
-        }
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.92)',
+        zIndex: 10000,
+        display: 'flex',
+        flexDirection: 'column',
       }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={windowStyle} onClick={(event) => event.stopPropagation()}>
-        <div style={topBarStyle}>
-          <div style={{ fontSize: 18, fontWeight: 600 }}>Camera Preview</div>
-          <button type="button" style={closeButtonStyle} onClick={onClose}>
-            Close
-          </button>
-        </div>
+      {/* Top bar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '14px 20px',
+        flexShrink: 0,
+        color: '#fff',
+      }}>
+        <span style={{ fontSize: 18, fontWeight: 600 }}>Camera Preview</span>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.35)',
+            borderRadius: 8,
+            color: '#fff',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            fontSize: 15,
+          }}
+        >
+          Close
+        </button>
+      </div>
 
-        <video
-          ref={videoRef}
-          style={videoStyle}
-          autoPlay
-          playsInline
-          muted
+      {/* Video — fills remaining space */}
+      <video
+        ref={videoRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          background: '#000',
+          transform: 'rotate(180deg)',
+          objectFit: 'contain',
+          display: 'block',
+        }}
+        autoPlay
+        playsInline
+        muted
+      />
+
+      {/* Shutter row */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '24px 16px',
+        flexShrink: 0,
+        background: 'rgba(0,0,0,0.6)',
+      }}>
+        <button
+          type="button"
+          disabled={waiting}
+          onClick={onTakePhoto}
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            border: '5px solid #fff',
+            background: waiting ? '#888' : '#e74c3c',
+            boxShadow: waiting ? 'none' : '0 0 24px rgba(231,76,60,0.6)',
+            cursor: waiting ? 'not-allowed' : 'pointer',
+            transition: 'background 0.2s, box-shadow 0.2s',
+          }}
         />
-
-        <div style={shutterRowStyle}>
-          <button
-            type="button"
-            style={shutterStyle}
-            onClick={onTakePhoto}
-            disabled={waiting}
-          />
-        </div>
       </div>
     </div>
   )
