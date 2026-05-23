@@ -11,17 +11,14 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
   if (!visible) return null
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.92)',
-        zIndex: 10000,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0, bottom: 0,
+      background: '#000',
+      zIndex: 10000,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
       {/* Top bar */}
       <div style={{
         display: 'flex',
@@ -29,6 +26,7 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
         alignItems: 'center',
         padding: '14px 20px',
         flexShrink: 0,
+        background: '#111',
         color: '#fff',
       }}>
         <span style={{ fontSize: 18, fontWeight: 600 }}>Camera Preview</span>
@@ -49,22 +47,23 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
         </button>
       </div>
 
-      {/* Video — fills remaining space */}
-      <video
-        ref={videoRef}
-        style={{
-          flex: 1,
-          minHeight: 0,
-          width: '100%',
-          background: '#000',
-          transform: 'rotate(180deg)',
-          objectFit: 'contain',
-          display: 'block',
-        }}
-        autoPlay
-        playsInline
-        muted
-      />
+      {/* Video wrapper — fills all remaining height */}
+      <div style={{ flex: 1, minHeight: 0, position: 'relative', background: '#000' }}>
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            transform: 'rotate(180deg)',
+          }}
+        />
+      </div>
 
       {/* Shutter row */}
       <div style={{
@@ -73,7 +72,7 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
         alignItems: 'center',
         padding: '24px 16px',
         flexShrink: 0,
-        background: 'rgba(0,0,0,0.6)',
+        background: '#111',
       }}>
         <button
           type="button"
@@ -84,7 +83,7 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
             height: 80,
             borderRadius: '50%',
             border: '5px solid #fff',
-            background: waiting ? '#888' : '#e74c3c',
+            background: waiting ? '#555' : '#e74c3c',
             boxShadow: waiting ? 'none' : '0 0 24px rgba(231,76,60,0.6)',
             cursor: waiting ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s, box-shadow 0.2s',
