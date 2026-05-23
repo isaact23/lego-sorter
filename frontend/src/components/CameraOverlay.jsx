@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRef }) => {
   useEffect(() => {
@@ -10,7 +11,7 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
 
   if (!visible) return null
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
@@ -90,7 +91,8 @@ const CameraOverlay = ({ visible, stream, onClose, onTakePhoto, waiting, videoRe
           }}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
