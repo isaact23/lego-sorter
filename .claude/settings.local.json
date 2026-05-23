@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o \"c:/Users/athom/code/lego-sorter/frontend/src/assets/brick-2x2.png\" --create-dirs \"https://cdn.rebrickable.com/media/parts/ldraw/4/3003.png\")"
+    ]
+  }
+}

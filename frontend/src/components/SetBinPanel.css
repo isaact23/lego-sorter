@@ -1,6 +1,6 @@
 .set-bin-panel {
   position: fixed;
-  top: 90px;
+  top: 150px;
   right: 16px;
   width: min(300px, calc(100vw - 32px));
   background: #ffffff;
@@ -12,7 +12,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
   animation: set-panel-drop 0.16s ease;
 }

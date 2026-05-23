@@ -1,5 +1,5 @@
 :root {
-  --top-panel-height: 100px;
+  --top-panel-height: 140px;
   --brick-image-size: 80px;
 }
 
@@ -7,21 +7,23 @@
     text-align: center;
     height: 100%;
     position: relative;
-    padding-top: calc(22px + var(--top-panel-height));
+    padding-top: var(--top-panel-height);
     box-sizing: border-box;
 }
 
 /* Prevent pinch zoom and double-tap zoom on mobile devices */
 html, body {
+  margin: 0;
+  padding: 0;
   touch-action: manipulation;
   background: #f1f1f1;
   height: 100%;
 }
 
-/* Full-width frosted-glass info bar pinned below the toolbar handle */
+/* Full-width frosted-glass info bar */
 .top-panel {
   position: fixed;
-  top: 22px;
+  top: 0;
   left: 0;
   right: 0;
   height: var(--top-panel-height);
@@ -30,7 +32,7 @@ html, body {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(15, 23, 42, 0.10);
-  padding: 0 20px;
+  padding: 0 20px 0 44px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -39,9 +41,22 @@ html, body {
 .top-panel-row {
   display: flex;
   gap: 12px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   height: 100%;
   align-items: center;
+}
+
+.panel-context-label {
+  flex-shrink: 0;
+  width: 62px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #94a3b8;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .bin-disabled {
@@ -94,7 +109,7 @@ html, body {
   line-height: 1.6;
 }
 
-/* ── Pull-down toolbar drawer ───────────────────────────────────────────── */
+/* ── Pull-down toolbar — handle spans same width as buttons row ── */
 .toolbar-drawer {
   position: fixed;
   top: 0;
@@ -103,28 +118,30 @@ html, body {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  border-top: none;
-  border-radius: 0 0 16px 16px;
-  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.12);
+  align-items: stretch;
 }
 
 .toolbar-handle {
-  height: 22px;
-  padding: 0 24px;
-  width: 100%;
-  box-sizing: border-box;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: none;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(15, 23, 42, 0.13);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
   color: #94a3b8;
   touch-action: manipulation;
   user-select: none;
+  transition: color 0.18s ease, border-radius 0.15s ease, box-shadow 0.15s ease;
+}
+
+.toolbar-drawer.open .toolbar-handle {
+  color: #64748b;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .toolbar-handle svg {
@@ -135,6 +152,7 @@ html, body {
   transform: rotate(180deg);
 }
 
+/* Buttons row — its natural width sets the width of the whole drawer */
 .toolbar-buttons {
   display: flex;
   align-items: center;
@@ -143,6 +161,11 @@ html, body {
   overflow: hidden;
   max-height: 0;
   opacity: 0;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(15, 23, 42, 0.13);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.13);
   transition: max-height 0.2s ease, opacity 0.18s ease, padding 0.2s ease;
 }
 
@@ -211,7 +234,8 @@ html, body {
   display: flex;
   flex-direction: row;
   height: 100%;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .scroll-row {
@@ -296,15 +320,15 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   border-radius: 6px;
-  background: rgba(15, 23, 42, 0.04);
 }
 
 .BrickImageFrame img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  box-shadow: 0 0 0 1.5px rgba(15, 23, 42, 0.28);
+  border-radius: 4px;
 }
 
 .BrickActions {
@@ -328,8 +352,9 @@ html, body {
   flex-direction: row;
   align-items: center;
   gap: 14px;
-  flex: 1 1 auto;
-  min-width: 0;
+  max-width: 540px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 /* ── Selectable brick card used in scroll list ───────────────────────── */
@@ -391,4 +416,41 @@ html, body {
   gap: 8px;
   align-items: center;
   justify-content: flex-start;
+}
+
+/* ── Loading overlay ─────────────────────────────────────────────────────── */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+/* 2x2 LEGO brick image (saved locally from Rebrickable) */
+.lego-brick-spinner {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  animation: lego-rock 0.75s ease-in-out infinite alternate;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5));
+}
+
+@keyframes lego-rock {
+  0%   { transform: rotate(-9deg) translateY(0);     }
+  100% { transform: rotate( 9deg) translateY(-12px); }
+}
+
+.loading-overlay-text {
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }

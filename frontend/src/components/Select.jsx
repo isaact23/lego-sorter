@@ -109,7 +109,7 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
       </div>
 
       <div className="top-panel-card-static">
-        <button className="ui-button" onClick={() => { console.log('[Select] close clicked'); onClose() }}>
+        <button className="ui-button blue" onClick={() => { console.log('[Select] close clicked'); onClose() }}>
           Close
         </button>
       </div>

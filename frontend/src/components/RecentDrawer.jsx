@@ -8,13 +8,13 @@ const IconClock = () => (
   </svg>
 )
 
-export default function RecentDrawer ({ items, onSelect }) {
+export default function RecentDrawer ({ items, onSelect, onOpen }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className={`recent-drawer${open ? ' open' : ''}`}>
-      <div className='recent-drawer-panel'>
-        <div className='recent-drawer-title'>Recent</div>
+    <>
+      <div className={`recent-drawer-panel${open ? ' open' : ''}`}>
+        <div className='recent-drawer-title'>Recent Builds</div>
         {items.length === 0
           ? <div className='recent-empty'>No recent searches</div>
           : items.map(item => (
@@ -39,12 +39,16 @@ export default function RecentDrawer ({ items, onSelect }) {
         }
       </div>
       <button
-        className='recent-drawer-handle'
-        onClick={() => setOpen(prev => !prev)}
+        className={`recent-drawer-handle${open ? ' open' : ''}`}
+        onClick={() => {
+          const next = !open
+          setOpen(next)
+          if (next) onOpen?.()
+        }}
         aria-label='Recent searches'
       >
         <IconClock />
       </button>
-    </div>
+    </>
   )
 }

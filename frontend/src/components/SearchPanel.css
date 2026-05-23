@@ -1,6 +1,6 @@
 .search-panel {
   position: fixed;
-  top: 90px;
+  top: 150px;
   left: 50%;
   transform: translateX(-50%);
   width: min(480px, calc(100vw - 32px));

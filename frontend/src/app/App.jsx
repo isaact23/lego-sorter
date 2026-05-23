@@ -1,5 +1,6 @@
 import './App.css'
 import './Button.css'
+import brick2x2 from '../assets/brick-loading-transparent.png'
 
 import Camera from '../components/Camera'
 import Select from '../components/Select'
@@ -57,6 +58,13 @@ function getRecentItems () {
   try { return JSON.parse(localStorage.getItem('lego_recent')) ?? [] } catch { return [] }
 }
 
+// Drop the system prefix (first segment) from a full bin ID: "A-B-1" → "B-1"
+function displayBinId (binId) {
+  if (!binId) return binId
+  const parts = binId.split('-')
+  return parts.length >= 3 ? parts.slice(1).join('-') : binId
+}
+
 // =====================
 // PAGE CONSTANTS
 // =====================
@@ -111,7 +119,8 @@ function App () {
   const [searchQuery, setSearchQuery] = useState('')                    // Text in the part# search box
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([])    // Category IDs selected in filter
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)   // Used to reset category dropdowns
-  const [showSearchPanel, setShowSearchPanel] = useState(true)          // Toggle search panel visibility
+  const [showSearchPanel, setShowSearchPanel] = useState(false)         // Toggle search panel visibility
+  const [emptyBinMsg, setEmptyBinMsg] = useState(null)                  // Message shown when an empty bin is clicked
   const [showFilterPanel, setShowFilterPanel] = useState(false)         // Toggle category filter panel visibility
   const [searchError, setSearchError] = useState(null)                  // Inline error shown in SearchPanel
   const [searchDisambig, setSearchDisambig] = useState(null)            // { query, part } when both part+set match
@@ -252,6 +261,7 @@ function App () {
 
   // Handler for when a bin is clicked in the Table
   async function onBinClicked (newBinId) {
+    setToolbarOpen(false)
     console.log('onBinClicked', {
       newBinId,
       selectedBinId,
@@ -335,10 +345,12 @@ function App () {
         setBinPropertyMap(prev => ({ ...prev, [newBinId]: res.properties ?? [] }))
         if (items.length === 0) {
           setHelperText(`Bin ${newBinId} is empty`)
+          setEmptyBinMsg(`Bin ${newBinId} is empty`)
           setPage(OPTION_CARDS)
           return
         } else {
           setHelperText('')
+          setEmptyBinMsg(null)
         }
       } catch (err) {
         console.error('Failed to fetch bin contents', err)
@@ -400,6 +412,7 @@ function App () {
   }
 
   async function selectCallback (selectedBrick) {
+    setToolbarOpen(false)
     console.log('[selectCallback] Called with brick data:', selectedBrick)
     setSelectedBinId(null)
     setBrick(selectedBrick)
@@ -549,6 +562,7 @@ function App () {
 
   // Shared helper: open a set that has already been fetched
   function openSetData (query, setData) {
+    setToolbarOpen(false)
     const canonical = query.includes('-') ? query : `${query}-1`
     const savedProgress = loadSetProgress(canonical)
     addRecentItem({ type: 'set', id: canonical, name: setData.setInfo?.name, img_url: setData.setInfo?.set_img_url, timestamp: Date.now() })
@@ -588,17 +602,17 @@ function App () {
           }
         } catch { /* set 404 or error — fall through to part */ }
         // Set lookup failed — safe to commit to part
-        addRecentItem({ type: 'part', id: part.part_num, name: part.name, timestamp: Date.now() })
-        setRecentItems(getRecentItems())
         setShowSearchPanel(false)
+        setKeyboardVisible(false)
+        setToolbarOpen(false)
         brickCallback([part])
         return
       }
 
       if (part) {
-        addRecentItem({ type: 'part', id: part.part_num, name: part.name, timestamp: Date.now() })
-        setRecentItems(getRecentItems())
         setShowSearchPanel(false)
+        setKeyboardVisible(false)
+        setToolbarOpen(false)
         brickCallback([part])
         return
       }
@@ -630,8 +644,6 @@ function App () {
   // Disambiguation: user chose the part result
   function handleDisambigPart () {
     const { part } = searchDisambig
-    addRecentItem({ type: 'part', id: part.part_num, name: part.name, timestamp: Date.now() })
-    setRecentItems(getRecentItems())
     setSearchDisambig(null)
     setShowSearchPanel(false)
     brickCallback([part])
@@ -684,6 +696,8 @@ function App () {
     setSetBinPartsMap({})
     setPulledPartKeys([])
     setSearchError(null)
+    setEmptyBinMsg(null)
+    setShowSearchPanel(false)
   }
 
   // Reset set progress (clears localStorage) and restart from zero
@@ -871,7 +885,17 @@ function App () {
           <button
             ref={searchToggleRef}
             className={`toolbar-btn${showSearchPanel ? ' active active-search' : ''}`}
-            onClick={() => { setShowSearchPanel(prev => !prev); setShowFilterPanel(false) }}
+            onClick={() => {
+              if (showSearchPanel) {
+                setShowSearchPanel(false)
+                setKeyboardVisible(false)
+              } else {
+                resetToHome()
+                setShowSearchPanel(true)
+                setShowFilterPanel(false)
+              }
+              setToolbarOpen(false)
+            }}
             aria-label='Toggle search'
           ><IconSearch /></button>
           <button
@@ -883,26 +907,45 @@ function App () {
                 setDropdownResetTrigger(prev => prev + 1)
                 setShowFilterPanel(false)
               } else {
+                resetToHome()
                 setShowFilterPanel(prev => !prev)
                 setShowSearchPanel(false)
               }
+              setToolbarOpen(false)
+              setKeyboardVisible(false)
             }}
             aria-label='Toggle category filter'
           ><IconFilter /></button>
           <div className='toolbar-sep' />
-          <button className={`toolbar-btn${showHelperPopup ? ' active active-help' : ''}`} onClick={toggleHelperPopup} aria-label='Show help'><IconHelp /></button>
-          <button className={`toolbar-btn${adminMode ? ' active active-admin' : ''}`} onClick={toggleAdminMode} aria-label='Toggle admin mode'><IconSettings /></button>
+          <button className={`toolbar-btn${showHelperPopup ? ' active active-help' : ''}`} onClick={() => { toggleHelperPopup(); setToolbarOpen(false) }} aria-label='Show help'><IconHelp /></button>
+          <button
+            className={`toolbar-btn${adminMode ? ' active active-admin' : ''}`}
+            onClick={() => {
+              if (!adminMode) resetToHome()
+              toggleAdminMode()
+              setToolbarOpen(false)
+            }}
+            aria-label='Toggle admin mode'
+          ><IconSettings /></button>
           <div className='toolbar-sep' />
           <button className='toolbar-btn' onClick={() => window.location.reload()} aria-label='Refresh page'><IconRefresh /></button>
         </div>
       </div>
       <div className='top-panel'>
+        {(() => {
+          if (setMode) return null
+          if (page === BRICK_INFO) return <div className='panel-context-label'>Brick Info:</div>
+          if (page === SELECT_PAGE && selectedBinId) return <div className='panel-context-label'>Bin {displayBinId(selectedBinId)} Contents:</div>
+          if (page === SELECT_PAGE) return <div className='panel-context-label'>Photo Results:</div>
+          if (emptyBinMsg && selectedBinId) return <div className='panel-context-label'>Bin {displayBinId(selectedBinId)} is empty</div>
+          return null
+        })()}
         {getPage()}
       </div>
 
       <SearchPanel
         visible={showSearchPanel}
-        onClose={() => setShowSearchPanel(false)}
+        onClose={() => { setShowSearchPanel(false); setKeyboardVisible(false) }}
         triggerRef={searchToggleRef}
         exemptRefs={[keyboardContainerRef]}
         searchQuery={searchQuery}
@@ -944,6 +987,7 @@ function App () {
       <RecentDrawer
         items={recentItems}
         onSelect={item => handleExactPartSearch(item.id)}
+        onOpen={() => setToolbarOpen(false)}
       />
 
       <OnScreenKeyboard
@@ -1027,6 +1071,13 @@ function App () {
         propertyMap={binPropertyMap}
         showPropertyClasses={adminMode}
       />
+
+      {waiting && (
+        <div className='loading-overlay'>
+          <img src={brick2x2} alt='Loading' className='lego-brick-spinner' />
+          <div className='loading-overlay-text'>Loading…</div>
+        </div>
+      )}
     </div>
   )
 }

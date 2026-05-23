@@ -51,7 +51,7 @@ function BrickInfo({
           >
             Remove from Bin
           </button>
-          <button className="ui-button" onClick={onClose}>Close</button>
+          <button className="ui-button blue" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
