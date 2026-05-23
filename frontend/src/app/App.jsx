@@ -91,7 +91,7 @@ function App () {
   const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')  // Helper message for the help popup
   const [showHelperPopup, setShowHelperPopup] = useState(false)
   const [keyboardVisible, setKeyboardVisible] = useState(false)  // On-screen keyboard for part# search
-  const [toolbarOpen, setToolbarOpen] = useState(false)          // Whether toolbar drawer is expanded
+  const [toolbarOpen, setToolbarOpen] = useState(true)           // Whether toolbar drawer is expanded
 
   // =====================
   // BRICK DATA STATE
@@ -550,14 +550,7 @@ function App () {
       )
 
     if (page === OPTION_CARDS)
-      return (
-        <div className='top-panel-row'>
-          <Camera
-            ref={cameraRef}
-            onBricksIdentified={onBricksIdentified}
-          />
-        </div>
-      )
+      return <div className='top-panel-row' />
   }
 
   // Shared helper: open a set that has already been fetched
@@ -698,6 +691,7 @@ function App () {
     setSearchError(null)
     setEmptyBinMsg(null)
     setShowSearchPanel(false)
+    setToolbarOpen(true)
   }
 
   // Reset set progress (clears localStorage) and restart from zero
@@ -881,7 +875,7 @@ function App () {
           <IconChevron />
         </button>
         <div className='toolbar-buttons'>
-          <button className='toolbar-btn' onClick={() => { cameraRef.current?.triggerCapture(); setToolbarOpen(false) }} aria-label='Capture with camera'><IconCamera /></button>
+          <button className='toolbar-btn' onClick={() => { resetToHome(); cameraRef.current?.triggerCapture(); setToolbarOpen(false) }} aria-label='Capture with camera'><IconCamera /></button>
           <button
             ref={searchToggleRef}
             className={`toolbar-btn${showSearchPanel ? ' active active-search' : ''}`}
@@ -942,6 +936,11 @@ function App () {
         })()}
         {getPage()}
       </div>
+
+      <Camera
+        ref={cameraRef}
+        onBricksIdentified={onBricksIdentified}
+      />
 
       <SearchPanel
         visible={showSearchPanel}
