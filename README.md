@@ -4,24 +4,8 @@ It sorts legos
 
 ## Instructions
 
+
+
 Install dependencies with `npm i`  
-Build with `npm run build`  
+Build with `npm run go`  
 Run with `npm run start`
-
-## TODO
-
-- Remove weird margin from the top of the page
-- Select page scroll (should be fixed)
-- Add info to right panel and close or home button to get back (which page?)
-- Use the same method when presenting a list in select whether it's from a photo search or bin click, photo from local DB or cache and description from local CSV.
-- Minimize API calls
-- Make category selection functional
-
-
--Jed Notes
-
-anything that needs to call up bricks is going to build/pass array of only ids and scores if present. 
-BrickRef {
-  id: string
-  score?: number
-}

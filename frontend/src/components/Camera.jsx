@@ -11,6 +11,7 @@ import CameraOverlay from './CameraOverlay'
 const Camera = forwardRef(({ onBricksIdentified }, ref) => {
   const fileInputRef = useRef(null)
   const videoRef = useRef(null)
+  const streamRef = useRef(null)
   const [waiting, setWaiting] = useState(false)
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [stream, setStream] = useState(null)
@@ -25,21 +26,25 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
     }
   }))
 
+  // Use ref in cleanup so it always sees the live stream, not a stale closure
   useEffect(() => {
     return () => {
-      stopStream()
+      streamRef.current?.getTracks().forEach(t => t.stop())
     }
   }, [])
 
   async function openCameraOverlay() {
     const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
+    streamRef.current = mediaStream
     setStream(mediaStream)
     setOverlayOpen(true)
   }
 
   function stopStream() {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
+    const s = streamRef.current
+    if (s) {
+      s.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
       setStream(null)
     }
   }

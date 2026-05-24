@@ -1,94 +1,51 @@
-// frontend/src/services/binService.js
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
 
-import axios from 'axios'
-import { BACKEND_URL } from '../config'
-
-
-// Get all bins containing a specific brick
-export async function getBinsByBrick (pieceId) {
-  const res = await fetch('/bin/getBins_Brick', {
+async function post(path, body) {
+  const res = await fetch(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pieceId })
+    headers: JSON_HEADERS,
+    body: JSON.stringify(body),
   })
+  if (!res.ok) throw new Error(`POST ${path} → ${res.status}`)
   return res.json()
 }
 
-// Get all bins containing a specific brick
-export async function getBinsbyCategory (categoryId) {
-  const res = await fetch('/bin/getBins_Category', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ categoryId })
-  })
+export async function getBinsByBrick(pieceId) {
+  return post('/bin/getBins_Brick', { pieceId })
+}
+
+export async function getBinsbyCategory(categoryId) {
+  return post('/bin/getBins_Category', { categoryId })
+}
+
+export async function getAllBins() {
+  const res = await fetch('/bin/all')
+  if (!res.ok) throw new Error(`GET /bin/all → ${res.status}`)
   return res.json()
 }
 
-// Get all bins with full loaded data
-export async function getAllBins () {
-  const response = await axios.get(`${BACKEND_URL}/bin/all`)
-  return response.data ?? {}
+export async function getBinsByProperty(propertyId) {
+  return post('/bin/getBins_Property', { propertyId })
 }
 
-// Get bins which have a specific property assigned
-export async function getBinsByProperty (propertyId) {
-  const res = await fetch('/bin/getBins_Property', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ propertyId })
-  })
-  return res.json()
+export async function updateBinProperties({ binId, properties }) {
+  return post('/bin/updateProperties', { binId, properties })
 }
 
-export async function updateBinProperties ({ binId, properties }) {
-  const response = await axios.post(
-    `${BACKEND_URL}/bin/updateProperties`,
-    { binId, properties }
-  )
-  return response.data
+export async function emptyBin(binId) {
+  return post('/bin/empty', { binId })
 }
 
-export async function emptyBin (binId) {
-  const response = await axios.post(
-    `${BACKEND_URL}/bin/empty`,
-    { binId }
-  )
-  return response.data
-}
-
-// Add or remove a part from a bin
-export async function operateBin ({ binId, partId, categoryId, operation }) {
+export async function operateBin({ binId, partId, categoryId, operation }) {
   if (!binId || !partId || !operation) {
     throw new Error('operateBin requires binId, partId, and operation')
   }
-
-  const endpoint =
-    operation === 'add'
-      ? '/bin/add'
-      : operation === 'remove'
-        ? '/bin/remove'
-        : null
-
-  const response = await axios.post(`${BACKEND_URL}${endpoint}`, {
-    binId,
-    pieceId: partId,
-    categoryId
-  })
-
-  return response.data
+  const path = operation === 'add' ? '/bin/add' : '/bin/remove'
+  return post(path, { binId, pieceId: partId, categoryId })
 }
 
-// Return all parts in a given bin
-export async function getBinContents (binId) {
-  if (!binId) {
-    throw new Error('getBinContents requires binId')
-  }
-
-  const response = await axios.post(
-    `${BACKEND_URL}/bin/get-Info`,
-    { binId }
-  )
-
-  // Expecting an object: { items: [partIds], properties: [propId] }
-  return response.data ?? { items: [], properties: [] }
+export async function getBinContents(binId) {
+  if (!binId) throw new Error('getBinContents requires binId')
+  const data = await post('/bin/get-Info', { binId })
+  return data ?? { items: [], properties: [] }
 }

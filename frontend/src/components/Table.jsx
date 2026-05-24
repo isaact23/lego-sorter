@@ -1,71 +1,5 @@
 import './Table.css'
 
-// ─── Physical unit type definitions ────────────────────────────────────────
-// physicalHeight: actual product height in inches — used as flex weight so
-// units within a column divide height proportionally, making all columns
-// the same total height regardless of how many units they contain.
-// These can be imported from a JSON file in future
-// physicalHeight is a visual weight, not an exact measurement.
-// drawer-60 is set to 18 so that 2× = 36, matching 4× drawer-6 (4×9 = 36).
-// All columns sum to the same flex total → perfectly flush bottom edges.
-const UNIT_TYPES = {
-  'drawer-60': { bins: [6, 10], physicalHeight: 18 },
-  'drawer-6':  { bins: [2, 3],  physicalHeight: 9  },
-  'drawer-3':  { bins: [1, 3],  physicalHeight: 9  },
-}
-
-// ─── System layout definition ───────────────────────────────────────────────
-// Columns of physical units stacked top-to-bottom.
-// Can be replaced with an imported JSON file.
-const SYSTEM_DEF = {
-  id: 'A',
-  cols: [
-    {
-      id: 'col-1',
-      units: [
-        { id: 'A', type: 'drawer-60' },
-        { id: 'B', type: 'drawer-60' },
-      ]
-    },
-    {
-      id: 'col-2',
-      units: [
-        { id: 'C', type: 'drawer-6' },
-        { id: 'D', type: 'drawer-6' },
-        { id: 'E', type: 'drawer-3' },
-        { id: 'F', type: 'drawer-3' },
-      ]
-    },
-    {
-      id: 'col-3',
-      units: [
-        { id: 'G', type: 'drawer-6' },
-        { id: 'H', type: 'drawer-6' },
-        { id: 'I', type: 'drawer-6' },
-        { id: 'J', type: 'drawer-6' },
-      ]
-    },
-    {
-      id: 'col-4',
-      units: [
-        { id: 'K', type: 'drawer-60' },
-        { id: 'L', type: 'drawer-60' },
-      ]
-    },
-    {
-      id: 'col-5',
-      units: [
-        { id: 'M', type: 'drawer-6' },
-        { id: 'N', type: 'drawer-6' },
-        { id: 'O', type: 'drawer-3' },
-        { id: 'P', type: 'drawer-3' },
-      ]
-    },
-  ]
-}
-
-// ─── Component ──────────────────────────────────────────────────────────────
-
 function Table ({
   highlightedBinIds = [],
   selectedBinId = null,
@@ -76,8 +10,8 @@ function Table ({
   showPropertyClasses = false,
   pulledBinIds = [],
   partialBinIds = [],
-  systemDef = SYSTEM_DEF,
-  unitTypes = UNIT_TYPES,
+  systemDef,
+  unitTypes = {},
 }) {
 
   const getBinState = (binId) => {
@@ -97,9 +31,9 @@ function Table ({
 
     switch (displayMode) {
       case 'DEFAULT':
-        return { className: `bin ${propClassNames}`,                                           clickable: true }
+        return { className: `bin ${propClassNames}`,                                                                    clickable: true }
       case 'SELECT':
-        return { className: isSelected ? `bin bin-selected ${propClassNames}` : `bin ${propClassNames}`, clickable: true }
+        return { className: isSelected ? `bin bin-selected ${propClassNames}` : `bin ${propClassNames}`,                clickable: true }
       case 'FILTER':
         return { className: isHighlighted ? `bin bin-highlighted ${propClassNames}` : `bin bin-disabled ${propClassNames}`, clickable: isHighlighted }
       case 'ADD':
@@ -107,27 +41,32 @@ function Table ({
       case 'REMOVE':
         return { className: isHighlighted ? `bin bin-highlighted ${propClassNames}` : `bin bin-disabled ${propClassNames}`, clickable: isHighlighted }
       case 'SET_BROWSE':
-        if (isSelected)                    return { className: `bin bin-selected ${propClassNames}`,      clickable: true  }
-        if (pulledBinIds.includes(binId))  return { className: `bin bin-set-pulled ${propClassNames}`,    clickable: true  }
-        if (partialBinIds.includes(binId)) return { className: `bin bin-set-partial ${propClassNames}`,   clickable: true  }
-        if (isHighlighted)                 return { className: `bin bin-set-pending ${propClassNames}`,   clickable: true  }
+        if (isSelected)                    return { className: `bin bin-selected ${propClassNames}`,    clickable: true  }
+        if (pulledBinIds.includes(binId))  return { className: `bin bin-set-pulled ${propClassNames}`,  clickable: true  }
+        if (partialBinIds.includes(binId)) return { className: `bin bin-set-partial ${propClassNames}`, clickable: true  }
+        if (isHighlighted)                 return { className: `bin bin-set-pending ${propClassNames}`, clickable: true  }
         return { className: `bin bin-disabled ${propClassNames}`, clickable: false }
       default:
         return { className: 'bin bin-disabled', clickable: false }
     }
   }
 
+  // Resolve display text: labels map wins, then binDef.label, then auto ID
+  const resolveLabel = (binId, fallback, binDefLabel) =>
+    systemDef.labels?.[binId] || binDefLabel || fallback
+
+  // ── Unit mode (System A style) ──────────────────────────────────────────
   const renderBin = (binId) => {
     const { className, clickable } = getBinState(binId)
-    const displayId = binId.split('-').slice(1).join('-')
-
+    const autoId = binId.split('-').slice(1).join('-')   // "A-B-5" → "B-5"
+    const label  = resolveLabel(binId, autoId)
     return (
       <div
         key={binId}
         className={className}
         onClick={() => { if (clickable) onBinClick(binId) }}
       >
-        <p>{displayId}</p>
+        <p>{label}</p>
       </div>
     )
   }
@@ -135,16 +74,9 @@ function Table ({
   const renderUnit = (unit) => {
     const typeDef = unitTypes[unit.type]
     if (!typeDef) return null
-
     const [cols, rows] = typeDef.bins
-    const totalBins = cols * rows
-
     return (
-      <div
-        key={unit.id}
-        className="Unit"
-        style={{ flex: typeDef.physicalHeight }}
-      >
+      <div key={unit.id} className="Unit" style={{ flex: typeDef.physicalHeight }}>
         <div
           className="BinGrid"
           style={{
@@ -152,7 +84,7 @@ function Table ({
             gridTemplateRows:    `repeat(${rows}, 1fr)`,
           }}
         >
-          {Array.from({ length: totalBins }, (_, i) =>
+          {Array.from({ length: cols * rows }, (_, i) =>
             renderBin(`${systemDef.id}-${unit.id}-${i + 1}`)
           )}
         </div>
@@ -160,14 +92,40 @@ function Table ({
     )
   }
 
+  // ── Direct bin mode (System B/C style) ──────────────────────────────────
+  // Bin ID is system prefix + bin id only (2 segments): "B-L1", "B-Wheels & Tires"
+  const renderDirectBin = (binDef) => {
+    const binId = `${systemDef.id}-${binDef.id}`
+    const { className, clickable } = getBinState(binId)
+    const label = resolveLabel(binId, binDef.id, binDef.label)
+    return (
+      <div
+        key={binId}
+        className={`${className} bin-direct`}
+        style={{ flex: binDef.height ?? 1 }}
+        onClick={() => { if (clickable) onBinClick(binId) }}
+      >
+        <p>{label}</p>
+      </div>
+    )
+  }
+
   const renderCol = (col) => (
-    <div key={col.id} className="Col">
-      {col.units.map(renderUnit)}
+    <div key={col.id} className={`Col${col.bins ? ' col-direct' : ''}`}>
+      {col.bins
+        ? col.bins.map(renderDirectBin)
+        : col.units.map(renderUnit)
+      }
     </div>
   )
 
+  const systemStyle = {
+    ...(systemDef.maxWidth && { maxWidth: systemDef.maxWidth, margin: '0 auto' }),
+    ...(systemDef.height   && { height: systemDef.height }),
+  }
+
   return (
-    <div className="System">
+    <div className="System" style={systemStyle}>
       {systemDef.cols.map(renderCol)}
     </div>
   )

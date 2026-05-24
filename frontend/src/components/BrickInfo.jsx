@@ -9,17 +9,11 @@ function BrickInfo({
 
   const [imageError, setImageError] = useState(false)
 
-  console.log('[BrickInfo] Rendered with brick:', brick)
-
   if (!brick) return null
 
   const isAddActive = selectedOperation === 'add'
   const isRemoveActive = selectedOperation === 'remove'
-
-  // Show warning if brick data is incomplete
   const isIncomplete = !brick.name || !brick.part_cat_id
-  
-  console.log('[BrickInfo] isIncomplete:', isIncomplete, 'name:', brick.name, 'part_cat_id:', brick.part_cat_id)
 
   return (
     <div className="top-panel-row">

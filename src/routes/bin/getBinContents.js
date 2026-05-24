@@ -1,4 +1,4 @@
-import { readBinData } from '../../data/binData.js'
+import { readBinData } from '../../binData.js'
 
 const getBinContents = (req, res) => {
   const { binId } = req.body

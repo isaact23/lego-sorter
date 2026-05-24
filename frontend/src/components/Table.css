@@ -46,8 +46,11 @@
   flex-direction: row;
   align-items: stretch;
   gap: var(--gap);
-  height: 80vh;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   padding: 10px;
+  box-sizing: border-box;
 }
 
 /* ─── Col: invisible layout scaffold only ─────────────────────────── */
@@ -59,6 +62,26 @@
   flex: 1;
   min-width: 0;
   height: 100%;
+}
+
+/* Direct bin columns get the same visual container as a Unit */
+.Col.col-direct {
+  background: var(--table-bg-soft);
+  border: 1px solid var(--table-border-strong);
+  border-radius: 6px;
+  padding: 4px;
+  gap: 4px;
+}
+
+/* Direct bins fill their flex height and use a larger label */
+.bin-direct {
+  min-height: 0;
+  border-radius: 5px;
+}
+
+.bin-direct p {
+  font-size: clamp(0.6rem, 1.4vw, 0.95rem);
+  font-weight: 500;
 }
 
 /* ─── Unit: one physical drawer organizer ─────────────────────────── */

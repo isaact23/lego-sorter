@@ -6,13 +6,6 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
   const [bricks, setBricks] = useState([])
   const [loading, setLoading] = useState(true)
 
-  console.log('[Select] render', {
-    partIds,
-    partIdsLength: partIds.length,
-    bricksLength: bricks.length,
-    loading
-  })
-
   useEffect(() => {
     let cancelled = false
 
@@ -28,26 +21,13 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
       for (const item of source) {
         try {
           const fullBrick = await fetchBrickData(item.part_num)
-
-          if (fullBrick) {
-            results.push({
-              ...fullBrick,
-              confidence: item.confidence ?? null
-            })
-          }
+          if (fullBrick) results.push({ ...fullBrick, confidence: item.confidence ?? null })
         } catch (err) {
           console.error('[Select] failed to fetch brick:', item.part_num, err)
         }
       }
 
       if (cancelled) return
-
-      // 🔥 Auto-select if exactly one result
-      //if (results.length === 1) {
-      //  console.log('[Select] auto-selecting single brick', results[0].part_num)
-      //  selectCallback(results[0])
-      //  //  return
-      //  }
 
       setBricks(results)
       setLoading(false)
@@ -60,14 +40,8 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
     }
   }, [initialBricks, partIds, selectCallback])
 
-  // ⛔ While loading OR auto-selecting → render nothing
   if (loading) return null
-
-  // ⛔ If no bricks → render nothing (parent handles message/page state)
-  if (!bricks.length) {
-    console.log('[Select] no bricks, returning null')
-    return null
-  }
+  if (!bricks.length) return null
 
   return (
     <div className="top-panel-select">
@@ -76,10 +50,7 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
           <div
             key={brick.part_num}
             className="brick-card-selectable"
-            onClick={() => {
-              console.log('[Select] brick clicked', brick.part_num)
-              selectCallback(brick)
-            }}
+            onClick={() => selectCallback(brick)}
           >
             <div className="BrickImageFrame">
               <img src={`/api/image/${brick.part_num}`} alt={brick.name} />
@@ -109,7 +80,7 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
       </div>
 
       <div className="top-panel-card-static">
-        <button className="ui-button blue" onClick={() => { console.log('[Select] close clicked'); onClose() }}>
+        <button className="ui-button blue" onClick={onClose}>
           Close
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { readBinData, writeBinData } from '../../data/binData.js'
+import { readBinData, writeBinData } from '../../binData.js'
 
 // Remove a piece-category pair from a bin
 const removeBrick = (req, res) => {

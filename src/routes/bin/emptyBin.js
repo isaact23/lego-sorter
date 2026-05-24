@@ -1,4 +1,4 @@
-import { readBinData, writeBinData } from '../../data/binData.js'
+import { readBinData, writeBinData } from '../../binData.js'
 
 const emptyBin = (req, res) => {
   const { binId } = req.body

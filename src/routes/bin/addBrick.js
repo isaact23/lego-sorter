@@ -1,4 +1,4 @@
-import { readBinData, writeBinData } from '../../data/binData.js'
+import { readBinData, writeBinData } from '../../binData.js'
 
 // Add a piece to a bin (and track category)
 const addBrick = (req, res) => {

@@ -7,7 +7,8 @@ import axios from 'axios'
 import { fileURLToPath } from 'url'
 import binRouter from './routes/bin.js'
 import createBrickRouter from './routes/brick.js'
-import './data/binData.js'
+import systemsRouter from './routes/systems.js'
+import './binData.js'
 
 // =====================
 // SETUP
@@ -20,7 +21,7 @@ const app = express()
 const PORT = 3000
 
 const partsMap = new Map()
-const csvPath = path.join(__dirname, 'data', 'parts.csv')
+const csvPath = path.resolve('data/parts.csv')
 const IMAGE_DIR = path.join(__dirname, 'images')
 
 // Ensure IMAGE_DIR exists
@@ -65,6 +66,7 @@ fs.createReadStream(csvPath)
 
 app.use('/bin', binRouter)
 app.use('/api', createBrickRouter(partsMap, IMAGE_DIR))
+app.use('/api/systems', systemsRouter)
 
 // =====================
 // SERVE REACT BUILD

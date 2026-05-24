@@ -26,6 +26,7 @@ import {
   updateBinProperties,
   emptyBin
 } from '../services/binService'
+import { fetchSystems } from '../services/systemsService'
 
 // ─── Toolbar icons (consistent stroke-based linework) ───────────────────────
 const IC = { strokeWidth: '1.75', strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none', stroke: 'currentColor' }
@@ -36,6 +37,8 @@ const IconHelp     = () => <svg width="22" height="22" viewBox="0 0 24 24" {...I
 const IconSettings = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
 const IconChevron  = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 const IconRefresh  = () => <svg width="22" height="22" viewBox="0 0 24 24" {...IC}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+const IconChevronLeft  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+const IconChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 
 // ─── Set progress + recent searches (localStorage) ─────────────────────────
 function saveSetProgress (setNum, keys) {
@@ -58,11 +61,13 @@ function getRecentItems () {
   try { return JSON.parse(localStorage.getItem('lego_recent')) ?? [] } catch { return [] }
 }
 
-// Drop the system prefix (first segment) from a full bin ID: "A-B-1" → "B-1"
+// Drop the system prefix (first segment) from any bin ID:
+//   "A-B-1" → "B-1"   (unit-mode, 3 segments)
+//   "B-L1"  → "L1"    (direct-bin mode, 2 segments)
 function displayBinId (binId) {
   if (!binId) return binId
-  const parts = binId.split('-')
-  return parts.length >= 3 ? parts.slice(1).join('-') : binId
+  const dash = binId.indexOf('-')
+  return dash === -1 ? binId : binId.slice(dash + 1)
 }
 
 // =====================
@@ -92,6 +97,9 @@ function App () {
   const [showHelperPopup, setShowHelperPopup] = useState(false)
   const [keyboardVisible, setKeyboardVisible] = useState(false)  // On-screen keyboard for part# search
   const [toolbarOpen, setToolbarOpen] = useState(true)           // Whether toolbar drawer is expanded
+  const [activeSystemIndex, setActiveSystemIndex] = useState(0)  // Which storage system is shown
+  const [systems, setSystems] = useState([])
+  const [unitTypes, setUnitTypes] = useState({})
 
   // =====================
   // BRICK DATA STATE
@@ -118,6 +126,7 @@ function App () {
   // =====================
   const [searchQuery, setSearchQuery] = useState('')                    // Text in the part# search box
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([])    // Category IDs selected in filter
+  const [selectedCategoryLabels, setSelectedCategoryLabels] = useState([])  // Human-readable labels for active filter
   const [dropdownResetTrigger, setDropdownResetTrigger] = useState(0)   // Used to reset category dropdowns
   const [showSearchPanel, setShowSearchPanel] = useState(false)         // Toggle search panel visibility
   const [emptyBinMsg, setEmptyBinMsg] = useState(null)                  // Message shown when an empty bin is clicked
@@ -138,11 +147,12 @@ function App () {
   // =====================
   // REFS
   // =====================
-  const cameraRef = useRef()              // Reference to Camera component to trigger capture
-  const searchInputRef = useRef(null)     // Reference to search input for keyboard focus
-  const keyboardContainerRef = useRef(null)  // Reference to keyboard container for click-outside detection
-  const searchToggleRef = useRef(null)    // Reference to 🔍 button so click-outside ignores it
-  const filterToggleRef = useRef(null)    // Reference to filter button so click-outside ignores it
+  const cameraRef = useRef()
+  const searchInputRef = useRef(null)
+  const keyboardContainerRef = useRef(null)
+  const searchToggleRef = useRef(null)
+  const filterToggleRef = useRef(null)
+  const searchExemptRefs = useMemo(() => [keyboardContainerRef], [])
 
 
   
@@ -151,7 +161,6 @@ function App () {
     const labels = payload?.labels ?? []
 
     if (ids.length > 0) {
-      // Clear all active state before applying the filter
       setBrick(null)
       setBrickList([])
       setBinOperation(null)
@@ -161,8 +170,10 @@ function App () {
       setPage(OPTION_CARDS)
       setSearchQuery('')
       setHelperText(`Showing bins containing Category: ${labels.join(' > ')}`)
+      setSelectedCategoryLabels(labels)
     } else {
       setHelperText('Select a bin or click an option above to get started')
+      setSelectedCategoryLabels([])
     }
 
     setSelectedCategoryIds(ids)
@@ -232,6 +243,16 @@ function App () {
     }
   }, [])
 
+  // Load systems config from API on mount; fall back to static defaults if unavailable
+  useEffect(() => {
+    fetchSystems()
+      .then(data => {
+        if (data.systems)   setSystems(data.systems)
+        if (data.unitTypes) setUnitTypes(data.unitTypes)
+      })
+      .catch(err => console.warn('[App] Using default systems (API unavailable):', err.message))
+  }, [])
+
   // Click outside handler to close keyboard
   useEffect(() => {
     if (!keyboardVisible) return
@@ -262,16 +283,6 @@ function App () {
   // Handler for when a bin is clicked in the Table
   async function onBinClicked (newBinId) {
     setToolbarOpen(false)
-    console.log('onBinClicked', {
-      newBinId,
-      selectedBinId,
-      binOperation,
-      brick,
-      adminMode,
-      adminAction,
-      adminBinId,
-      swapSelection
-    })
 
     // Set browse mode — clicking a highlighted bin opens its parts panel
     if (setMode) {
@@ -328,19 +339,15 @@ function App () {
     // No brick, no operation → normal bin browsing
     if (!brick && !binOperation) {
       if (clickingSameBin) {
-        console.log('Deselecting bin, returning home')
         resetToHome()
         return
       }
-
-      console.log('Selecting bin for browsing')
 
       setSelectedBinId(newBinId)
 
       try {
         const res = await getBinContents(newBinId)
         const items = Array.isArray(res) ? res : (res.items ?? [])
-        console.log('Bin contents:', items, 'properties:', res.properties)
         setCurrentBinContents(items)
         setBinPropertyMap(prev => ({ ...prev, [newBinId]: res.properties ?? [] }))
         if (items.length === 0) {
@@ -367,14 +374,12 @@ function App () {
 
     // Brick selected, no operation → visual select only
     if (brick && !binOperation) {
-      console.log('Brick selected, no operation yet – selecting bin visually')
       setSelectedBinId(newBinId)
       return
     }
 
     // Brick + operation → perform add/remove
     if (brick && binOperation) {
-      console.log(`Performing ${binOperation} on bin ${newBinId}`)
 
       try {
         await operateBin({
@@ -411,22 +416,16 @@ function App () {
     setPage(SELECT_PAGE)
   }
 
-  async function selectCallback (selectedBrick) {
+  const selectCallback = useCallback(async (selectedBrick) => {
     setToolbarOpen(false)
-    console.log('[selectCallback] Called with brick data:', selectedBrick)
     setSelectedBinId(null)
     setBrick(selectedBrick)
     setBinOperation(null)
     setBrickList([])
     setHelperText('')
 
-
     try {
-      console.log('[selectCallback] Fetching bins for brick:', selectedBrick.part_num, 'name:', selectedBrick.name, 'cat_id:', selectedBrick.part_cat_id)
-
       const bins = await getBinsByBrick(selectedBrick.part_num)
-
-      console.log('Brick found in bins:', bins)
       setHighlightedBinIds(bins)
     } catch (err) {
       console.error('Failed to fetch bins for brick', err)
@@ -434,42 +433,27 @@ function App () {
     }
     setHelperText(`Choose an operation or click Close to return home.`)
     setPage(BRICK_INFO)
-  }
+  }, [])
 
   async function onBricksIdentified (bricks) {
-    console.log('[onBricksIdentified] Called with', bricks?.length, 'bricks:', bricks)
-    if (!bricks || bricks.length === 0) {
-      console.log('[onBricksIdentified] No bricks provided')
-      return
-    }
+    if (!bricks || bricks.length === 0) return
 
     if (bricks.length > 1) {
-      console.log('[onBricksIdentified] Multiple bricks detected, enriching each...')
-      // For multiple bricks, enrich them with full data
       setWaiting(true)
       try {
         const enrichedBricks = await Promise.all(
-          bricks.map(async (brick) => {
-            console.log('[onBricksIdentified] Enriching brick:', brick.part_num)
-            const fullData = await fetchBrickData(brick.part_num)
-            console.log('[onBricksIdentified] Enrichment result for', brick.part_num, ':', fullData)
-            return fullData || null // return null if not found (will be filtered out)
-          })
+          bricks.map(async (brick) => fetchBrickData(brick.part_num).catch(() => null))
         )
-        
-        // Filter out null values (parts not in database)
-        const validBricks = enrichedBricks.filter(b => b !== null)
-        
+        const validBricks = enrichedBricks.filter(Boolean)
+
         if (validBricks.length === 0) {
           setHelperText('No identified parts found in database. Try again.')
           setPage(OPTION_CARDS)
-          setWaiting(false)
           return
         }
-        
-          setBrickList(validBricks)
-          setPage(SELECT_PAGE)
 
+        setBrickList(validBricks)
+        setPage(SELECT_PAGE)
       } catch (err) {
         console.error('Error enriching brick data:', err)
         setHelperText('Error loading brick data')
@@ -477,28 +461,19 @@ function App () {
       } finally {
         setWaiting(false)
       }
-    } 
-    else {
-      // For single brick, fetch full data then select
-      console.log('[onBricksIdentified] Single brick detected:', bricks[0])
+    } else {
       setWaiting(true)
       try {
-        const originalPart = bricks[0].part_num
-        console.log('[onBricksIdentified] Enriching single brick:', originalPart)
-        const fullData = await fetchBrickData(originalPart)
-        console.log('[onBricksIdentified] Enrichment result:', fullData)
-        
+        const fullData = await fetchBrickData(bricks[0].part_num)
         if (fullData) {
-          console.log('[onBricksIdentified] Valid data received, calling selectCallback')
           selectCallback(fullData)
         } else {
-          console.warn(`[onBricksIdentified] Brick ${originalPart} enrichment returned null/empty`)
-          setHelperText(`Part #${originalPart} not found in database. Try another brick.`)
+          setHelperText(`Part #${bricks[0].part_num} not found in database. Try another brick.`)
           setPage(OPTION_CARDS)
         }
       } catch (err) {
-        console.error('[onBricksIdentified] Error fetching brick data:', err)
-        setHelperText(`Error loading part details`)
+        console.error('Error fetching brick data:', err)
+        setHelperText('Error loading part details')
         setPage(OPTION_CARDS)
       } finally {
         setWaiting(false)
@@ -669,6 +644,17 @@ function App () {
     return 'DEFAULT'
   })()
 
+  // Navigate between storage systems (circular)
+  function navigateSystem (direction) {
+    setActiveSystemIndex(prev =>
+      direction === 'left'
+        ? (prev - 1 + systems.length) % systems.length
+        : (prev + 1) % systems.length
+    )
+    setSelectedBinId(null)
+    setEmptyBinMsg(null)
+  }
+
   // Clear everything and start over. Progress stays in localStorage so it can be resumed.
   function resetToHome () {
     setBrick(null)
@@ -681,6 +667,7 @@ function App () {
     setPage(OPTION_CARDS)
     setCurrentBinContents([])
     setSelectedCategoryIds([])
+    setSelectedCategoryLabels([])
     setDropdownResetTrigger(prev => prev + 1)
     setShowFilterPanel(false)
     setSetMode(false)
@@ -932,10 +919,18 @@ function App () {
           if (page === SELECT_PAGE && selectedBinId) return <div className='panel-context-label'>Bin {displayBinId(selectedBinId)} Contents:</div>
           if (page === SELECT_PAGE) return <div className='panel-context-label'>Photo Results:</div>
           if (emptyBinMsg && selectedBinId) return <div className='panel-context-label'>Bin {displayBinId(selectedBinId)} is empty</div>
+          if (page === OPTION_CARDS) return <div className='panel-context-label'>{systems[activeSystemIndex]?.name ?? ''}</div>
           return null
         })()}
         {getPage()}
       </div>
+
+      {selectedCategoryIds.length > 0 && !setMode && (
+        <div className='filter-indicator'>
+          <IconFilter />
+          <span>{selectedCategoryLabels.join(' › ')}</span>
+        </div>
+      )}
 
       <Camera
         ref={cameraRef}
@@ -946,7 +941,7 @@ function App () {
         visible={showSearchPanel}
         onClose={() => { setShowSearchPanel(false); setKeyboardVisible(false) }}
         triggerRef={searchToggleRef}
-        exemptRefs={[keyboardContainerRef]}
+        exemptRefs={searchExemptRefs}
         searchQuery={searchQuery}
         onSearchChange={v => { setSearchQuery(v); setSearchError(null); setSearchDisambig(null) }}
         onSearch={handleExactPartSearch}
@@ -1059,17 +1054,60 @@ function App () {
         </div>
       )}
 
-      <Table
-        onBinClick={onBinClicked}
-        selectedBinId={adminMode ? adminBinId : selectedBinId}
-        highlightedBinIds={highlightedBinIds}
-        displayMode={binDisplayMode}
-        pulledBinIds={pulledBinIds}
-        partialBinIds={partialBinIds}
-        propertyDefs={BIN_PROPERTIES}
-        propertyMap={binPropertyMap}
-        showPropertyClasses={adminMode}
-      />
+      {systems.length > 0 && (() => {
+        const currentSystem = systems[activeSystemIndex]
+        const leftIdx  = (activeSystemIndex - 1 + systems.length) % systems.length
+        const rightIdx = (activeSystemIndex + 1) % systems.length
+        const leftHighlighted  = highlightedBinIds.some(id => id.startsWith(systems[leftIdx].id  + '-'))
+        const rightHighlighted = highlightedBinIds.some(id => id.startsWith(systems[rightIdx].id + '-'))
+        return (
+          <div className='system-nav-wrapper'>
+            <button
+              className={`system-nav-arrow left${leftHighlighted ? ' has-highlighted' : ''}`}
+              onClick={() => navigateSystem('left')}
+              aria-label={`Go to ${systems[leftIdx].name}`}
+            >
+              <IconChevronLeft />
+            </button>
+
+            <div className='system-nav-content'>
+              <div className='system-nav-main'>
+                <Table
+                  onBinClick={onBinClicked}
+                  selectedBinId={adminMode ? adminBinId : selectedBinId}
+                  highlightedBinIds={highlightedBinIds}
+                  displayMode={binDisplayMode}
+                  pulledBinIds={pulledBinIds}
+                  partialBinIds={partialBinIds}
+                  propertyDefs={BIN_PROPERTIES}
+                  propertyMap={binPropertyMap}
+                  showPropertyClasses={adminMode}
+                  systemDef={currentSystem}
+                  unitTypes={unitTypes}
+                />
+              </div>
+              <div className='system-nav-dots'>
+                {systems.map((s, i) => (
+                  <button
+                    key={s.id}
+                    className={`system-dot${i === activeSystemIndex ? ' active' : ''}`}
+                    onClick={() => { setActiveSystemIndex(i); setSelectedBinId(null); setEmptyBinMsg(null) }}
+                    aria-label={s.name}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button
+              className={`system-nav-arrow right${rightHighlighted ? ' has-highlighted' : ''}`}
+              onClick={() => navigateSystem('right')}
+              aria-label={`Go to ${systems[rightIdx].name}`}
+            >
+              <IconChevronRight />
+            </button>
+          </div>
+        )
+      })()}
 
       {waiting && (
         <div className='loading-overlay'>

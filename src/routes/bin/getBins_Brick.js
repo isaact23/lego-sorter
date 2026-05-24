@@ -1,4 +1,4 @@
-import { readBinData } from '../../data/binData.js'
+import { readBinData } from '../../binData.js'
 
 const getBins_Brick = (req, res) => {
   const { pieceId } = req.body

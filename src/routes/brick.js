@@ -2,7 +2,7 @@ import express from 'express'
 import fs from 'fs'
 import path from 'path'
 import axios from 'axios'
-import { readBinData } from '../data/binData.js'
+import { readBinData } from '../binData.js'
 
 export default function createBrickRouter(partsMap, IMAGE_DIR) {
   const router = express.Router()
