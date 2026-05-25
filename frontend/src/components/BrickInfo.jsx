@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './BrickInfo.css'
 
 function BrickInfo({
   brick,

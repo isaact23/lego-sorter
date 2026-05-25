@@ -1,45 +1,3 @@
-:root {
-  --table-border: rgba(15, 23, 42, 0.12);
-  --table-border-strong: rgba(15, 23, 42, 0.22);
-
-  --table-bg: rgba(255, 255, 255, 0.92);
-  --table-bg-soft: #3341558a;
-
-  --table-shadow-inset: inset 0 -1px 0 rgba(15, 23, 42, 0.04);
-  --table-shadow-light: 0 14px 26px rgba(15, 23, 42, 0.08);
-  --table-shadow-medium: 0 20px 55px rgba(15, 23, 42, 0.08);
-  --table-shadow-heavy: 0 26px 60px rgba(15, 23, 42, 0.18);
-  --table-shadow-highlight: rgba(46, 204, 113, 0.22);
-  --table-shadow-highlight-strong: rgba(46, 204, 113, 0.8);
-  --table-shadow-highlight-fade: rgba(46, 204, 113, 0);
-  --table-shadow-baseline: rgba(15, 23, 42, 0.12);
-  --table-shadow-after: rgba(15, 23, 42, 0.12);
-
-  --bin-highlight-border: #2ecc71;
-  --bin-selected-border: #ff9800;
-  --bin-selected-bg: var(--table-bg);
-
-  --bin-empty-border: #157e00;
-  --bin-empty-bg: #11b31f;
-  --bin-full-border: #131f18;
-  --bin-full-bg: #264e37;
-  --bin-overwhelmed-border: #6c0e04;
-  --bin-overwhelmed-bg: #bd1c0a;
-  --bin-half-border: #900052;
-  --bin-half-bg: #bb0095;
-
-  --bin-set-pending-border: #f59e0b;
-  --bin-set-partial-border: #ea580c;
-  --bin-set-pulled-border: #16a34a;
-
-  --badge-bg: rgba(15, 23, 42, 0.08);
-  --badge-color: #10222f;
-  --surface-start: #f8fbff;
-  --surface-end: #eef4fc;
-
-  --gap: 2px;
-}
-
 /* ─── System: horizontal strip of columns ─────────────────────────── */
 .System {
   display: flex;
@@ -54,7 +12,6 @@
 }
 
 /* ─── Col: invisible layout scaffold only ─────────────────────────── */
-/* No border, no background — Units are the visible elements.          */
 .Col {
   display: flex;
   flex-direction: column;
@@ -85,8 +42,6 @@
 }
 
 /* ─── Unit: one physical drawer organizer ─────────────────────────── */
-/* Each unit is fully self-contained visually.                         */
-/* flex value set inline from physicalHeight.                          */
 .Unit {
   position: relative;
   width: 100%;
@@ -99,8 +54,6 @@
 }
 
 /* ─── BinGrid: independent grid inside each unit ──────────────────── */
-/* No z-index here — keeping it out of a stacking context so .bin-selected
-   (z-index:50) can paint above bins in neighbouring units. */
 .BinGrid {
   position: relative;
   display: grid;
@@ -201,8 +154,18 @@
   background: var(--bin-half-bg);
 }
 
-/* ─── Set browse mode ─────────────────────────────────────────────── */
+/* Striped overlay used in ADD mode */
+.bin-halftone {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255, 255, 255, 0.18) 4px,
+    rgba(255, 255, 255, 0.18) 8px
+  );
+}
 
+/* ─── Set browse mode ─────────────────────────────────────────────── */
 .bin-set-pending {
   border-color: var(--bin-set-pending-border);
   background: var(--table-bg);
@@ -226,16 +189,4 @@
   border-color: var(--bin-set-pulled-border);
   background: var(--table-bg);
   opacity: 1 !important;
-}
-
-/* ─── Badge ───────────────────────────────────────────────────────── */
-.property-badge {
-  display: inline-flex;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--badge-bg);
-  color: var(--badge-color);
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
 }

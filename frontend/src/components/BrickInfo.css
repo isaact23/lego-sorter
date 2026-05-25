@@ -1,0 +1,25 @@
+.Top-Panel-BrickInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  max-width: 540px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.BrickActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.BrickActions button {
+  transition: all 0.15s ease;
+}
+
+.BrickActions button:hover {
+  transform: scale(1.04);
+}

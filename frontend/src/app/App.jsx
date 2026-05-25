@@ -93,7 +93,7 @@ function App () {
   // =====================
   const [page, setPage] = useState(2)                          // Which view to show (SELECT_PAGE, OPTION_CARDS, BRICK_INFO)
   const [waiting, setWaiting] = useState(false)                // Loading state for async operations
-  const [helperText, setHelperText] = useState('Welcome! Select a bin or click an option above to get started')  // Helper message for the help popup
+  const [helperText, setHelperText] = useState('Tap a bin to see what\'s inside, or use the buttons above to find a piece!')
   const [showHelperPopup, setShowHelperPopup] = useState(false)
   const [keyboardVisible, setKeyboardVisible] = useState(false)  // On-screen keyboard for part# search
   const [toolbarOpen, setToolbarOpen] = useState(true)           // Whether toolbar drawer is expanded
@@ -143,6 +143,9 @@ function App () {
   const [pulledPartKeys, setPulledPartKeys] = useState([])              // "${part_num}-${colorId}" for each pulled part
   const [activeSetNum, setActiveSetNum] = useState(null)                // Canonical set number (e.g. "2064-1") while in set mode
   const [recentItems, setRecentItems] = useState(() => getRecentItems())
+  const [toast, setToast] = useState(null)
+  const [cameraNotice, setCameraNotice] = useState(null)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   // =====================
   // REFS
@@ -153,6 +156,8 @@ function App () {
   const searchToggleRef = useRef(null)
   const filterToggleRef = useRef(null)
   const searchExemptRefs = useMemo(() => [keyboardContainerRef], [])
+  const toastTimerRef = useRef(null)
+  const touchStartXRef = useRef(null)
 
 
   
@@ -169,10 +174,10 @@ function App () {
       setHighlightedBinIds([])
       setPage(OPTION_CARDS)
       setSearchQuery('')
-      setHelperText(`Showing bins containing Category: ${labels.join(' > ')}`)
+      setHelperText(`Showing bins with ${labels.join(' › ')} pieces — tap a glowing bin!`)
       setSelectedCategoryLabels(labels)
     } else {
-      setHelperText('Select a bin or click an option above to get started')
+      setHelperText('Tap a bin to see what\'s inside, or use the buttons above to find a piece!')
       setSelectedCategoryLabels([])
     }
 
@@ -351,7 +356,7 @@ function App () {
         setCurrentBinContents(items)
         setBinPropertyMap(prev => ({ ...prev, [newBinId]: res.properties ?? [] }))
         if (items.length === 0) {
-          setHelperText(`Bin ${newBinId} is empty`)
+          setHelperText('That bin is empty — nothing here yet!')
           setEmptyBinMsg(`Bin ${newBinId} is empty`)
           setPage(OPTION_CARDS)
           return
@@ -362,10 +367,10 @@ function App () {
       } catch (err) {
         console.error('Failed to fetch bin contents', err)
         setCurrentBinContents([])
-        setHelperText('Unable to load bin contents')
+        setHelperText('Couldn\'t open that bin. Try tapping it again!')
       }
 
-      setHelperText(`Select a brick from bin ${newBinId} or click Close to return home.`)
+      setHelperText('Pick the piece you\'re looking for, or tap Close!')
       setPage(SELECT_PAGE)
       
       return
@@ -389,6 +394,8 @@ function App () {
           categoryId: brick.part_cat_id
         })
 
+        showToast(binOperation === 'add' ? `Added to bin ${displayBinId(newBinId)}!` : `Removed from bin ${displayBinId(newBinId)}!`)
+
         // Keep UI in sync
         setHighlightedBinIds(prev => {
           if (binOperation === 'add') {
@@ -401,6 +408,7 @@ function App () {
         })
       } catch (err) {
         console.error('Bin operation failed:', err)
+        showToast('Something went wrong — try again', 'error')
       }
 
       // Clear operation state
@@ -431,11 +439,12 @@ function App () {
       console.error('Failed to fetch bins for brick', err)
       setHighlightedBinIds([])
     }
-    setHelperText(`Choose an operation or click Close to return home.`)
+    setHelperText('Found it! Tap Add to Bin or Remove from Bin, or tap Close.')
     setPage(BRICK_INFO)
   }, [])
 
   async function onBricksIdentified (bricks) {
+    setCameraNotice(null)
     if (!bricks || bricks.length === 0) return
 
     if (bricks.length > 1) {
@@ -447,7 +456,7 @@ function App () {
         const validBricks = enrichedBricks.filter(Boolean)
 
         if (validBricks.length === 0) {
-          setHelperText('No identified parts found in database. Try again.')
+          setCameraNotice({ message: "Couldn't find those pieces in the collection — try again!" })
           setPage(OPTION_CARDS)
           return
         }
@@ -456,7 +465,7 @@ function App () {
         setPage(SELECT_PAGE)
       } catch (err) {
         console.error('Error enriching brick data:', err)
-        setHelperText('Error loading brick data')
+        setCameraNotice({ message: 'Something went wrong loading that — try again!' })
         setPage(OPTION_CARDS)
       } finally {
         setWaiting(false)
@@ -468,12 +477,12 @@ function App () {
         if (fullData) {
           selectCallback(fullData)
         } else {
-          setHelperText(`Part #${bricks[0].part_num} not found in database. Try another brick.`)
+          setCameraNotice({ message: `Part #${bricks[0].part_num} isn't in our collection — try a different brick!` })
           setPage(OPTION_CARDS)
         }
       } catch (err) {
         console.error('Error fetching brick data:', err)
-        setHelperText('Error loading part details')
+        setCameraNotice({ message: 'Couldn\'t load piece info — try again!' })
         setPage(OPTION_CARDS)
       } finally {
         setWaiting(false)
@@ -591,19 +600,19 @@ function App () {
         if (setData?.binIds?.length > 0) {
           openSetData(query, setData)
         } else {
-          setSearchError(`Set ${query} found but no parts matched your bins`)
+          setSearchError(`Set ${query} found, but none of those pieces are in your bins yet.`)
         }
       } catch (setErr) {
         const status = setErr.response?.status
         if (status === 404) {
-          setSearchError(`"${query}" not found as a part or set number`)
+          setSearchError(`"${query}" isn't a part number or set number we know.`)
         } else {
-          setSearchError(`Error looking up set — ${setErr.message}`)
+          setSearchError('Couldn\'t look that up — check your connection!')
         }
       }
     } catch (err) {
       console.error('Error searching:', err)
-      setSearchError('Search error — check the console')
+      setSearchError('Something went wrong. Try again!')
     } finally {
       setWaiting(false)
     }
@@ -655,6 +664,28 @@ function App () {
     setEmptyBinMsg(null)
   }
 
+  function showToast (message, type = 'success') {
+    clearTimeout(toastTimerRef.current)
+    setToast({ message, type, id: Date.now() })
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500)
+  }
+
+  function showConfirm (message, onConfirm, opts = {}) {
+    setConfirmModal({ message, onConfirm, ...opts })
+  }
+
+  function handleTouchStart (e) {
+    touchStartXRef.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd (e) {
+    if (touchStartXRef.current === null) return
+    const delta = e.changedTouches[0].clientX - touchStartXRef.current
+    touchStartXRef.current = null
+    if (Math.abs(delta) < 50) return
+    navigateSystem(delta < 0 ? 'right' : 'left')
+  }
+
   // Clear everything and start over. Progress stays in localStorage so it can be resumed.
   function resetToHome () {
     setBrick(null)
@@ -662,7 +693,7 @@ function App () {
     setBrickList([])
     setBinOperation(null)
     setSearchQuery('')
-    setHelperText('Select a bin or click an option above to get started')
+    setHelperText('Tap a bin to see what\'s inside, or use the buttons above to find a piece!')
     setSelectedBinId(null)
     setPage(OPTION_CARDS)
     setCurrentBinContents([])
@@ -677,6 +708,7 @@ function App () {
     setPulledPartKeys([])
     setSearchError(null)
     setEmptyBinMsg(null)
+    setCameraNotice(null)
     setShowSearchPanel(false)
     setToolbarOpen(true)
   }
@@ -693,7 +725,7 @@ function App () {
       if (next) {
         setHelperText('Admin mode active. Click a bin to manage it.')
       } else {
-        setHelperText('Select a bin or click an option above to get started')
+        setHelperText('Tap a bin to see what\'s inside, or use the buttons above to find a piece!')
         setAdminAction(null)
         setAdminBinId(null)
         setSwapSelection([])
@@ -742,7 +774,7 @@ function App () {
       .then(() => refreshBinProperties())
       .catch(err => {
         console.error('Failed to update property', err)
-        alert('Unable to save property')
+        showToast('Unable to save — try again', 'error')
       })
   }
 
@@ -753,10 +785,10 @@ function App () {
       await updateBinProperties({ binId: adminBinId, properties: adminPropertySelection })
       await refreshBinProperties()
       setAdminAction(null)
-      setHelperText(`Properties updated for ${adminBinId}`)
+      showToast('Properties updated!')
     } catch (err) {
       console.error('Failed to update properties', err)
-      alert('Unable to save properties')
+      showToast('Unable to save — try again', 'error')
     } finally {
       setWaiting(false)
     }
@@ -784,75 +816,82 @@ function App () {
 
   async function confirmAdminSwap () {
     if (swapSelection.length !== 2) {
-      alert('Select two bins to swap')
+      showToast('Select two bins to swap', 'error')
       return
     }
 
     const [a, b] = swapSelection
-    const ok = window.confirm(`Swap contents of ${a} ⇄ ${b}?`)
-    if (!ok) return
+    showConfirm(
+      `Swap the contents of bin ${displayBinId(a)} with bin ${displayBinId(b)}?`,
+      async () => {
+        setWaiting(true)
+        try {
+          const resA = await getBinContents(a)
+          const resB = await getBinContents(b)
+          const contentsA = Array.isArray(resA.details)
+            ? resA.details
+            : Array.isArray(resA.items)
+              ? resA.items.map(partId => ({ partId, categoryId: undefined }))
+              : []
+          const contentsB = Array.isArray(resB.details)
+            ? resB.details
+            : Array.isArray(resB.items)
+              ? resB.items.map(partId => ({ partId, categoryId: undefined }))
+              : []
 
-    setWaiting(true)
-    try {
-      const resA = await getBinContents(a)
-      const resB = await getBinContents(b)
-      const contentsA = Array.isArray(resA.details)
-        ? resA.details
-        : Array.isArray(resA.items)
-          ? resA.items.map(partId => ({ partId, categoryId: undefined }))
-          : []
-      const contentsB = Array.isArray(resB.details)
-        ? resB.details
-        : Array.isArray(resB.items)
-          ? resB.items.map(partId => ({ partId, categoryId: undefined }))
-          : []
+          for (const part of contentsA) {
+            try { await operateBin({ operation: 'add', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Add failed', err) }
+          }
+          for (const part of contentsB) {
+            try { await operateBin({ operation: 'add', binId: a, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Add failed', err) }
+          }
+          for (const part of contentsA) {
+            try { await operateBin({ operation: 'remove', binId: a, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
+          }
+          for (const part of contentsB) {
+            try { await operateBin({ operation: 'remove', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
+          }
 
-      for (const part of contentsA) {
-        try { await operateBin({ operation: 'add', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Add failed', err) }
-      }
-      for (const part of contentsB) {
-        try { await operateBin({ operation: 'add', binId: a, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Add failed', err) }
-      }
-      for (const part of contentsA) {
-        try { await operateBin({ operation: 'remove', binId: a, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
-      }
-      for (const part of contentsB) {
-        try { await operateBin({ operation: 'remove', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
-      }
-
-      await refreshBinProperties()
-      alert('Swap complete')
-      setSwapSelection([])
-      setAdminAction(null)
-      setHelperText(`Swapped ${a} and ${b}`)
-    } catch (err) {
-      console.error('Swap failed', err)
-      alert('Swap failed — see console')
-    } finally {
-      setWaiting(false)
-    }
+          await refreshBinProperties()
+          showToast(`Swapped bins ${displayBinId(a)} and ${displayBinId(b)}!`)
+          setSwapSelection([])
+          setAdminAction(null)
+          setHelperText(`Swapped ${a} and ${b}`)
+        } catch (err) {
+          console.error('Swap failed', err)
+          showToast('Swap failed — try again', 'error')
+        } finally {
+          setWaiting(false)
+        }
+      },
+      { confirmLabel: 'Swap', confirmClass: 'blue' }
+    )
   }
 
   async function handleEmptyBin () {
     if (!adminBinId) return
-    const ok = window.confirm(`Empty bin ${adminBinId} and set property Empty?`)
-    if (!ok) return
-
-    setWaiting(true)
-    try {
-      await emptyBin(adminBinId)
-      await refreshBinProperties()
-      if (selectedBinId === adminBinId) {
-        setCurrentBinContents([])
-      }
-      setAdminAction(null)
-      setHelperText(`Bin ${adminBinId} emptied and marked Empty`)
-    } catch (err) {
-      console.error('Empty bin failed', err)
-      alert('Unable to empty bin')
-    } finally {
-      setWaiting(false)
-    }
+    showConfirm(
+      `Empty bin ${displayBinId(adminBinId)}? This will remove all pieces from it.`,
+      async () => {
+        setWaiting(true)
+        try {
+          await emptyBin(adminBinId)
+          await refreshBinProperties()
+          if (selectedBinId === adminBinId) {
+            setCurrentBinContents([])
+          }
+          setAdminAction(null)
+          showToast(`Bin ${displayBinId(adminBinId)} emptied`)
+          setHelperText(`Bin ${adminBinId} emptied and marked Empty`)
+        } catch (err) {
+          console.error('Empty bin failed', err)
+          showToast('Couldn\'t empty that bin', 'error')
+        } finally {
+          setWaiting(false)
+        }
+      },
+      { confirmLabel: 'Empty It', confirmClass: 'red' }
+    )
   }
 
   return (
@@ -932,9 +971,25 @@ function App () {
         </div>
       )}
 
+      {cameraNotice && (
+        <div className='camera-notice'>
+          <span>{cameraNotice.message}</span>
+          <button
+            onClick={() => {
+              setCameraNotice(null)
+              cameraRef.current?.triggerCapture()
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
       <Camera
         ref={cameraRef}
         onBricksIdentified={onBricksIdentified}
+        onNoResults={() => setCameraNotice({ message: "Couldn't find any pieces — try again!" })}
+        onCaptureError={() => setCameraNotice({ message: 'Something went wrong with the camera.' })}
       />
 
       <SearchPanel
@@ -1061,7 +1116,7 @@ function App () {
         const leftHighlighted  = highlightedBinIds.some(id => id.startsWith(systems[leftIdx].id  + '-'))
         const rightHighlighted = highlightedBinIds.some(id => id.startsWith(systems[rightIdx].id + '-'))
         return (
-          <div className='system-nav-wrapper'>
+          <div className='system-nav-wrapper' onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             <button
               className={`system-nav-arrow left${leftHighlighted ? ' has-highlighted' : ''}`}
               onClick={() => navigateSystem('left')}
@@ -1108,6 +1163,34 @@ function App () {
           </div>
         )
       })()}
+
+      {toast && (
+        <div key={toast.id} className={`toast toast-${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
+
+      {confirmModal && (
+        <div className='helper-popup-overlay' onClick={() => setConfirmModal(null)}>
+          <div className='helper-popup' onClick={e => e.stopPropagation()}>
+            <div className='helper-popup-body'>{confirmModal.message}</div>
+            <div className='helper-popup-actions'>
+              <button className='ui-button neutral' onClick={() => setConfirmModal(null)}>
+                Cancel
+              </button>
+              <button
+                className={`ui-button ${confirmModal.confirmClass ?? 'blue'}`}
+                onClick={async () => {
+                  setConfirmModal(null)
+                  await confirmModal.onConfirm()
+                }}
+              >
+                {confirmModal.confirmLabel ?? 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {waiting && (
         <div className='loading-overlay'>

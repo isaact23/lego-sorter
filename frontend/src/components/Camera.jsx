@@ -1,4 +1,4 @@
-﻿import {
+import {
   forwardRef,
   useEffect,
   useImperativeHandle,
@@ -8,7 +8,7 @@
 import { identifyFromBlob } from '../services/imageService'
 import CameraOverlay from './CameraOverlay'
 
-const Camera = forwardRef(({ onBricksIdentified }, ref) => {
+const Camera = forwardRef(({ onBricksIdentified, onNoResults, onCaptureError }, ref) => {
   const fileInputRef = useRef(null)
   const videoRef = useRef(null)
   const streamRef = useRef(null)
@@ -26,7 +26,6 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
     }
   }))
 
-  // Use ref in cleanup so it always sees the live stream, not a stale closure
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach(t => t.stop())
@@ -76,12 +75,11 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
     try {
       const blob = await captureFromVideo()
       if (!blob) throw new Error('Capture failed')
-
       closeOverlay()
       await processBlob(blob)
     } catch (err) {
       console.error(err)
-      alert('Unable to capture from camera. Please use a file upload.')
+      onCaptureError?.()
       fileInputRef.current?.click()
     }
   }
@@ -95,13 +93,13 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
       const bricks = await identifyFromBlob(blob)
 
       if (!bricks.length) {
-        alert('No pieces identified, try again?')
+        onNoResults?.()
       } else {
         onBricksIdentified(bricks)
       }
     } catch (err) {
       console.error(err)
-      alert('Something went wrong.')
+      onCaptureError?.()
     } finally {
       setWaiting(false)
     }
@@ -110,7 +108,6 @@ const Camera = forwardRef(({ onBricksIdentified }, ref) => {
   function handleFileChange(event) {
     const file = event.target.files?.[0]
     if (!file) return
-
     processBlob(file)
     event.target.value = ''
   }

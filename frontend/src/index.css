@@ -1,3 +1,4 @@
+/* ── Global reset ─────────────────────────────────────────────────── */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -8,6 +9,52 @@ body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* ── Design tokens ────────────────────────────────────────────────── */
+:root {
+  /* App shell */
+  --top-panel-height: 140px;
+  --brick-image-size: 80px;
+
+  /* Table borders */
+  --table-border: rgba(15, 23, 42, 0.12);
+  --table-border-strong: rgba(15, 23, 42, 0.22);
+
+  /* Table surfaces */
+  --table-bg: rgba(255, 255, 255, 0.92);
+  --table-bg-soft: #3341558a;
+
+  /* Shadows */
+  --table-shadow-inset: inset 0 -1px 0 rgba(15, 23, 42, 0.04);
+  --table-shadow-light: 0 14px 26px rgba(15, 23, 42, 0.08);
+  --table-shadow-medium: 0 20px 55px rgba(15, 23, 42, 0.08);
+  --table-shadow-heavy: 0 26px 60px rgba(15, 23, 42, 0.18);
+  --table-shadow-highlight: rgba(46, 204, 113, 0.22);
+  --table-shadow-highlight-strong: rgba(46, 204, 113, 0.8);
+  --table-shadow-highlight-fade: rgba(46, 204, 113, 0);
+  --table-shadow-after: rgba(15, 23, 42, 0.12);
+
+  /* Bin state colours */
+  --bin-highlight-border: #2ecc71;
+  --bin-selected-border: #ff9800;
+  --bin-selected-bg: var(--table-bg);
+  --bin-empty-border: #157e00;
+  --bin-empty-bg: #11b31f;
+  --bin-full-border: #131f18;
+  --bin-full-bg: #264e37;
+  --bin-overwhelmed-border: #6c0e04;
+  --bin-overwhelmed-bg: #bd1c0a;
+  --bin-half-border: #900052;
+  --bin-half-bg: #bb0095;
+  --bin-set-pending-border: #f59e0b;
+  --bin-set-partial-border: #ea580c;
+  --bin-set-pulled-border: #16a34a;
+
+  /* Badges and surfaces */
+  --badge-bg: rgba(15, 23, 42, 0.08);
+  --badge-color: #10222f;
+
+  --gap: 2px;
 }

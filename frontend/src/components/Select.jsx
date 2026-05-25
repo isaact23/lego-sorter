@@ -1,4 +1,4 @@
-import '../app/App.css'
+import './Select.css'
 import { useEffect, useState } from 'react'
 import { fetchBrickData } from '../services/brickService'
 
@@ -61,7 +61,7 @@ function Select({ initialBricks = null, partIds = [], selectCallback, onClose })
               <p>Part #{brick.part_num}</p>
               {brick.part_cat_id && <p>Category {brick.part_cat_id}</p>}
               {brick.confidence != null && (
-                <div className="ConfidenceBar" style={{ marginTop: 4 }}>
+                <div className="ConfidenceBar">
                   <span
                     className="ConfidenceFill"
                     style={{

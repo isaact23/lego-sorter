@@ -1,8 +1,3 @@
-:root {
-  --top-panel-height: 140px;
-  --brick-image-size: 80px;
-}
-
 .App {
   text-align: center;
   height: 100vh;
@@ -75,11 +70,6 @@ html, body {
   flex-shrink: 0;
 }
 
-.bin-disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .helper-popup-overlay {
   position: fixed;
   inset: 0;
@@ -125,7 +115,7 @@ html, body {
   line-height: 1.6;
 }
 
-/* ── Pull-down toolbar — handle spans same width as buttons row ── */
+/* ── Pull-down toolbar ─────────────────────────────────────────────── */
 .toolbar-drawer {
   position: fixed;
   top: 0;
@@ -168,7 +158,6 @@ html, body {
   transform: rotate(180deg);
 }
 
-/* Buttons row — its natural width sets the width of the whole drawer */
 .toolbar-buttons {
   display: flex;
   align-items: center;
@@ -235,79 +224,7 @@ html, body {
   flex-shrink: 0;
 }
 
-
-.top-panel-card-static {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-sizing: border-box;
-  width: 120px;
-  flex-shrink: 0;
-}
-
-.top-panel-select {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-  flex: 1;
-  min-width: 0;
-}
-
-.scroll-row {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  min-width: 0;
-  padding: 4px 0;
-  justify-content: safe center;
-}
-
-/* Desktop only */
-@media (hover: hover) and (pointer: fine) {
-  .scroll-row {
-    scrollbar-width: thin;
-  }
-
-  .scroll-row::-webkit-scrollbar {
-    display: block;
-    height: 8px;
-  }
-}
-
-@media (hover: none) {
-  .w3-button:hover,
-  .w3-button:active,
-  .w3-button:focus {
-    background-color: inherit !important;
-    box-shadow: none !important;
-  }
-}
-
-.ConfidenceBar {
-  display: block;
-  width: 100%;
-  height: 20px;
-  background-color: #e5e7eb;
-  border-radius: 4px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #6b7280;
-  overflow: hidden;
-  margin-top: 6px;
-}
-
-.ConfidenceFill {
-  display: block;
-  min-width: 2px;
-  height: 100%;
-  transition: width 0.3s ease;
-}
-
+/* ── Shared brick display (used by Select and BrickInfo) ──────────── */
 .BrickText {
   flex: 1;
   min-width: 0;
@@ -350,61 +267,7 @@ html, body {
   border-radius: 4px;
 }
 
-.BrickActions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.BrickActions button {
-  transition: all 0.15s ease;
-}
-
-.BrickActions button:hover {
-  transform: scale(1.04);
-}
-
-.Top-Panel-BrickInfo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
-  max-width: 540px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-/* ── Selectable brick card used in scroll list ───────────────────────── */
-.brick-card-selectable {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  border-radius: 10px;
-  padding: 6px 10px;
-  width: 200px;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s;
-}
-
-.brick-card-selectable:hover {
-  background: rgba(15, 23, 42, 0.05);
-}
-
-.brick-card-selectable:active {
-  background: rgba(15, 23, 42, 0.10);
-}
-
-.Select.TopModule {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
+/* ── Bottom controls ──────────────────────────────────────────────── */
 .bottom-controls {
   height: 56px;
   display: flex;
@@ -437,7 +300,7 @@ html, body {
   justify-content: flex-start;
 }
 
-/* ── Loading overlay ─────────────────────────────────────────────────────── */
+/* ── Loading overlay ──────────────────────────────────────────────── */
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -452,7 +315,6 @@ html, body {
   gap: 22px;
 }
 
-/* 2x2 LEGO brick image (saved locally from Rebrickable) */
 .lego-brick-spinner {
   width: 80px;
   height: 80px;
@@ -474,7 +336,7 @@ html, body {
   text-transform: uppercase;
 }
 
-/* ── System navigation wrapper — fills all remaining App height ──────────── */
+/* ── System navigation ────────────────────────────────────────────── */
 .system-nav-wrapper {
   display: flex;
   align-items: stretch;
@@ -483,7 +345,6 @@ html, body {
   width: 100%;
 }
 
-/* Content column between the two arrows */
 .system-nav-content {
   flex: 1;
   min-width: 0;
@@ -492,7 +353,6 @@ html, body {
   flex-direction: column;
 }
 
-/* Centering layer: system floats here, smaller systems center vertically */
 .system-nav-main {
   flex: 1;
   min-height: 0;
@@ -503,7 +363,6 @@ html, body {
   overflow: hidden;
 }
 
-/* ── Left / right arrows — full height of wrapper ────────────────────────── */
 .system-nav-arrow {
   width: 40px;
   flex-shrink: 0;
@@ -549,7 +408,6 @@ html, body {
   50%       { opacity: 0.7; transform: scaleX(1.15); }
 }
 
-/* ── System indicator dots — always at bottom of content column ──────────── */
 .system-nav-dots {
   display: flex;
   justify-content: center;
@@ -579,4 +437,68 @@ html, body {
 
 .system-dot:hover:not(.active) {
   background: rgba(15, 23, 42, 0.35);
+}
+
+/* ── Toast notification ───────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: toast-in 0.2s ease both, toast-out 0.35s ease 2.15s forwards;
+}
+
+.toast-success { background: #16a34a; box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4); }
+.toast-error   { background: #dc2626; box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(-50%) translateY(10px); }
+}
+
+/* ── Camera retry banner ──────────────────────────────────────────── */
+.camera-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 16px;
+  background: rgba(220, 38, 38, 0.08);
+  border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.camera-notice button {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+
+/* ── Confirm modal actions row ────────────────────────────────────── */
+.helper-popup-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
 }

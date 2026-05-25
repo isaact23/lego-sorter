@@ -1,0 +1,55 @@
+.osk-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffffee;
+  border-top: 1px solid #ccc;
+  padding: 12px 8px 18px;
+  z-index: 9999;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.16);
+}
+
+.osk-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.osk-action-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.key-btn {
+  flex: 1;
+  min-width: 36px;
+  min-height: 44px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin: 2px;
+  background: #f7f7f7;
+  color: #111;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.key-btn.key-wide {
+  min-width: 88px;
+}
+
+.key-btn.key-space {
+  min-width: 120px;
+}
+
+.key-btn.key-enter {
+  background: #0078d4;
+  color: #fff;
+}
+
+.key-btn.key-back {
+  background: #e0e0e0;
+}
