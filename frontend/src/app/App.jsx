@@ -24,7 +24,8 @@ import {
   getBinContents,
   operateBin,
   updateBinProperties,
-  emptyBin
+  emptyBin,
+  setBinName
 } from '../services/binService'
 import { fetchSystems } from '../services/systemsService'
 
@@ -61,10 +62,8 @@ function getRecentItems () {
   try { return JSON.parse(localStorage.getItem('lego_recent')) ?? [] } catch { return [] }
 }
 
-// Drop the system prefix (first segment) from any bin ID:
-//   "A-B-1" → "B-1"   (unit-mode, 3 segments)
-//   "B-L1"  → "L1"    (direct-bin mode, 2 segments)
-function displayBinId (binId) {
+// Strip the system prefix from a bin ID ("A-B-1" → "B-1", "B-L1" → "L1")
+function stripBinId (binId) {
   if (!binId) return binId
   const dash = binId.indexOf('-')
   return dash === -1 ? binId : binId.slice(dash + 1)
@@ -115,11 +114,13 @@ function App () {
   const [highlightedBinIds, setHighlightedBinIds] = useState([])  // Bins to highlight (contains brick or category)
   const [currentBinContents, setCurrentBinContents] = useState([])  // Bricks in the currently selected bin
   const [binPropertyMap, setBinPropertyMap] = useState({})
+  const [binNameMap, setBinNameMap] = useState({})
   const [adminMode, setAdminMode] = useState(false)
   const [adminBinId, setAdminBinId] = useState(null)
   const [adminAction, setAdminAction] = useState(null)
   const [adminPropertySelection, setAdminPropertySelection] = useState([])
   const [swapSelection, setSwapSelection] = useState([])
+  const [nameInput, setNameInput] = useState('')
 
   // =====================
   // SEARCH/FILTER STATE
@@ -228,14 +229,15 @@ function App () {
         const bins = await getAllBins()
         if (cancelled) return
 
-        const mapped = Object.fromEntries(
-          Object.entries(bins).map(([binId, bin]) => [
-            binId,
-            Array.isArray(bin.properties) ? bin.properties : []
-          ])
-        )
+        const propertyMapped = {}
+        const nameMapped = {}
+        for (const [binId, bin] of Object.entries(bins)) {
+          propertyMapped[binId] = Array.isArray(bin.properties) ? bin.properties : []
+          if (bin.name) nameMapped[binId] = bin.name
+        }
 
-        setBinPropertyMap(mapped)
+        setBinPropertyMap(propertyMapped)
+        setBinNameMap(nameMapped)
       } catch (err) {
         console.error('Failed to load all bin data', err)
       }
@@ -394,7 +396,7 @@ function App () {
           categoryId: brick.part_cat_id
         })
 
-        showToast(binOperation === 'add' ? `Added to bin ${displayBinId(newBinId)}!` : `Removed from bin ${displayBinId(newBinId)}!`)
+        showToast(binOperation === 'add' ? `Added to bin ${displayBin(newBinId)}!` : `Removed from bin ${displayBin(newBinId)}!`)
 
         // Keep UI in sync
         setHighlightedBinIds(prev => {
@@ -664,6 +666,11 @@ function App () {
     setEmptyBinMsg(null)
   }
 
+  function displayBin (binId) {
+    if (!binId) return binId
+    return binNameMap[binId] || stripBinId(binId)
+  }
+
   function showToast (message, type = 'success') {
     clearTimeout(toastTimerRef.current)
     setToast({ message, type, id: Date.now() })
@@ -757,6 +764,9 @@ function App () {
         setHelperText('Select the first bin to swap, then select the second bin.')
       }
     }
+    if (action === 'set-name') {
+      setNameInput(binNameMap[adminBinId] ?? '')
+    }
   }
 
   function toggleAdminProperty (propertyId) {
@@ -799,16 +809,50 @@ function App () {
     setSwapSelection([])
     setAdminBinId(null)
     setAdminPropertySelection([])
+    setNameInput('')
     setHelperText('Admin mode active. Click a bin to manage it.')
+  }
+
+  async function applyBinName () {
+    if (!adminBinId) return
+    const trimmed = nameInput.trim()
+    try {
+      await setBinName(adminBinId, trimmed)
+      await refreshBinProperties()
+      showToast(trimmed ? `Named "${trimmed}"!` : 'Name cleared')
+      setAdminAction(null)
+      setNameInput('')
+    } catch (err) {
+      console.error('Failed to set bin name', err)
+      showToast('Couldn\'t save name — try again', 'error')
+    }
+  }
+
+  async function clearBinName () {
+    if (!adminBinId) return
+    try {
+      await setBinName(adminBinId, '')
+      await refreshBinProperties()
+      showToast('Name cleared')
+      setAdminAction(null)
+      setNameInput('')
+    } catch (err) {
+      console.error('Failed to clear bin name', err)
+      showToast('Couldn\'t clear name — try again', 'error')
+    }
   }
 
   async function refreshBinProperties () {
     try {
       const bins = await getAllBins()
-      const mapped = Object.fromEntries(
-        Object.entries(bins).map(([binId, bin]) => [binId, Array.isArray(bin.properties) ? bin.properties : []])
-      )
-      setBinPropertyMap(mapped)
+      const propertyMapped = {}
+      const nameMapped = {}
+      for (const [binId, bin] of Object.entries(bins)) {
+        propertyMapped[binId] = Array.isArray(bin.properties) ? bin.properties : []
+        if (bin.name) nameMapped[binId] = bin.name
+      }
+      setBinPropertyMap(propertyMapped)
+      setBinNameMap(nameMapped)
     } catch (err) {
       console.error('Failed to refresh bin properties', err)
     }
@@ -822,7 +866,7 @@ function App () {
 
     const [a, b] = swapSelection
     showConfirm(
-      `Swap the contents of bin ${displayBinId(a)} with bin ${displayBinId(b)}?`,
+      `Swap the contents of bin ${displayBin(a)} with bin ${displayBin(b)}?`,
       async () => {
         setWaiting(true)
         try {
@@ -852,8 +896,21 @@ function App () {
             try { await operateBin({ operation: 'remove', binId: b, partId: part.partId, categoryId: part.categoryId }) } catch (err) { console.error('Remove failed', err) }
           }
 
+          // Properties, names travel with contents
+          const propsA = binPropertyMap[a] ?? []
+          const propsB = binPropertyMap[b] ?? []
+          await updateBinProperties({ binId: b, properties: propsA })
+          await updateBinProperties({ binId: a, properties: propsB })
+
+          const nameA = binNameMap[a]
+          const nameB = binNameMap[b]
+          if (nameA || nameB) {
+            await setBinName(b, nameA ?? '')
+            await setBinName(a, nameB ?? '')
+          }
+
           await refreshBinProperties()
-          showToast(`Swapped bins ${displayBinId(a)} and ${displayBinId(b)}!`)
+          showToast(`Swapped bins ${displayBin(a)} and ${displayBin(b)}!`)
           setSwapSelection([])
           setAdminAction(null)
           setHelperText(`Swapped ${a} and ${b}`)
@@ -871,7 +928,7 @@ function App () {
   async function handleEmptyBin () {
     if (!adminBinId) return
     showConfirm(
-      `Empty bin ${displayBinId(adminBinId)}? This will remove all pieces from it.`,
+      `Empty bin ${displayBin(adminBinId)}? This will remove all pieces from it.`,
       async () => {
         setWaiting(true)
         try {
@@ -881,7 +938,7 @@ function App () {
             setCurrentBinContents([])
           }
           setAdminAction(null)
-          showToast(`Bin ${displayBinId(adminBinId)} emptied`)
+          showToast(`Bin ${displayBin(adminBinId)} emptied`)
           setHelperText(`Bin ${adminBinId} emptied and marked Empty`)
         } catch (err) {
           console.error('Empty bin failed', err)
@@ -955,9 +1012,9 @@ function App () {
         {(() => {
           if (setMode) return null
           if (page === BRICK_INFO) return <div className='panel-context-label'>Brick Info:</div>
-          if (page === SELECT_PAGE && selectedBinId) return <div className='panel-context-label'>Bin {displayBinId(selectedBinId)} Contents:</div>
+          if (page === SELECT_PAGE && selectedBinId) return <div className='panel-context-label'>Bin {displayBin(selectedBinId)} Contents:</div>
           if (page === SELECT_PAGE) return <div className='panel-context-label'>Photo Results:</div>
-          if (emptyBinMsg && selectedBinId) return <div className='panel-context-label'>Bin {displayBinId(selectedBinId)} is empty</div>
+          if (emptyBinMsg && selectedBinId) return <div className='panel-context-label'>Bin {displayBin(selectedBinId)} is empty</div>
           if (page === OPTION_CARDS) return <div className='panel-context-label'>{systems[activeSystemIndex]?.name ?? ''}</div>
           return null
         })()}
@@ -1084,13 +1141,37 @@ function App () {
           <div className="admin-divider" />
 
           <div className="admin-right-group">
-            <button className='ui-button blue' onClick={() => setAdminActionMode('swap-bins')} disabled={!adminBinId}>Swap Bins</button>
+            <button className='ui-button blue' onClick={() => setAdminActionMode('set-name')} disabled={!adminBinId}>Name Bin</button>
+            <button className='ui-button neutral' onClick={() => setAdminActionMode('swap-bins')} disabled={!adminBinId}>Swap Bins</button>
             <button className='ui-button red' onClick={handleEmptyBin} disabled={!adminBinId}>Empty Bin</button>
           </div>
         </div>
       )}
 
 
+
+      {adminMode && adminAction === 'set-name' && adminBinId && (
+        <div className='admin-panel'>
+          <strong>Name bin {displayBin(adminBinId)}</strong>
+          <div className='admin-panel-row'>
+            <input
+              className='admin-name-input'
+              type='text'
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') applyBinName() }}
+              placeholder='Enter a name…'
+              maxLength={30}
+              autoFocus
+            />
+            <button className='ui-button blue' onClick={applyBinName}>Save</button>
+            {binNameMap[adminBinId] && (
+              <button className='ui-button neutral' onClick={clearBinName}>Clear Name</button>
+            )}
+            <button className='ui-button neutral' onClick={cancelAdminAction}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {adminMode && adminAction === 'swap-bins' && (
         <div className='admin-panel' style={{ padding: '10px 20px', margin: '10px 20px', border: '1px solid #ccc', borderRadius: 12, background: '#fafafa' }}>
@@ -1136,6 +1217,7 @@ function App () {
                   partialBinIds={partialBinIds}
                   propertyDefs={BIN_PROPERTIES}
                   propertyMap={binPropertyMap}
+                  binNameMap={binNameMap}
                   showPropertyClasses={adminMode}
                   systemDef={currentSystem}
                   unitTypes={unitTypes}

@@ -12,6 +12,7 @@ function Table ({
   partialBinIds = [],
   systemDef,
   unitTypes = {},
+  binNameMap = {},
 }) {
 
   const getBinState = (binId) => {
@@ -51,9 +52,9 @@ function Table ({
     }
   }
 
-  // Resolve display text: labels map wins, then binDef.label, then auto ID
+  // Resolve display text: admin name → system labels → binDef label → auto ID
   const resolveLabel = (binId, fallback, binDefLabel) =>
-    systemDef.labels?.[binId] || binDefLabel || fallback
+    binNameMap[binId] || systemDef.labels?.[binId] || binDefLabel || fallback
 
   // ── Unit mode (System A style) ──────────────────────────────────────────
   const renderBin = (binId) => {

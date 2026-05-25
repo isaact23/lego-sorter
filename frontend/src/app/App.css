@@ -439,6 +439,43 @@ html, body {
   background: rgba(15, 23, 42, 0.35);
 }
 
+/* ── Admin action panels ──────────────────────────────────────────── */
+.admin-panel {
+  padding: 10px 20px;
+  margin: 10px 20px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.admin-panel-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-name-input {
+  flex: 1;
+  min-width: 140px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fff;
+}
+
+.admin-name-input:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+}
+
 /* ── Toast notification ───────────────────────────────────────────── */
 .toast {
   position: fixed;

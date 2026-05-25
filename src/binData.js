@@ -37,10 +37,14 @@ function normalizeBinData (data) {
     }
 
     // New format
-      normalized[binId] = {
+      const entry = {
         items: Array.isArray(value.items) ? value.items : [],
         properties: Array.isArray(value.properties) ? value.properties : []
       }
+      if (value.name && typeof value.name === 'string' && value.name.trim()) {
+        entry.name = value.name.trim()
+      }
+      normalized[binId] = entry
   }
 
   return normalized

@@ -44,6 +44,10 @@ export async function operateBin({ binId, partId, categoryId, operation }) {
   return post(path, { binId, pieceId: partId, categoryId })
 }
 
+export async function setBinName(binId, name) {
+  return post('/bin/setName', { binId, name: name ?? '' })
+}
+
 export async function getBinContents(binId) {
   if (!binId) throw new Error('getBinContents requires binId')
   const data = await post('/bin/get-Info', { binId })

@@ -10,6 +10,7 @@ import getBins_Property from './bin/getBins_Property.js'
 import getAllBins from './bin/getAllBins.js'
 import updateBinProperties from './bin/updateBinProperties.js'
 import emptyBin from './bin/emptyBin.js'
+import setBinName from './bin/setBinName.js'
 
 // Routes under the /bin route
 router.post('/get-Info', getBinContents)
@@ -21,5 +22,6 @@ router.post('/getBins_Property', getBins_Property)
 router.get('/all', getAllBins)
 router.post('/updateProperties', updateBinProperties)
 router.post('/empty', emptyBin)
+router.post('/setName', setBinName)
 
 export default router
