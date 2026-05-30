@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import './Table.css'
 
 function Table ({
@@ -15,9 +16,13 @@ function Table ({
   binNameMap = {},
 }) {
 
+  const highlightedSet = new Set(highlightedBinIds)
+  const pulledSet      = new Set(pulledBinIds)
+  const partialSet     = new Set(partialBinIds)
+
   const getBinState = (binId) => {
     const isSelected    = binId === selectedBinId
-    const isHighlighted = highlightedBinIds.includes(binId)
+    const isHighlighted = highlightedSet.has(binId)
 
     const assigned = propertyMap[binId] ?? []
     const propClassNames = showPropertyClasses
@@ -42,10 +47,10 @@ function Table ({
       case 'REMOVE':
         return { className: isHighlighted ? `bin bin-highlighted ${propClassNames}` : `bin bin-disabled ${propClassNames}`, clickable: isHighlighted }
       case 'SET_BROWSE':
-        if (isSelected)                    return { className: `bin bin-selected ${propClassNames}`,    clickable: true  }
-        if (pulledBinIds.includes(binId))  return { className: `bin bin-set-pulled ${propClassNames}`,  clickable: true  }
-        if (partialBinIds.includes(binId)) return { className: `bin bin-set-partial ${propClassNames}`, clickable: true  }
-        if (isHighlighted)                 return { className: `bin bin-set-pending ${propClassNames}`, clickable: true  }
+        if (isSelected)               return { className: `bin bin-selected ${propClassNames}`,    clickable: true  }
+        if (pulledSet.has(binId))     return { className: `bin bin-set-pulled ${propClassNames}`,  clickable: true  }
+        if (partialSet.has(binId))    return { className: `bin bin-set-partial ${propClassNames}`, clickable: true  }
+        if (isHighlighted)            return { className: `bin bin-set-pending ${propClassNames}`, clickable: true  }
         return { className: `bin bin-disabled ${propClassNames}`, clickable: false }
       default:
         return { className: 'bin bin-disabled', clickable: false }
@@ -132,4 +137,4 @@ function Table ({
   )
 }
 
-export default Table
+export default memo(Table)

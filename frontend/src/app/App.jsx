@@ -1191,7 +1191,6 @@ function App () {
       )}
 
       {systems.length > 0 && (() => {
-        const currentSystem = systems[activeSystemIndex]
         const leftIdx  = (activeSystemIndex - 1 + systems.length) % systems.length
         const rightIdx = (activeSystemIndex + 1) % systems.length
         const leftHighlighted  = highlightedBinIds.some(id => id.startsWith(systems[leftIdx].id  + '-'))
@@ -1208,20 +1207,24 @@ function App () {
 
             <div className='system-nav-content'>
               <div className='system-nav-main'>
-                <Table
-                  onBinClick={onBinClicked}
-                  selectedBinId={adminMode ? adminBinId : selectedBinId}
-                  highlightedBinIds={highlightedBinIds}
-                  displayMode={binDisplayMode}
-                  pulledBinIds={pulledBinIds}
-                  partialBinIds={partialBinIds}
-                  propertyDefs={BIN_PROPERTIES}
-                  propertyMap={binPropertyMap}
-                  binNameMap={binNameMap}
-                  showPropertyClasses={adminMode}
-                  systemDef={currentSystem}
-                  unitTypes={unitTypes}
-                />
+                {systems.map((system, i) => (
+                  <div key={system.id} className={`system-slot${i === activeSystemIndex ? ' active' : ''}`}>
+                    <Table
+                      onBinClick={onBinClicked}
+                      selectedBinId={adminMode ? adminBinId : selectedBinId}
+                      highlightedBinIds={highlightedBinIds}
+                      displayMode={binDisplayMode}
+                      pulledBinIds={pulledBinIds}
+                      partialBinIds={partialBinIds}
+                      propertyDefs={BIN_PROPERTIES}
+                      propertyMap={binPropertyMap}
+                      binNameMap={binNameMap}
+                      showPropertyClasses={adminMode}
+                      systemDef={system}
+                      unitTypes={unitTypes}
+                    />
+                  </div>
+                ))}
               </div>
               <div className='system-nav-dots'>
                 {systems.map((s, i) => (

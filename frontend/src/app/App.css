@@ -337,6 +337,16 @@ html, body {
 }
 
 /* ── System navigation ────────────────────────────────────────────── */
+.system-slot {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.system-slot.active {
+  display: flex;
+}
+
 .system-nav-wrapper {
   display: flex;
   align-items: stretch;
